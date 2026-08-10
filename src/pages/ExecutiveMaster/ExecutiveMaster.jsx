@@ -160,7 +160,7 @@ const ExecutiveMaster = () => {
               {(error || successMessage) ? <div className={successMessage ? 'field-message field-success' : 'field-message field-error'}>{error || successMessage}</div> : null}
             </label>
           </div>
-          <div className="form-actions">
+          <div className="form-actions master-form-actions">
             <Button type="submit" disabled={loading}>{loading ? (editingId ? 'Updating...' : 'Saving...') : (editingId ? 'Update Executive' : 'Save Executive')}</Button>
             <Button type="button" variant="secondary" onClick={resetForm}>Clear</Button>
             {/* <Button type="button" variant="ghost" onClick={() => setName('')}>Cancel</Button> */}

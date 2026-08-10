@@ -174,6 +174,8 @@ th { color: #64748b; font-weight: 600; }
   .stats-grid, .stats-grid.small-grid, .masters-grid, .report-grid, .form-grid.two-col { grid-template-columns: 1fr; }
   .voucher-save-actions .btn { width: 100%; }
   .panel-heading, .toolbar, .login-options, .form-actions, .card-actions { flex-direction: column; align-items: flex-start; }
+  .master-form-actions { flex-direction: row; align-items: center; flex-wrap: nowrap; }
+  .master-form-actions .btn { flex: 0 0 auto; white-space: nowrap; }
   .page-content { padding-top: 64px; }
   .login-options a { margin-left: 0; }
 }

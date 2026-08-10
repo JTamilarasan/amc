@@ -204,7 +204,7 @@ const ProductMaster = () => {
           </div>
 
           {(error || successMessage) ? <div className={successMessage ? 'auth-success' : 'auth-error'} style={{ marginTop: 16 }}>{error || successMessage}</div> : null}
-          <div className="form-actions">
+          <div className="form-actions master-form-actions">
             <Button type="submit" disabled={loading}>{loading ? 'Saving...' : editingId ? 'Update Product' : 'Save Product'}</Button>
             <Button type="button" variant="secondary" onClick={resetForm}>Clear</Button>
           </div>
