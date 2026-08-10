@@ -4,6 +4,7 @@ import { salesVoucherService } from '../../services/salesVoucherService'
 const initialState = {
   items: [],
   nextVoucherNumber: null,
+  startingNumber: null,
   loading: false,
   error: null,
   successMessage: null,
@@ -15,6 +16,10 @@ export const fetchSalesVouchers = createAsyncThunk('salesVouchers/fetchSalesVouc
 
 export const fetchNextVoucherNumber = createAsyncThunk('salesVouchers/fetchNextVoucherNumber', async () => {
   return salesVoucherService.getNextVoucherNumber()
+})
+
+export const fetchVoucherSequence = createAsyncThunk('salesVouchers/fetchVoucherSequence', async () => {
+  return salesVoucherService.getVoucherSequence()
 })
 
 export const initializeVoucherCounter = createAsyncThunk('salesVouchers/initializeVoucherCounter', async (startingNumber, { rejectWithValue }) => {
@@ -85,6 +90,13 @@ const salesVoucherSlice = createSlice({
       .addCase(fetchNextVoucherNumber.rejected, (state, action) => {
         state.loading = false
         state.error = action.error?.message || 'Failed to load next voucher number.'
+      })
+      .addCase(fetchVoucherSequence.fulfilled, (state, action) => {
+        state.startingNumber = action.payload?.startingNumber ?? null
+        state.nextVoucherNumber = action.payload?.nextVoucherNumber ?? null
+      })
+      .addCase(fetchVoucherSequence.rejected, (state, action) => {
+        state.error = action.error?.message || 'Failed to load voucher sequence.'
       })
       .addCase(initializeVoucherCounter.fulfilled, (state, action) => {
         state.nextVoucherNumber = action.payload

@@ -5,7 +5,7 @@ import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import { fetchCustomers, selectCustomers } from '../../features/customers/customerSlice'
 import { fetchProducts, selectProducts } from '../../features/products/productSlice'
-import { addSalesVoucher, clearSalesVoucherMessage, editSalesVoucher, fetchNextVoucherNumber, fetchSalesVouchers, initializeVoucherCounter, removeSalesVoucher, selectSalesVoucherState, selectSalesVouchers } from '../../features/salesVouchers/salesVoucherSlice'
+import { addSalesVoucher, clearSalesVoucherMessage, editSalesVoucher, fetchNextVoucherNumber, fetchSalesVouchers, fetchVoucherSequence, initializeVoucherCounter, removeSalesVoucher, selectSalesVoucherState, selectSalesVouchers } from '../../features/salesVouchers/salesVoucherSlice'
 
 const todayValue = () => new Date().toISOString().split('T')[0]
 
@@ -44,9 +44,14 @@ const SalesVoucher = () => {
   useEffect(() => {
     const loadVoucherNumber = async () => {
       try {
-        let nextNumber = await dispatch(fetchNextVoucherNumber()).unwrap()
-        if (nextNumber == null) nextNumber = await dispatch(initializeVoucherCounter(100)).unwrap()
-        setVoucherNumber(nextNumber)
+        const sequence = await dispatch(fetchVoucherSequence()).unwrap()
+        if (sequence) {
+          setManualStartingNumber(String(sequence.startingNumber))
+          setVoucherNumber(sequence.nextVoucherNumber)
+        } else {
+          setManualStartingNumber('100')
+          setVoucherNumber(await dispatch(initializeVoucherCounter(100)).unwrap())
+        }
       } catch {
         setFormError('Unable to load the next voucher number.')
       }
@@ -101,13 +106,12 @@ const SalesVoucher = () => {
     return filteredProducts.slice(start, start + productPageSize)
   }, [filteredProducts, productPage, productPageSize])
 
-  const formatDisplayDate = (timestamp) => {
-    if (!timestamp?.toDate) {
-      return '—'
-    }
-
-    const date = timestamp.toDate()
-    return `${date.getDate().toString().padStart(2, '0')} ${date.toLocaleString('en-GB', { month: 'short' })} ${date.getFullYear()}`
+  const formatVoucherDate = (value) => {
+    if (!value) return '—'
+    const [year, month, day] = value.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
+    if (Number.isNaN(date.getTime())) return '—'
+    return `${String(day).padStart(2, '0')} ${date.toLocaleString('en-GB', { month: 'short' })} ${year}`
   }
 
   const handleCustomerSelect = (event) => {
@@ -379,10 +383,10 @@ const SalesVoucher = () => {
                     <td>{product.itemName}</td>
                     <td>{product.unit || '—'}</td>
                     <td>{product.amcApplicable ? 'Yes' : 'No'}</td>
-                    <td><input className="product-row-input qty-input" type="number" min="1" value={values.quantity} onChange={(event) => handleRowChange(product.id, 'quantity', event.target.value)} /></td>
-                    <td><input className="product-row-input date-input" type="date" value={values.amcFromDate} onChange={(event) => handleRowChange(product.id, 'amcFromDate', event.target.value)} /></td>
+                    <td><input className="product-row-input qty-input" type="number" min="1" value={values.quantity} onChange={(event) => handleRowChange(product.id, 'quantity', event.target.value)} />{rowErrors[product.id]?.startsWith('Quantity') ? <div className="table-row-error">{rowErrors[product.id]}</div> : null}</td>
+                    <td><input className="product-row-input date-input" type="date" value={values.amcFromDate} onChange={(event) => handleRowChange(product.id, 'amcFromDate', event.target.value)} />{rowErrors[product.id]?.startsWith('AMC') ? <div className="table-row-error">{rowErrors[product.id]}</div> : null}</td>
                     <td><input className="product-row-input date-input" type="date" value={values.amcToDate} onChange={(event) => handleRowChange(product.id, 'amcToDate', event.target.value)} /></td>
-                    <td><input className="product-row-input amount-input" type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => handleRowChange(product.id, 'amount', event.target.value)} placeholder="Amount" />{rowErrors[product.id] ? <div className="table-row-error">{rowErrors[product.id]}</div> : null}</td>
+                    <td><input className="product-row-input amount-input" type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => handleRowChange(product.id, 'amount', event.target.value)} placeholder="Amount" />{rowErrors[product.id]?.startsWith('Amount') ? <div className="table-row-error">{rowErrors[product.id]}</div> : null}</td>
                     <td><Button type="button" variant={isSelected ? 'secondary' : 'primary'} onClick={() => handleSelectProduct(product)}>{isSelected ? 'Selected' : 'Select'}</Button></td>
                   </tr>
                 })}
@@ -425,7 +429,7 @@ const SalesVoucher = () => {
               <div className="customer-mobile-card" key={voucher.id}>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Voucher</span><span>#{voucher.voucherNumber}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Party</span><span>{voucher.customerName}</span></div>
-                <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDisplayDate(voucher.createdAt)}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatVoucherDate(voucher.voucherDate)}</span></div>
                 <div className="customer-mobile-actions">
                   <button className="executive-action-btn" onClick={() => handleViewVoucher(voucher)}><Eye size={13} /> View</button>
                   <button className="executive-action-btn" onClick={() => handleEditVoucher(voucher)}><Pencil size={13} /> Edit</button>
@@ -456,10 +460,10 @@ const SalesVoucher = () => {
                   <tr key={voucher.id}>
                     <td>{(page - 1) * pageSize + index + 1}</td>
                     <td>#{voucher.voucherNumber}</td>
-                    <td>{voucher.voucherDate}</td>
+                    <td>{formatVoucherDate(voucher.voucherDate)}</td>
                     <td>{voucher.customerName}</td>
                     <td>{voucher.items?.length || 0}</td>
-                    <td>{formatDisplayDate(voucher.createdAt)}</td>
+                    <td>{formatVoucherDate(voucher.voucherDate)}</td>
                     <td><span className="status-badge green">{voucher.status}</span></td>
                     <td><div className="table-actions">
                       <button className="executive-action-btn" onClick={() => handleViewVoucher(voucher)}><Eye size={13} /><span>View</span></button>
