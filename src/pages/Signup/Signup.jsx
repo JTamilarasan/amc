@@ -4,14 +4,14 @@ import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
 
-const Login = () => {
+const Signup = () => {
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(true)
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' })
   const [loading, setLoading] = useState(false)
   const [validationError, setValidationError] = useState('')
   const navigate = useNavigate()
-  const { login, authError, setAuthError } = useAuth()
+  const { signup, authError, setAuthError } = useAuth()
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -27,6 +27,11 @@ const Login = () => {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
+    if (!form.fullName.trim()) {
+      setValidationError('Please enter your full name.')
+      return
+    }
+
     if (!form.email.trim()) {
       setValidationError('Please enter your email address.')
       return
@@ -38,8 +43,13 @@ const Login = () => {
       return
     }
 
-    if (!form.password) {
-      setValidationError('Please enter your password.')
+    if (form.password.length < 6) {
+      setValidationError('Password must contain at least 6 characters.')
+      return
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setValidationError('Passwords do not match.')
       return
     }
 
@@ -47,7 +57,7 @@ const Login = () => {
     setValidationError('')
 
     try {
-      await login(form.email.trim(), form.password, rememberMe)
+      await signup(form.email.trim(), form.password, form.fullName.trim(), true)
       navigate('/dashboard')
     } catch {
       // Error handled in context
@@ -63,28 +73,57 @@ const Login = () => {
           <div className="brand-icon large">A</div>
           <div>
             <h1>AMC Manager</h1>
-            <p>Professional service and AMC renewals platform</p>
+            <p>Create your account to keep renewals and customer service organized.</p>
           </div>
         </div>
 
         <div className="login-form-panel">
           <div className="login-intro">
-            <h2>Welcome Back</h2>
-            <p>Sign in to manage your customers and AMC renewals.</p>
+            <h2>Create Account</h2>
+            <p>Sign up to access your AMC workspace.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="form-grid">
             <label className="field">
+              <span>Full Name</span>
+              <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Alex Morgan" required />
+            </label>
+
+            <label className="field">
               <span>Email</span>
-              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="admin@amcmanager.com" required />
+              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@company.com" required />
             </label>
 
             <label className="field">
               <span>Password</span>
               <div className="password-field">
-                <input type={showPassword ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} placeholder="Enter password" required />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Create a password"
+                  required
+                />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </label>
+
+            <label className="field">
+              <span>Confirm Password</span>
+              <div className="password-field">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  required
+                />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label="Toggle confirm password visibility">
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </label>
@@ -92,23 +131,15 @@ const Login = () => {
             {validationError ? <div className="auth-error">{validationError}</div> : null}
             {authError ? <div className="auth-error">{authError}</div> : null}
 
-            <div className="login-options">
-              <label className="checkbox-row">
-                <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe((value) => !value)} />
-                <span>Remember me</span>
-              </label>
-              <Link to="/forgot-password">Forgot Password?</Link>
-            </div>
-
             <Button type="submit" className="login-btn" disabled={loading}>
               <ShieldCheck size={16} />
-              <span>{loading ? 'Signing in...' : 'Login'}</span>
+              <span>{loading ? 'Creating account...' : 'Create Account'}</span>
             </Button>
           </form>
 
           <div className="login-options">
-            <span>Don&apos;t have an account?</span>
-            <Link to="/signup">Create Account</Link>
+            <span>Already have an account?</span>
+            <Link to="/login">Sign in</Link>
           </div>
         </div>
       </div>
@@ -116,4 +147,4 @@ const Login = () => {
   )
 }
 
-export default Login
+export default Signup

@@ -2,8 +2,6 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   BookOpen,
-  Users,
-  Package,
   FileText,
   BriefcaseBusiness,
   BarChart3,
@@ -12,6 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -33,6 +32,12 @@ const navItems = [
 const Sidebar = () => {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login')
+  }
 
   return (
     <>
@@ -83,7 +88,7 @@ const Sidebar = () => {
           </nav>
         </div>
 
-        <button className="logout-btn" onClick={() => navigate('/login')}>
+        <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={16} />
           <span>Logout</span>
         </button>
