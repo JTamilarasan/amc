@@ -11,6 +11,7 @@ const Header = () => {
     '/masters/executives': ['Masters', 'Executive Master'],
     '/masters/customers': ['Masters', 'Customer Master'],
     '/masters/products': ['Masters', 'Product Master'],
+    '/masters/areas': ['Masters', 'Area Master'],
     '/sales-voucher': ['Sales Voucher'],
     '/amc': ['AMC Management'],
     '/reports': ['Reports'],

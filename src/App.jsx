@@ -9,6 +9,7 @@ import Masters from './pages/Masters/Masters'
 import ExecutiveMaster from './pages/ExecutiveMaster/ExecutiveMaster'
 import CustomerMaster from './pages/CustomerMaster/CustomerMaster'
 import ProductMaster from './pages/ProductMaster/ProductMaster'
+import AreaMaster from './pages/AreaMaster/AreaMaster'
 import SalesVoucher from './pages/SalesVoucher/SalesVoucher'
 import AMCManagement from './pages/AMCManagement/AMCManagement'
 import Reports from './pages/Reports/Reports'
@@ -34,6 +35,7 @@ function App() {
             <Route path="/masters/executives" element={<ExecutiveMaster />} />
             <Route path="/masters/customers" element={<CustomerMaster />} />
             <Route path="/masters/products" element={<ProductMaster />} />
+            <Route path="/masters/areas" element={<AreaMaster />} />
             <Route path="/sales-voucher" element={<SalesVoucher />} />
             <Route path="/amc" element={<AMCManagement />} />
             <Route path="/reports" element={<Reports />} />

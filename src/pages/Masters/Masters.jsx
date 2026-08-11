@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Package, Users, UserRound } from 'lucide-react'
+import { MapPin, Package, Users, UserRound } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 
@@ -24,6 +24,13 @@ const cards = [
     description: 'Manage products and AMC eligibility.',
     action: '/masters/products',
     buttonLabel: 'Manage Products',
+  },
+  {
+    title: 'Area Master',
+    icon: MapPin,
+    description: 'Create and manage customer service areas.',
+    action: '/masters/areas',
+    buttonLabel: 'Manage Areas',
   },
 ]
 

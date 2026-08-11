@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Search, Pencil, Trash2 } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import { addCustomer, clearCustomerMessage, editCustomer, fetchCustomers, removeCustomer, selectCustomerState } from '../../features/customers/customerSlice'
+import { fetchAreas, selectAreas } from '../../features/areas/areaSlice'
 
 const initialForm = {
   customerName: '',
+  mobileNo: '',
+  email: '',
+  areaId: '',
+  areaName: '',
   address: '',
   pincode: '',
   country: 'India',
@@ -19,19 +25,37 @@ const initialForm = {
 
 const CustomerMaster = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
   const { items, loading, error, successMessage } = useSelector(selectCustomerState)
-  const [form, setForm] = useState(initialForm)
-  const [editingId, setEditingId] = useState(null)
+  const areas = useSelector(selectAreas)
+  const returnedCustomerState = location.state?.createdAreaId ? location.state : null
+  const [form, setForm] = useState(() => returnedCustomerState ? {
+    ...initialForm,
+    ...(returnedCustomerState.customerForm || {}),
+    areaId: returnedCustomerState.createdAreaId,
+    areaName: returnedCustomerState.createdAreaName || '',
+  } : initialForm)
+  const [editingId, setEditingId] = useState(() => returnedCustomerState?.customerEditingId || null)
   const [searchText, setSearchText] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 720)
   const [validationErrors, setValidationErrors] = useState({})
+  const [areaOpen, setAreaOpen] = useState(false)
 
   useEffect(() => {
     dispatch(fetchCustomers())
+    dispatch(fetchAreas())
   }, [dispatch])
+
+  useEffect(() => {
+    const returnedState = location.state
+    if (!returnedState?.createdAreaId) return
+    dispatch(fetchAreas())
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, dispatch, navigate])
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 720)
@@ -47,17 +71,13 @@ const CustomerMaster = () => {
     }
   }, [successMessage, error, dispatch])
 
-  useEffect(() => {
-    setPage(1)
-  }, [searchText])
-
   const filteredCustomers = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) {
       return items
     }
 
-    return items.filter((customer) => customer.customerName.toLowerCase().includes(query))
+    return items.filter((customer) => [customer.customerName, customer.mobileNo, customer.email, customer.areaName].some((value) => (value || '').toLowerCase().includes(query)))
   }, [items, searchText])
 
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
@@ -81,34 +101,50 @@ const CustomerMaster = () => {
     setValidationErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
+  const filteredAreas = useMemo(() => {
+    const query = form.areaName.trim().toLowerCase()
+    return areas.filter((area) => !query || area.areaName.toLowerCase().includes(query))
+  }, [areas, form.areaName])
+  const areaSearchText = form.areaName.trim()
+  const exactAreaExists = areas.some((area) => area.areaName.toLowerCase() === areaSearchText.toLowerCase())
+
+  const handleAreaInput = (value) => {
+    const match = areas.find((area) => area.areaName.toLowerCase() === value.trim().toLowerCase())
+    setForm((prev) => ({ ...prev, areaName: value, areaId: match?.id || '' }))
+    setValidationErrors((prev) => ({ ...prev, areaId: '' }))
+  }
+
+  const selectArea = (area) => {
+    setForm((prev) => ({ ...prev, areaId: area.id, areaName: area.areaName }))
+    setValidationErrors((prev) => ({ ...prev, areaId: '' }))
+    setAreaOpen(false)
+  }
+
+  const navigateToCreateArea = () => {
+    if (!areaSearchText || exactAreaExists) return
+    navigate('/masters/areas', {
+      state: {
+        newAreaName: areaSearchText,
+        returnTo: '/masters/customers',
+        customerForm: form,
+        customerEditingId: editingId,
+      },
+    })
+  }
+
   const validateForm = () => {
     const nextErrors = {}
 
     if (!form.customerName.trim() || form.customerName.trim().length < 2) {
       nextErrors.customerName = 'Customer name is required.'
     }
-    if (!form.address.trim()) {
-      nextErrors.address = 'Address is required.'
-    }
-    if (!form.pincode.trim()) {
-      nextErrors.pincode = 'Pincode is required.'
-    } else if (!/^\d{6}$/.test(form.pincode.trim())) {
+    if (!form.areaId) nextErrors.areaId = 'Please select an area.'
+    if (!form.mobileNo.trim()) nextErrors.mobileNo = 'Mobile number is required.'
+    else if (!/^\d{10}$/.test(form.mobileNo.trim())) nextErrors.mobileNo = 'Enter a valid 10-digit mobile number.'
+    if (!form.email.trim()) nextErrors.email = 'Email ID is required.'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextErrors.email = 'Enter a valid email address.'
+    if (form.pincode.trim() && !/^\d{6}$/.test(form.pincode.trim())) {
       nextErrors.pincode = 'Pincode must be 6 digits.'
-    }
-    if (!form.country.trim()) {
-      nextErrors.country = 'Country is required.'
-    }
-    if (!form.state.trim()) {
-      nextErrors.state = 'State is required.'
-    }
-    if (!form.category1) {
-      nextErrors.category1 = 'Category 1 is required.'
-    }
-    if (!form.category2) {
-      nextErrors.category2 = 'Category 2 is required.'
-    }
-    if (!form.gstin.trim()) {
-      nextErrors.gstin = 'GSTIN is required.'
     }
 
     setValidationErrors(nextErrors)
@@ -131,6 +167,8 @@ const CustomerMaster = () => {
     const payload = {
       ...form,
       customerName: form.customerName.trim(),
+      mobileNo: form.mobileNo.trim(),
+      email: form.email.trim().toLowerCase(),
       address: form.address.trim(),
       pincode: form.pincode.trim(),
       country: form.country.trim(),
@@ -155,6 +193,10 @@ const CustomerMaster = () => {
     setEditingId(customer.id)
     setForm({
       customerName: customer.customerName,
+      mobileNo: customer.mobileNo || '',
+      email: customer.email || '',
+      areaId: customer.areaId || '',
+      areaName: customer.areaName || '',
       address: customer.address,
       pincode: customer.pincode,
       country: customer.country,
@@ -196,27 +238,48 @@ const CustomerMaster = () => {
               {validationErrors.customerName ? <div className="field-message field-error">{validationErrors.customerName}</div> : null}
             </label>
             <label className="field">
-              <span>Address *</span>
+              <span>Area *</span>
+              <div className="searchable-select">
+                <input value={form.areaName} onChange={(event) => { handleAreaInput(event.target.value); setAreaOpen(true) }} onFocus={() => setAreaOpen(true)} onBlur={() => window.setTimeout(() => setAreaOpen(false), 150)} placeholder="Search and select area" autoComplete="off" />
+                {areaOpen ? <div className="searchable-options">
+                  {filteredAreas.length ? filteredAreas.map((area) => <button type="button" key={area.id} onMouseDown={() => selectArea(area)}>{area.areaName}</button>) : <div className="searchable-empty">No matching areas</div>}
+                  {areaSearchText && !exactAreaExists ? <button type="button" className="searchable-create-option" onMouseDown={navigateToCreateArea}>+ Create &quot;{areaSearchText}&quot; Area</button> : null}
+                </div> : null}
+              </div>
+              {validationErrors.areaId ? <div className="field-message field-error">{validationErrors.areaId}</div> : null}
+            </label>
+            <label className="field">
+              <span>Mobile No *</span>
+              <input name="mobileNo" inputMode="numeric" maxLength="10" value={form.mobileNo} onChange={(event) => handleChange({ target: { name: 'mobileNo', value: event.target.value.replace(/\D/g, '').slice(0, 10) } })} placeholder="9876543210" />
+              {validationErrors.mobileNo ? <div className="field-message field-error">{validationErrors.mobileNo}</div> : null}
+            </label>
+            <label className="field">
+              <span>Email ID *</span>
+              <input name="email" type="text" inputMode="email" value={form.email} onChange={handleChange} placeholder="customer@example.com" />
+              {validationErrors.email ? <div className="field-message field-error">{validationErrors.email}</div> : null}
+            </label>
+            <label className="field">
+              <span>Address</span>
               <input name="address" value={form.address} onChange={handleChange} placeholder="Enter address" />
               {validationErrors.address ? <div className="field-message field-error">{validationErrors.address}</div> : null}
             </label>
             <label className="field">
-              <span>Pincode *</span>
+              <span>Pincode</span>
               <input name="pincode" value={form.pincode} onChange={handleChange} placeholder="400001" />
               {validationErrors.pincode ? <div className="field-message field-error">{validationErrors.pincode}</div> : null}
             </label>
             <label className="field">
-              <span>Country *</span>
+              <span>Country</span>
               <input name="country" value={form.country} onChange={handleChange} placeholder="India" />
               {validationErrors.country ? <div className="field-message field-error">{validationErrors.country}</div> : null}
             </label>
             <label className="field">
-              <span>State *</span>
+              <span>State</span>
               <input name="state" value={form.state} onChange={handleChange} placeholder="Maharashtra" />
               {validationErrors.state ? <div className="field-message field-error">{validationErrors.state}</div> : null}
             </label>
             <label className="field">
-              <span>GSTIN *</span>
+              <span>GSTIN</span>
               <input name="gstin" value={form.gstin} onChange={handleChange} placeholder="27AAAPL1234C1Z5" />
               {validationErrors.gstin ? <div className="field-message field-error">{validationErrors.gstin}</div> : null}
             </label>
@@ -224,7 +287,7 @@ const CustomerMaster = () => {
 
           <div className="form-grid two-col" style={{ gap: 18, marginTop: 8 }}>
             <label className="field">
-              <span>Category 1 *</span>
+              <span>Category 1</span>
               <select name="category1" value={form.category1} onChange={handleChange}>
                 <option value="AMC">AMC</option>
                 <option value="Remote AMC">Remote AMC</option>
@@ -233,7 +296,7 @@ const CustomerMaster = () => {
               {validationErrors.category1 ? <div className="field-message field-error">{validationErrors.category1}</div> : null}
             </label>
             <label className="field">
-              <span>Category 2 *</span>
+              <span>Category 2</span>
               <select name="category2" value={form.category2} onChange={handleChange}>
                 <option value="Direct">Direct</option>
                 <option value="Google">Google</option>
@@ -264,7 +327,7 @@ const CustomerMaster = () => {
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <div className="search-box" style={{ minWidth: 240, width: '100%' }}>
             <Search size={16} />
-            <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search customer by name..." />
+            <input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search name, mobile, email or area..." />
           </div>
           <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}>
             <option value={10}>10</option>
@@ -277,7 +340,9 @@ const CustomerMaster = () => {
             {pagedCustomers.map((customer) => (
               <div className="customer-mobile-card" key={customer.id}>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Customer</span><span>{customer.customerName}</span></div>
-                <div className="customer-mobile-row"><span className="customer-mobile-label">State</span><span>{customer.state}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">Mobile</span><span>{customer.mobileNo || '—'}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">Email</span><span>{customer.email || '—'}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">Area</span><span>{customer.areaName || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Category</span><span>{customer.category1}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDisplayDate(customer.createdAt)}</span></div>
                 <div className="customer-mobile-actions">
@@ -294,28 +359,28 @@ const CustomerMaster = () => {
                 <tr>
                   <th>S.No</th>
                   <th>Customer Name</th>
-                  <th>Pincode</th>
-                  <th>State</th>
-                  <th>GSTIN</th>
+                  <th>Mobile No</th>
+                  <th>Email ID</th>
+                  <th>Area</th>
                   <th>Category 1</th>
-                  <th>Category 2</th>
+                  <th>Executive</th>
                   <th>Created Date</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {loading && items.length === 0 ? <tr><td colSpan="11" className="text-center">Loading customers...</td></tr> : null}
-                {!loading && filteredCustomers.length === 0 ? <tr><td colSpan="11" className="text-center">{searchText ? 'No matching customers found.' : 'No customers found.'}</td></tr> : null}
+                {loading && items.length === 0 ? <tr><td colSpan="10" className="text-center">Loading customers...</td></tr> : null}
+                {!loading && filteredCustomers.length === 0 ? <tr><td colSpan="10" className="text-center">{searchText ? 'No matching customers found.' : 'No customers found.'}</td></tr> : null}
                 {pagedCustomers.map((customer, index) => (
                   <tr key={customer.id}>
                     <td>{(page - 1) * pageSize + index + 1}</td>
                     <td>{customer.customerName}</td>
-                    <td>{customer.pincode}</td>
-                    <td>{customer.state}</td>
-                    <td>{customer.gstin || '—'}</td>
+                    <td>{customer.mobileNo || '—'}</td>
+                    <td>{customer.email || '—'}</td>
+                    <td>{customer.areaName || '—'}</td>
                     <td>{customer.category1}</td>
-                    <td>{customer.category2}</td>
+                    <td>{customer.executiveName || '—'}</td>
                     <td>{formatDisplayDate(customer.createdAt)}</td>
                     <td><span className={`status-badge ${customer.status === 'Active' ? 'green' : 'amber'}`}>{customer.status}</span></td>
                     <td>

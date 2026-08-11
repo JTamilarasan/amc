@@ -22,6 +22,7 @@ const navItems = [
       { label: 'Executive Master', path: '/masters/executives' },
       { label: 'Customer Master', path: '/masters/customers' },
       { label: 'Product Master', path: '/masters/products' },
+      { label: 'Area Master', path: '/masters/areas' },
     ],
   },
   { label: 'Sales Voucher', path: '/sales-voucher', icon: FileText },

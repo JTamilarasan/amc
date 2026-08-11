@@ -17,22 +17,37 @@ const CUSTOMERS_COLLECTION = 'customers'
 
 const normalizeCustomerName = (name) => (name || '').trim().toLowerCase()
 
+const validateRequiredCustomerFields = (customerData) => {
+  if (!(customerData.customerName || '').trim()) throw new Error('Customer name is required.')
+  if (!customerData.areaId) throw new Error('Please select an area.')
+  const mobileNo = (customerData.mobileNo || '').trim()
+  if (!mobileNo) throw new Error('Mobile number is required.')
+  if (!/^\d{10}$/.test(mobileNo)) throw new Error('Enter a valid 10-digit mobile number.')
+  const email = (customerData.email || '').trim()
+  if (!email) throw new Error('Email ID is required.')
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid email address.')
+}
+
 const mapCustomer = (docSnapshot) => {
   const data = docSnapshot.data()
   return {
     id: docSnapshot.id,
     customerName: data.customerName,
     customerNameLower: data.customerNameLower,
-    address: data.address,
-    pincode: data.pincode,
-    country: data.country,
-    state: data.state,
-    gstin: data.gstin,
-    category1: data.category1,
-    category2: data.category2,
-    executiveId: data.executiveId,
-    executiveName: data.executiveName,
-    notes: data.notes,
+    mobileNo: data.mobileNo || '',
+    email: data.email || '',
+    areaId: data.areaId || '',
+    areaName: data.areaName || '',
+    address: data.address || '',
+    pincode: data.pincode || '',
+    country: data.country || '',
+    state: data.state || '',
+    gstin: data.gstin || '',
+    category1: data.category1 || '',
+    category2: data.category2 || '',
+    executiveId: data.executiveId || '',
+    executiveName: data.executiveName || '',
+    notes: data.notes || '',
     status: data.status || 'Active',
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
@@ -42,13 +57,17 @@ const mapCustomer = (docSnapshot) => {
 const formatCustomerPayload = (customerData) => ({
   customerName: customerData.customerName.trim(),
   customerNameLower: normalizeCustomerName(customerData.customerName),
-  address: customerData.address.trim(),
-  pincode: customerData.pincode.trim(),
-  country: customerData.country.trim(),
-  state: customerData.state.trim(),
+  mobileNo: (customerData.mobileNo || '').trim(),
+  email: (customerData.email || '').trim().toLowerCase(),
+  areaId: customerData.areaId || '',
+  areaName: customerData.areaName || '',
+  address: (customerData.address || '').trim(),
+  pincode: (customerData.pincode || '').trim(),
+  country: (customerData.country || '').trim(),
+  state: (customerData.state || '').trim(),
   gstin: (customerData.gstin || '').trim(),
-  category1: customerData.category1,
-  category2: customerData.category2,
+  category1: customerData.category1 || '',
+  category2: customerData.category2 || '',
   executiveId: customerData.executiveId || '',
   executiveName: customerData.executiveName || '',
   notes: (customerData.notes || '').trim(),
@@ -56,6 +75,7 @@ const formatCustomerPayload = (customerData) => ({
 })
 
 export const createCustomer = async (customerData) => {
+  validateRequiredCustomerFields(customerData)
   const normalizedName = normalizeCustomerName(customerData.customerName)
   const exists = await checkCustomerExists(normalizedName)
 
@@ -87,6 +107,7 @@ export const getCustomerById = async (id) => {
 }
 
 export const updateCustomer = async (id, customerData) => {
+  validateRequiredCustomerFields(customerData)
   const normalizedName = normalizeCustomerName(customerData.customerName)
   const exists = await checkCustomerExists(normalizedName, id)
 
@@ -101,13 +122,7 @@ export const updateCustomer = async (id, customerData) => {
 
   const customerRef = doc(db, CUSTOMERS_COLLECTION, id)
   await updateDoc(customerRef, payload)
-  return {
-    id,
-    ...payload,
-    status: 'Active',
-    createdAt: null,
-    updatedAt: null,
-  }
+  return mapCustomer(await getDoc(customerRef))
 }
 
 export const deleteCustomer = async (id) => {
