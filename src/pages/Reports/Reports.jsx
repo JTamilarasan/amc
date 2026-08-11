@@ -1,34 +1,19 @@
+import { CalendarClock, FileSpreadsheet } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
+import Button from '../../components/common/Button'
 
-const Reports = () => {
-  return (
-    <div className="page-stack">
-      <PageHeader title="Reports" subtitle="View business snapshots and renewal performance." />
-      <section className="panel-card">
-        <div className="panel-heading">
-          <h2>Executive and AMC Summary</h2>
-          <span>Static reporting snapshot</span>
-        </div>
-        <div className="report-grid">
-          <div className="metric-card">
-            <h3>Renewal Conversion</h3>
-            <p>84%</p>
-            <span>Steady growth in renewals</span>
-          </div>
-          <div className="metric-card">
-            <h3>Pending Follow-ups</h3>
-            <p>38</p>
-            <span>Priority outreach scheduled</span>
-          </div>
-          <div className="metric-card">
-            <h3>Revenue Trend</h3>
-            <p>₹4.85L</p>
-            <span>Monthly milestone achieved</span>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
-}
+const reportCards = [
+  { title: 'Sales Register Report', description: 'View sales vouchers by selected date range.', path: '/reports/sales-register', icon: FileSpreadsheet },
+  { title: 'Current Monthly Expiry Report', description: 'View AMC records expiring in the current month.', path: '/reports/current-month-expiry', icon: CalendarClock },
+]
+
+const Reports = () => <div className="page-stack">
+  <PageHeader title="Reports" subtitle="Choose a business report." />
+  <div className="masters-grid">{reportCards.map((report) => {
+    const Icon = report.icon
+    return <article className="master-card" key={report.path}><div className="master-icon"><Icon size={24} /></div><h3>{report.title}</h3><p>{report.description}</p><div className="card-actions"><Link to={report.path}><Button>Open Report</Button></Link></div></article>
+  })}</div>
+</div>
 
 export default Reports

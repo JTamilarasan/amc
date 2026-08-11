@@ -27,7 +27,15 @@ const navItems = [
   },
   { label: 'Sales Voucher', path: '/sales-voucher', icon: FileText },
   { label: 'AMC Management', path: '/amc', icon: BriefcaseBusiness },
-  { label: 'Reports', path: '/reports', icon: BarChart3 },
+  {
+    label: 'Reports',
+    path: '/reports',
+    icon: BarChart3,
+    children: [
+      { label: 'Sales Register Report', path: '/reports/sales-register' },
+      { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry' },
+    ],
+  },
 ]
 
 const Sidebar = () => {

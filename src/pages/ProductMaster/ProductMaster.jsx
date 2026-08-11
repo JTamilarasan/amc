@@ -5,6 +5,7 @@ import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import Loader from '../../components/common/Loader'
 import { addProduct, clearProductMessage, editProduct, fetchProducts, removeProduct, selectProductState } from '../../features/products/productSlice'
+import { formatDate } from '../../utils/dateUtils'
 
 const initialForm = {
   itemName: '',
@@ -61,15 +62,6 @@ const ProductMaster = () => {
     const startIndex = (page - 1) * pageSize
     return filteredProducts.slice(startIndex, startIndex + pageSize)
   }, [filteredProducts, page, pageSize])
-
-  const formatDisplayDate = (timestamp) => {
-    if (!timestamp?.toDate) {
-      return '—'
-    }
-
-    const date = timestamp.toDate()
-    return `${date.getDate().toString().padStart(2, '0')} ${date.toLocaleString('en-GB', { month: 'short' })} ${date.getFullYear()}`
-  }
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -236,7 +228,7 @@ const ProductMaster = () => {
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Group</span><span>{product.itemGroup}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Unit</span><span>{product.unit}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">AMC</span><span>{product.amcApplicable ? 'Yes' : 'No'}</span></div>
-                <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDisplayDate(product.createdAt)}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(product.createdAt)}</span></div>
                 <div className="customer-mobile-actions">
                   <button className="executive-action-btn" onClick={() => handleEdit(product)}><Pencil size={13} /><span>Edit</span></button>
                   <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button>
@@ -269,7 +261,7 @@ const ProductMaster = () => {
                     <td>{product.itemGroup}</td>
                     <td>{product.unit}</td>
                     <td>{product.amcApplicable ? 'Yes' : 'No'}</td>
-                    <td>{formatDisplayDate(product.createdAt)}</td>
+                    <td>{formatDate(product.createdAt)}</td>
                     <td><span className={`status-badge ${product.status === 'Active' ? 'green' : 'amber'}`}>{product.status}</span></td>
                     <td>
                       <div className="table-actions">

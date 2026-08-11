@@ -13,6 +13,7 @@ import {
   fetchSalesVouchers, fetchVoucherSequence, initializeVoucherCounter, removeSalesVoucher,
   selectSalesVoucherState, selectSalesVouchers,
 } from '../../features/salesVouchers/salesVoucherSlice'
+import { formatDate } from '../../utils/dateUtils'
 
 const todayValue = () => {
   const date = new Date()
@@ -123,12 +124,6 @@ const SalesVoucher = () => {
   const totalPages = Math.max(1, Math.ceil(filteredVouchers.length / pageSize))
   const pagedVouchers = useMemo(() => filteredVouchers.slice((page - 1) * pageSize, page * pageSize), [filteredVouchers, page, pageSize])
 
-  const formatDate = (value) => {
-    if (!value) return '—'
-    const [year, month, day] = value.split('-').map(Number)
-    const date = new Date(year, month - 1, day)
-    return Number.isNaN(date.getTime()) ? '—' : `${String(day).padStart(2, '0')} ${date.toLocaleString('en-GB', { month: 'short' })} ${year}`
-  }
   const handleCustomerInput = (value) => {
     const match = customers.find((item) => item.customerName.toLowerCase() === value.trim().toLowerCase())
     setCustomerName(value)

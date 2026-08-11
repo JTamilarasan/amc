@@ -15,6 +15,8 @@ const Header = () => {
     '/sales-voucher': ['Sales Voucher'],
     '/amc': ['AMC Management'],
     '/reports': ['Reports'],
+    '/reports/sales-register': ['Reports', 'Sales Register Report'],
+    '/reports/current-month-expiry': ['Reports', 'Current Monthly Expiry Report'],
   }
   const breadcrumb = breadcrumbByPath[pathname] || ['Dashboard']
   const displayName = user?.displayName || user?.email || 'User'

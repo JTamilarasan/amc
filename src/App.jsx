@@ -13,6 +13,8 @@ import AreaMaster from './pages/AreaMaster/AreaMaster'
 import SalesVoucher from './pages/SalesVoucher/SalesVoucher'
 import AMCManagement from './pages/AMCManagement/AMCManagement'
 import Reports from './pages/Reports/Reports'
+import SalesRegisterReport from './pages/Reports/SalesRegisterReport'
+import CurrentMonthlyExpiryReport from './pages/Reports/CurrentMonthlyExpiryReport'
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -39,6 +41,8 @@ function App() {
             <Route path="/sales-voucher" element={<SalesVoucher />} />
             <Route path="/amc" element={<AMCManagement />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/reports/sales-register" element={<SalesRegisterReport />} />
+            <Route path="/reports/current-month-expiry" element={<CurrentMonthlyExpiryReport />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

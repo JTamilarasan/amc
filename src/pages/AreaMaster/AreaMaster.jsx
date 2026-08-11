@@ -6,6 +6,7 @@ import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import Loader from '../../components/common/Loader'
 import { clearAreaMessage, createArea, editArea, fetchAreas, removeArea, selectAreaState } from '../../features/areas/areaSlice'
+import { formatDate } from '../../utils/dateUtils'
 
 const AreaMaster = () => {
   const dispatch = useDispatch()
@@ -38,7 +39,6 @@ const AreaMaster = () => {
   }, [items, searchText])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize)
-  const formatDate = (value) => value?.toDate ? value.toDate().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
   const reset = () => { setAreaName(''); setEditingId(null); setFieldError('') }
   const submit = async (event) => {
     event.preventDefault()

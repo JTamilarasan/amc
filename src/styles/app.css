@@ -180,6 +180,17 @@ th { color: #64748b; font-weight: 600; }
 .metric-card h3 { margin: 0 0 6px; }
 .metric-card p { font-size: 1.4rem; font-weight: 700; color: #0f172a; margin: 0 0 4px; }
 .metric-card span { color: #64748b; }
+.report-section { overflow: hidden; }
+.report-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; }
+.report-actions { justify-content: flex-start; margin-bottom: 16px; }
+.report-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
+.report-empty-warning { display: flex; align-items: center; gap: 8px; width: fit-content; max-width: 100%; margin: -4px 0 14px; padding: 8px 11px; border: 1px solid #fde68a; border-radius: 10px; background: #fffbeb; color: #92400e; font-size: 0.86rem; line-height: 1.35; }
+.report-empty-warning svg { flex: 0 0 auto; }
+.report-toolbar { margin: 14px 0 12px; }
+.report-toolbar .search-box { flex: 1 1 auto; }
+.report-table table { min-width: 1120px; }
+.expiry-report-section .report-table table { min-width: 820px; }
+.report-pagination { justify-content: space-between; align-items: center; }
 @media (max-width: 1100px) { .stats-grid, .stats-grid.small-grid, .masters-grid, .report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .sidebar { position: fixed; left: -320px; z-index: 30; transition: left 0.25s ease; width: 250px; } .sidebar.open { left: 0; } .mobile-menu { display: inline-flex; align-items: center; justify-content: center; position: fixed; top: 16px; left: 16px; z-index: 40; width: 42px; height: 42px; border: none; border-radius: 999px; background: white; box-shadow: 0 10px 25px rgba(15,23,42,0.16); } .sidebar-close { display: inline-flex; position: absolute; right: 0; top: 10px; border: none; background: rgba(255,255,255,0.15); color: white; width: 32px; height: 32px; border-radius: 999px; align-items: center; justify-content: center; } .topbar { padding: 14px 16px 14px 60px; } .page-content { padding: 18px 14px 24px; } }
 @media (max-width: 720px) {
@@ -212,6 +223,10 @@ th { color: #64748b; font-weight: 600; }
   .details-modal-header, .details-modal-body, .details-modal-footer { padding-left: 14px; padding-right: 14px; }
   .details-grid { grid-template-columns: 1fr; }
   .detail-field-wide { grid-column: auto; }
+  .report-filter-grid { grid-template-columns: 1fr; width: 100%; }
+  .report-actions { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .report-actions .btn { width: auto; }
+  .report-pagination { flex-direction: row; align-items: center; width: 100%; }
   .voucher-save-actions .btn { width: 100%; }
   .panel-heading, .toolbar, .login-options, .form-actions, .card-actions { flex-direction: column; align-items: flex-start; }
   .master-form-actions { flex-direction: row; align-items: center; flex-wrap: nowrap; }

@@ -4,6 +4,7 @@ import { Plus, Search, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import Loader from '../../components/common/Loader'
+import { formatDate } from '../../utils/dateUtils'
 import { addExecutive, clearExecutiveMessage, editExecutive, fetchExecutives, removeExecutive, selectExecutiveState } from '../../features/executives/executiveSlice'
 
 const ExecutiveMaster = () => {
@@ -47,15 +48,6 @@ const ExecutiveMaster = () => {
 
     return items.filter((executive) => executive.name.toLowerCase().includes(query))
   }, [items, searchText])
-
-  const formatDisplayDate = (timestamp) => {
-    if (!timestamp?.toDate) {
-      return '—'
-    }
-
-    const date = timestamp.toDate()
-    return `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}`
-  }
 
   const totalPages = Math.max(1, Math.ceil(filteredExecutives.length / pageSize))
   const pagedExecutives = useMemo(() => {
@@ -120,7 +112,7 @@ const ExecutiveMaster = () => {
       <tr key={executive.id}>
         <td>{(page - 1) * pageSize + index + 1}</td>
         <td>{executive.name}</td>
-        <td>{formatDisplayDate(executive.createdAt)}</td>
+        <td>{formatDate(executive.createdAt)}</td>
         <td><span className={`status-badge ${executive.status === 'Active' ? 'green' : 'amber'}`}>{executive.status}</span></td>
         <td>
           <div className="table-actions">
@@ -199,7 +191,7 @@ const ExecutiveMaster = () => {
                 </div>
                 <div className="executive-mobile-row">
                   <span className="executive-mobile-label">Created</span>
-                  <span>{formatDisplayDate(executive.createdAt)}</span>
+                  <span>{formatDate(executive.createdAt)}</span>
                 </div>
                 <div className="executive-mobile-actions">
                   <button className="executive-action-btn" onClick={() => handleEdit(executive)}>

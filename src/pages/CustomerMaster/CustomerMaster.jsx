@@ -7,6 +7,7 @@ import Button from '../../components/common/Button'
 import Loader from '../../components/common/Loader'
 import { addCustomer, clearCustomerMessage, editCustomer, fetchCustomers, removeCustomer, selectCustomerState } from '../../features/customers/customerSlice'
 import { fetchAreas, selectAreas } from '../../features/areas/areaSlice'
+import { formatDate } from '../../utils/dateUtils'
 
 const initialForm = {
   customerName: '',
@@ -86,15 +87,6 @@ const CustomerMaster = () => {
     const startIndex = (page - 1) * pageSize
     return filteredCustomers.slice(startIndex, startIndex + pageSize)
   }, [filteredCustomers, page, pageSize])
-
-  const formatDisplayDate = (timestamp) => {
-    if (!timestamp?.toDate) {
-      return '—'
-    }
-
-    const date = timestamp.toDate()
-    return `${date.getDate().toString().padStart(2, '0')} ${date.toLocaleString('en-GB', { month: 'short' })} ${date.getFullYear()}`
-  }
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -345,7 +337,7 @@ const CustomerMaster = () => {
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Email</span><span>{customer.email || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Area</span><span>{customer.areaName || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Category</span><span>{customer.category1}</span></div>
-                <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDisplayDate(customer.createdAt)}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(customer.createdAt)}</span></div>
                 <div className="customer-mobile-actions">
                   <button className="executive-action-btn" onClick={() => handleEdit(customer)}><Pencil size={13} /><span>Edit</span></button>
                   <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button>
@@ -382,7 +374,7 @@ const CustomerMaster = () => {
                     <td>{customer.areaName || '—'}</td>
                     <td>{customer.category1}</td>
                     <td>{customer.executiveName || '—'}</td>
-                    <td>{formatDisplayDate(customer.createdAt)}</td>
+                    <td>{formatDate(customer.createdAt)}</td>
                     <td><span className={`status-badge ${customer.status === 'Active' ? 'green' : 'amber'}`}>{customer.status}</span></td>
                     <td>
                       <div className="table-actions">

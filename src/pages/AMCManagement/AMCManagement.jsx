@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import { amcRecords } from '../../data/mockData'
+import { formatDate } from '../../utils/dateUtils'
 
 const AMCManagement = () => {
   return (
@@ -64,8 +65,8 @@ const AMCManagement = () => {
                   <td>{record.customer}</td>
                   <td>{record.mobile}</td>
                   <td>{record.product}</td>
-                  <td>{record.from}</td>
-                  <td>{record.to}</td>
+                  <td>{formatDate(record.from)}</td>
+                  <td>{formatDate(record.to)}</td>
                   <td>{record.daysRemaining}</td>
                   <td>{record.executive}</td>
                   <td><span className={`status-badge ${record.status === 'Expired' ? 'red' : record.status === 'Expiring Soon' ? 'amber' : 'green'}`}>{record.status}</span></td>

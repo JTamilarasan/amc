@@ -3,6 +3,7 @@ import PageHeader from '../../components/common/PageHeader'
 import StatCard from '../../components/common/StatCard'
 import { expiringSoon, vouchers } from '../../data/mockData'
 import Button from '../../components/common/Button'
+import { formatDate } from '../../utils/dateUtils'
 
 const dashboardStats = [
   { title: 'Total Customers', value: '1,250', subtitle: '+12% this month', icon: Users, accent: 'accent-blue' },
@@ -52,7 +53,7 @@ const Dashboard = () => {
                   <td>{item.customer}</td>
                   <td>{item.mobile}</td>
                   <td>{item.product}</td>
-                  <td>{item.endDate}</td>
+                  <td>{formatDate(item.endDate)}</td>
                   <td>{item.daysLeft} days</td>
                   <td><span className="status-badge amber">{item.status}</span></td>
                   <td><button className="text-link">Call <ArrowRight size={14} /></button></td>
@@ -85,7 +86,7 @@ const Dashboard = () => {
               {vouchers.map((voucher) => (
                 <tr key={voucher.id}>
                   <td>{voucher.id}</td>
-                  <td>{voucher.date}</td>
+                  <td>{formatDate(voucher.date)}</td>
                   <td>{voucher.party}</td>
                   <td>{voucher.items}</td>
                   <td>{voucher.amount}</td>
