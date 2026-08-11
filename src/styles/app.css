@@ -119,21 +119,37 @@ th { color: #64748b; font-weight: 600; }
 .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .voucher-save-actions { justify-content: flex-start; margin-top: 14px; }
 .voucher-products-heading { margin-top: 18px; }
-.voucher-products-toolbar { margin-bottom: 12px; }
-.voucher-products-toolbar .search-box { flex: 1; }
+.voucher-item-grid { grid-template-columns: 0.75fr 1.5fr 1fr; gap: 12px; }
 .searchable-select { position: relative; min-width: 0; }
 .searchable-options { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 25; max-height: 220px; overflow-y: auto; padding: 5px; border: 1px solid #dbe4f0; border-radius: 12px; background: white; box-shadow: 0 14px 30px rgba(15,23,42,0.14); }
 .searchable-options button { display: block; width: 100%; border: 0; border-radius: 8px; padding: 9px 10px; text-align: left; background: white; color: #0f172a; cursor: pointer; font: inherit; }
 .searchable-options button:hover { background: #eff6ff; color: #1d4ed8; }
 .searchable-empty { padding: 9px 10px; color: #64748b; font-size: 0.88rem; }
-.voucher-items-table { margin-top: 16px; }
-.voucher-items-table table { min-width: 900px; }
 .product-row-input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #dbe4f0; border-radius: 9px; padding: 7px 8px; background: white; color: #0f172a; font: inherit; }
 .product-row-input.qty-input { min-width: 65px; }
 .product-row-input.date-input { min-width: 135px; }
 .product-row-input.amount-input { min-width: 105px; }
 .selected-product-row td { background: #eff6ff; }
 .table-row-error { width: 150px; margin-top: 5px; color: #b91c1c; font-size: 0.75rem; line-height: 1.25; }
+.details-modal-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 12px; background: rgba(15,23,42,0.58); backdrop-filter: blur(3px); }
+.details-modal { display: flex; flex-direction: column; width: min(920px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: hidden; border: 1px solid #e2e8f0; border-radius: 20px; background: white; box-shadow: 0 28px 70px rgba(15,23,42,0.28); }
+.details-modal-small { max-width: 520px; }
+.details-modal-medium { max-width: 700px; }
+.details-modal-large { max-width: 920px; }
+.details-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #e2e8f0; }
+.details-modal-header h2 { margin: 0; font-size: 1.2rem; color: #0f172a; }
+.details-modal-close { display: grid; flex: 0 0 auto; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 999px; background: #f1f5f9; color: #475569; cursor: pointer; }
+.details-modal-close:hover { background: #e2e8f0; color: #0f172a; }
+.details-modal-body { flex: 1 1 auto; overflow-y: auto; padding: 20px; }
+.details-modal-footer { display: flex; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+.voucher-modal-number { color: #2563eb; font-weight: 700; }
+.details-section-title { margin: 18px 0 10px; color: #0f172a; font-size: 1rem; }
+.details-section-title:first-of-type { margin-top: 12px; }
+.details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.detail-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.detail-field span { color: #64748b; font-size: 0.8rem; font-weight: 600; }
+.detail-field strong { overflow-wrap: anywhere; color: #0f172a; font-size: 0.94rem; white-space: pre-wrap; }
+.detail-field-wide { grid-column: 1 / -1; }
 .product-pagination { justify-content: space-between; align-items: center; margin-top: 10px; }
 .toggle-wrap { display: flex; gap: 8px; }
 .toggle { border: 1px solid #dbe4f0; padding: 8px 12px; border-radius: 999px; background: white; cursor: pointer; }
@@ -172,6 +188,12 @@ th { color: #64748b; font-weight: 600; }
   }
   .topbar-actions > * { flex: 0 0 auto; }
   .stats-grid, .stats-grid.small-grid, .masters-grid, .report-grid, .form-grid.two-col { grid-template-columns: 1fr; }
+  .voucher-item-grid { grid-template-columns: 1fr; }
+  .details-modal-overlay { padding: 12px; }
+  .details-modal { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); border-radius: 16px; }
+  .details-modal-header, .details-modal-body, .details-modal-footer { padding-left: 14px; padding-right: 14px; }
+  .details-grid { grid-template-columns: 1fr; }
+  .detail-field-wide { grid-column: auto; }
   .voucher-save-actions .btn { width: 100%; }
   .panel-heading, .toolbar, .login-options, .form-actions, .card-actions { flex-direction: column; align-items: flex-start; }
   .master-form-actions { flex-direction: row; align-items: center; flex-wrap: nowrap; }

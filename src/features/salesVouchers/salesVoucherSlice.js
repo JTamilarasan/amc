@@ -14,8 +14,8 @@ export const fetchSalesVouchers = createAsyncThunk('salesVouchers/fetchSalesVouc
   return salesVoucherService.getSalesVouchers()
 })
 
-export const fetchNextVoucherNumber = createAsyncThunk('salesVouchers/fetchNextVoucherNumber', async () => {
-  return salesVoucherService.getNextVoucherNumber()
+export const fetchNextVoucherNumber = createAsyncThunk('salesVouchers/fetchNextVoucherNumber', async (startingNumber) => {
+  return salesVoucherService.getNextAvailableVoucherNumber(startingNumber)
 })
 
 export const fetchVoucherSequence = createAsyncThunk('salesVouchers/fetchVoucherSequence', async () => {
@@ -114,7 +114,7 @@ const salesVoucherSlice = createSlice({
         state.loading = false
         state.items = [action.payload, ...state.items]
         state.successMessage = 'Sales voucher saved successfully.'
-        state.nextVoucherNumber = Number(action.payload.voucherNumber) + 1
+        state.nextVoucherNumber = null
       })
       .addCase(addSalesVoucher.rejected, (state, action) => {
         state.loading = false
