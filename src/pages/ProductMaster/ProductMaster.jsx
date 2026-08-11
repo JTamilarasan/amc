@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Search, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import Loader from '../../components/common/Loader'
 import { addProduct, clearProductMessage, editProduct, fetchProducts, removeProduct, selectProductState } from '../../features/products/productSlice'
 
 const initialForm = {
@@ -227,7 +228,7 @@ const ProductMaster = () => {
             <option value={50}>50</option>
           </select>
         </div>
-        {isMobile ? (
+        {loading && items.length === 0 ? <Loader size="small" label="Loading products..." /> : isMobile ? (
           <div className="customer-mobile-list">
             {pagedProducts.map((product) => (
               <div className="customer-mobile-card" key={product.id}>
@@ -259,7 +260,7 @@ const ProductMaster = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading && items.length === 0 ? <tr><td colSpan="8" className="text-center">Loading products...</td></tr> : null}
+                {loading && items.length === 0 ? <tr><td colSpan="8"><Loader size="small" label="Loading products..." /></td></tr> : null}
                 {!loading && filteredProducts.length === 0 ? <tr><td colSpan="8" className="text-center">{searchText ? 'No matching products found.' : 'No products found.'}</td></tr> : null}
                 {pagedProducts.map((product, index) => (
                   <tr key={product.id}>

@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth'
 import { auth } from '../firebase/firebase'
 import { getFirebaseAuthErrorMessage } from '../utils/firebaseAuthErrors'
+import Loader from '../components/common/Loader'
 
 const AuthContext = createContext({})
 
@@ -87,6 +88,10 @@ export const AuthProvider = ({ children }) => {
     }),
     [user, loading, authError]
   )
+
+  if (loading) {
+    return <Loader fullScreen />
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

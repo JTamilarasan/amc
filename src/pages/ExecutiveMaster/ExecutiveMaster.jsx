@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import Loader from '../../components/common/Loader'
 import { addExecutive, clearExecutiveMessage, editExecutive, fetchExecutives, removeExecutive, selectExecutiveState } from '../../features/executives/executiveSlice'
 
 const ExecutiveMaster = () => {
@@ -108,7 +109,7 @@ const ExecutiveMaster = () => {
 
   const renderTableContent = () => {
     if (loading && items.length === 0) {
-      return <tr><td colSpan="5" className="text-center">Loading executives...</td></tr>
+      return <tr><td colSpan="5"><Loader size="small" label="Loading executives..." /></td></tr>
     }
 
     if (!loading && filteredExecutives.length === 0) {
@@ -184,7 +185,7 @@ const ExecutiveMaster = () => {
             <option value={50}>50</option>
           </select>
         </div>
-        {isMobile ? (
+        {loading && items.length === 0 ? <Loader size="small" label="Loading executives..." /> : isMobile ? (
           <div className="executive-mobile-list">
             {pagedExecutives.map((executive, index) => (
               <div className="executive-mobile-card" key={executive.id}>

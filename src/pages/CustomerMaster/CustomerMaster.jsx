@@ -4,6 +4,7 @@ import { Search, Pencil, Trash2 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import Loader from '../../components/common/Loader'
 import { addCustomer, clearCustomerMessage, editCustomer, fetchCustomers, removeCustomer, selectCustomerState } from '../../features/customers/customerSlice'
 import { fetchAreas, selectAreas } from '../../features/areas/areaSlice'
 
@@ -335,7 +336,7 @@ const CustomerMaster = () => {
             <option value={50}>50</option>
           </select>
         </div>
-        {isMobile ? (
+        {loading && items.length === 0 ? <Loader size="small" label="Loading customers..." /> : isMobile ? (
           <div className="customer-mobile-list">
             {pagedCustomers.map((customer) => (
               <div className="customer-mobile-card" key={customer.id}>
@@ -370,7 +371,7 @@ const CustomerMaster = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading && items.length === 0 ? <tr><td colSpan="10" className="text-center">Loading customers...</td></tr> : null}
+                {loading && items.length === 0 ? <tr><td colSpan="10"><Loader size="small" label="Loading customers..." /></td></tr> : null}
                 {!loading && filteredCustomers.length === 0 ? <tr><td colSpan="10" className="text-center">{searchText ? 'No matching customers found.' : 'No customers found.'}</td></tr> : null}
                 {pagedCustomers.map((customer, index) => (
                   <tr key={customer.id}>
