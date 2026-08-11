@@ -18,6 +18,10 @@
 .search-box input, .field input, .field select, .field textarea { width: 100%; border: 1px solid #dbe4f0; border-radius: 12px; padding: 10px 12px; font: inherit; background: white; color: #0f172a; box-sizing: border-box; font-size: 0.95rem; line-height: 1.4; min-width: 0; }
 .search-box input:focus, .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid rgba(37,99,235,0.18); border-color: #2563eb; }
 .topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.header-breadcrumb { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; overflow: hidden; color: #64748b; font-size: 0.95rem; font-weight: 600; white-space: nowrap; }
+.header-breadcrumb span { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.header-breadcrumb i { color: #94a3b8; font-style: normal; }
+.header-breadcrumb .current { overflow: hidden; color: #0f172a; text-overflow: ellipsis; }
 .icon-btn { border: none; background: white; border-radius: 999px; width: 40px; height: 40px; display: grid; place-items: center; box-shadow: 0 8px 20px rgba(15,23,42,0.08); cursor: pointer; flex-shrink: 0; }
 .profile-pill { display: flex; align-items: center; gap: 8px; background: white; padding: 7px 10px; border-radius: 999px; box-shadow: 0 8px 20px rgba(15,23,42,0.08); flex-shrink: 0; }
 .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #8b5cf6); display: grid; place-items: center; color: white; font-weight: 700; }

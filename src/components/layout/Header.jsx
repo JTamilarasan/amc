@@ -1,8 +1,21 @@
-import { Bell, ChevronDown, Search } from 'lucide-react'
+import { Bell, ChevronDown } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const Header = () => {
   const { user } = useAuth()
+  const { pathname } = useLocation()
+  const breadcrumbByPath = {
+    '/dashboard': ['Dashboard'],
+    '/masters': ['Masters'],
+    '/masters/executives': ['Masters', 'Executive Master'],
+    '/masters/customers': ['Masters', 'Customer Master'],
+    '/masters/products': ['Masters', 'Product Master'],
+    '/sales-voucher': ['Sales Voucher'],
+    '/amc': ['AMC Management'],
+    '/reports': ['Reports'],
+  }
+  const breadcrumb = breadcrumbByPath[pathname] || ['Dashboard']
   const displayName = user?.displayName || user?.email || 'User'
   const initials = displayName
     .split(' ')
@@ -13,10 +26,13 @@ const Header = () => {
 
   return (
     <header className="topbar">
-      <div className="search-box">
-        <Search size={16} />
-        <input placeholder="Search customers, vouchers..." />
-      </div>
+      <nav className="header-breadcrumb" aria-label="Breadcrumb">
+        {breadcrumb.map((label, index) => (
+          <span key={label} className={index === breadcrumb.length - 1 ? 'current' : ''}>
+            {index > 0 ? <i aria-hidden="true">/</i> : null}{label}
+          </span>
+        ))}
+      </nav>
       <div className="topbar-actions">
         <button className="icon-btn" aria-label="Notifications">
           <Bell size={18} />
