@@ -17,6 +17,9 @@ const Header = () => {
     '/reports': ['Reports'],
     '/reports/sales-register': ['Reports', 'Sales Register Report'],
     '/reports/current-month-expiry': ['Reports', 'Current Monthly Expiry Report'],
+    '/reports/customer-calls-history': ['Reports', 'Customer Calls History Report'],
+    '/reports/executive-calls': ['Reports', 'Executive Calls Report'],
+    '/call-management/call-receipt-voucher': ['Call Management', 'Call Receipt Voucher'],
   }
   const breadcrumb = breadcrumbByPath[pathname] || ['Dashboard']
   const displayName = user?.displayName || user?.email || 'User'

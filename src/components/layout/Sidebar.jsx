@@ -4,6 +4,7 @@ import {
   BookOpen,
   FileText,
   BriefcaseBusiness,
+  Headset,
   BarChart3,
   LogOut,
   Menu,
@@ -28,12 +29,22 @@ const navItems = [
   { label: 'Sales Voucher', path: '/sales-voucher', icon: FileText },
   { label: 'AMC Management', path: '/amc', icon: BriefcaseBusiness },
   {
+    label: 'Call Management',
+    path: '/call-management/call-receipt-voucher',
+    icon: Headset,
+    children: [
+      { label: 'Call Receipt Voucher', path: '/call-management/call-receipt-voucher' },
+    ],
+  },
+  {
     label: 'Reports',
     path: '/reports',
     icon: BarChart3,
     children: [
       { label: 'Sales Register Report', path: '/reports/sales-register' },
       { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry' },
+      { label: 'Customer Calls History Report', path: '/reports/customer-calls-history' },
+      { label: 'Executive Calls Report', path: '/reports/executive-calls' },
     ],
   },
 ]

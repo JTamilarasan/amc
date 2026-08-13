@@ -15,6 +15,9 @@ import AMCManagement from './pages/AMCManagement/AMCManagement'
 import Reports from './pages/Reports/Reports'
 import SalesRegisterReport from './pages/Reports/SalesRegisterReport'
 import CurrentMonthlyExpiryReport from './pages/Reports/CurrentMonthlyExpiryReport'
+import CallReceiptVoucher from './pages/CallManagement/CallReceiptVoucher'
+import CustomerCallsHistoryReport from './pages/Reports/CustomerCallsHistoryReport'
+import ExecutiveCallsReport from './pages/Reports/ExecutiveCallsReport'
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -40,9 +43,12 @@ function App() {
             <Route path="/masters/areas" element={<AreaMaster />} />
             <Route path="/sales-voucher" element={<SalesVoucher />} />
             <Route path="/amc" element={<AMCManagement />} />
+            <Route path="/call-management/call-receipt-voucher" element={<CallReceiptVoucher />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/reports/sales-register" element={<SalesRegisterReport />} />
             <Route path="/reports/current-month-expiry" element={<CurrentMonthlyExpiryReport />} />
+            <Route path="/reports/customer-calls-history" element={<CustomerCallsHistoryReport />} />
+            <Route path="/reports/executive-calls" element={<ExecutiveCallsReport />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

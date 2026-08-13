@@ -190,6 +190,12 @@ th { color: #64748b; font-weight: 600; }
 .report-toolbar .search-box { flex: 1 1 auto; }
 .report-table table { min-width: 1120px; }
 .expiry-report-section .report-table table { min-width: 820px; }
+.customer-calls-report-section .report-table table { min-width: 620px; }
+.executive-calls-report-section .report-table table { min-width: 720px; }
+.report-count-link { border: 0; padding: 2px 4px; background: transparent; color: #2563eb; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.report-count-link:hover { color: #1d4ed8; }
+.call-details-table table { min-width: 1050px; }
+.call-details-toolbar { margin-top: 0; }
 .report-pagination { justify-content: space-between; align-items: center; }
 @media (max-width: 1100px) { .stats-grid, .stats-grid.small-grid, .masters-grid, .report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .sidebar { position: fixed; left: -320px; z-index: 30; transition: left 0.25s ease; width: 250px; } .sidebar.open { left: 0; } .mobile-menu { display: inline-flex; align-items: center; justify-content: center; position: fixed; top: 16px; left: 16px; z-index: 40; width: 42px; height: 42px; border: none; border-radius: 999px; background: white; box-shadow: 0 10px 25px rgba(15,23,42,0.16); } .sidebar-close { display: inline-flex; position: absolute; right: 0; top: 10px; border: none; background: rgba(255,255,255,0.15); color: white; width: 32px; height: 32px; border-radius: 999px; align-items: center; justify-content: center; } .topbar { padding: 14px 16px 14px 60px; } .page-content { padding: 18px 14px 24px; } }
