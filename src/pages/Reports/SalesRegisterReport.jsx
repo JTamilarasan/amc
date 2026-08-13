@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AlertTriangle, Download, Search } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import CommonPagination from '../../components/common/CommonPagination'
 import Loader from '../../components/common/Loader'
 import { fetchSalesVouchers, selectSalesVoucherState, selectSalesVouchers } from '../../features/salesVouchers/salesVoucherSlice'
 import { exportToCsv } from '../../utils/exportCsv'
@@ -65,7 +66,7 @@ const SalesRegisterReport = () => {
         {range && !filtered.length && <tr><td colSpan="13" className="text-center">No records found.</td></tr>}{!range && <tr><td colSpan="13" className="text-center">Select a date range and generate the report.</td></tr>}
         {paged.map((voucher, index) => { const item = getVoucherItem(voucher); return <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{emptyReportValue(voucher.voucherNumber)}</td><td>{formatReportDate(voucher.voucherDate)}</td><td>{emptyReportValue(voucher.customerName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(item?.itemName)}</td><td>{emptyReportValue(item?.serialNo)}</td><td>{emptyReportValue(item?.duration)}</td><td>{formatReportDate(item?.amcFromDate)}</td><td>{formatReportDate(item?.amcToDate)}</td><td>{formatReportCurrency(item?.amount)}</td><td>{emptyReportValue(voucher.status)}</td></tr> })}
       </tbody></table></div>
-      <div className="form-actions compact report-pagination"><Button type="button" variant="ghost" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1}>Previous</Button><span>Page {page} of {totalPages}</span><Button type="button" variant="ghost" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page === totalPages}>Next</Button></div>
+      <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" />
     </section>
   </div>
 }
