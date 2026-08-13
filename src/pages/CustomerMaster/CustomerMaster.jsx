@@ -4,6 +4,7 @@ import { Search, Pencil, Trash2 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import CommonPagination from '../../components/common/CommonPagination'
 import Loader from '../../components/common/Loader'
 import { addCustomer, clearCustomerMessage, editCustomer, fetchCustomers, removeCustomer, selectCustomerState } from '../../features/customers/customerSlice'
 import { fetchAreas, selectAreas } from '../../features/areas/areaSlice'
@@ -388,11 +389,7 @@ const CustomerMaster = () => {
             </table>
           </div>
         )}
-        <div className="form-actions compact" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <Button type="button" variant="ghost" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>Previous</Button>
-          <span>Page {page} of {totalPages}</span>
-          <Button type="button" variant="ghost" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages}>Next</Button>
-        </div>
+        <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filteredCustomers.length} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(totalPages, current + 1))} />
       </section>
 
       {confirmDeleteId ? (

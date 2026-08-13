@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Eye, Pencil, Search, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import CommonPagination from '../../components/common/CommonPagination'
 import DetailsModal from '../../components/common/DetailsModal'
 import Loader from '../../components/common/Loader'
 import { fetchCustomers, selectCustomers } from '../../features/customers/customerSlice'
@@ -297,7 +298,7 @@ const SalesVoucher = () => {
         {loading && !vouchers.length && <tr><td colSpan="10"><Loader size="small" label="Loading vouchers..." /></td></tr>}{!loading && !filteredVouchers.length && <tr><td colSpan="10" className="text-center">{searchText ? 'No matching vouchers found.' : 'No vouchers found.'}</td></tr>}
         {pagedVouchers.map((voucher, index) => <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{voucher.voucherNumber}</td><td>{formatDate(voucher.voucherDate)}</td><td>{voucher.customerName}</td><td>{voucher.executiveName || '—'}</td><td>{voucher.category || '—'}</td><td>{getVoucherItemNames(voucher)}</td><td>{formatDate(voucher.voucherDate)}</td><td><span className="status-badge green">{voucher.status}</span></td><td><div className="table-actions"><button className="executive-action-btn" onClick={() => handleViewVoucher(voucher)}><Eye size={13} /> View</button><button className="executive-action-btn" onClick={() => handleEditVoucher(voucher)}><Pencil size={13} /> Edit</button><button className="executive-action-btn delete" onClick={() => handleDeleteVoucher(voucher)}><Trash2 size={13} /> Delete</button></div></td></tr>)}
       </tbody></table></div>}
-      <div className="form-actions compact history-pagination" style={{ justifyContent: 'space-between', alignItems: 'center' }}><Button type="button" variant="ghost" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>Previous</Button><span>Page {page} of {totalPages}</span><Button type="button" variant="ghost" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages}>Next</Button></div>
+      <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filteredVouchers.length} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(totalPages, current + 1))} className="history-pagination" />
     </section>
 
     <DetailsModal isOpen={viewModalOpen} title="Sales Voucher Details" onClose={handleCloseView}>

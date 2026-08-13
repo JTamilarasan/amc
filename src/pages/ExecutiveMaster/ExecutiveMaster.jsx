@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import CommonPagination from '../../components/common/CommonPagination'
 import Loader from '../../components/common/Loader'
 import { formatDate } from '../../utils/dateUtils'
 import { addExecutive, clearExecutiveMessage, editExecutive, fetchExecutives, removeExecutive, selectExecutiveState } from '../../features/executives/executiveSlice'
@@ -222,11 +223,7 @@ const ExecutiveMaster = () => {
             </table>
           </div>
         )}
-        <div className="form-actions compact" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <Button type="button" variant="ghost" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>Previous</Button>
-          <span>Page {page} of {totalPages}</span>
-          <Button type="button" variant="ghost" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages}>Next</Button>
-        </div>
+        <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filteredExecutives.length} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(totalPages, current + 1))} />
       </section>
 
       {confirmDeleteId ? (

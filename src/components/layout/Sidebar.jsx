@@ -43,7 +43,7 @@ const navItems = [
     children: [
       { label: 'Sales Register Report', path: '/reports/sales-register' },
       { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry' },
-      { label: 'Customer Calls History Report', path: '/reports/customer-calls-history' },
+      { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history' },
       { label: 'Executive Calls Report', path: '/reports/executive-calls' },
     ],
   },
