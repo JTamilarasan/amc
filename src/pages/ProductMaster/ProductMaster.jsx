@@ -7,6 +7,7 @@ import CommonPagination from '../../components/common/CommonPagination'
 import Loader from '../../components/common/Loader'
 import { addProduct, clearProductMessage, editProduct, fetchProducts, removeProduct, selectProductState } from '../../features/products/productSlice'
 import { formatDate } from '../../utils/dateUtils'
+import { productService } from '../../services/productService'
 
 const initialForm = {
   itemName: '',
@@ -26,9 +27,11 @@ const ProductMaster = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 720)
   const [validationErrors, setValidationErrors] = useState({})
+  const [productUsage, setProductUsage] = useState(null)
 
   useEffect(() => {
     dispatch(fetchProducts())
+    productService.getProductUsage().then((usage) => setProductUsage({ ids: new Set(usage.ids), legacyNames: new Set(usage.legacyNames) })).catch(() => setProductUsage(null))
   }, [dispatch])
 
   useEffect(() => {
@@ -45,10 +48,6 @@ const ProductMaster = () => {
     }
   }, [successMessage, error, dispatch])
 
-  useEffect(() => {
-    setPage(1)
-  }, [searchText])
-
   const filteredProducts = useMemo(() => {
     const query = searchText.trim().toLowerCase()
     if (!query) {
@@ -59,6 +58,7 @@ const ProductMaster = () => {
   }, [items, searchText])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
+  const productIsUsed = (product) => productUsage?.ids.has(product.id) || productUsage?.legacyNames.has((product.itemName || '').trim().toLowerCase())
   const pagedProducts = useMemo(() => {
     const startIndex = (page - 1) * pageSize
     return filteredProducts.slice(startIndex, startIndex + pageSize)
@@ -213,7 +213,7 @@ const ProductMaster = () => {
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <div className="search-box" style={{ minWidth: 240, width: '100%' }}>
             <Search size={16} />
-            <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search product by item name..." />
+            <input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search product by item name..." />
           </div>
           <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}>
             <option value={10}>10</option>
@@ -232,7 +232,7 @@ const ProductMaster = () => {
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(product.createdAt)}</span></div>
                 <div className="customer-mobile-actions">
                   <button className="executive-action-btn" onClick={() => handleEdit(product)}><Pencil size={13} /><span>Edit</span></button>
-                  <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button>
+                  {productUsage && !productIsUsed(product) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                 </div>
               </div>
             ))}
@@ -267,7 +267,7 @@ const ProductMaster = () => {
                     <td>
                       <div className="table-actions">
                         <button className="executive-action-btn" onClick={() => handleEdit(product)}><Pencil size={13} /><span>Edit</span></button>
-                        <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button>
+                        {productUsage && !productIsUsed(product) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                       </div>
                     </td>
                   </tr>

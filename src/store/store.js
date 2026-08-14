@@ -4,6 +4,7 @@ import customerReducer from '../features/customers/customerSlice'
 import productReducer from '../features/products/productSlice'
 import salesVoucherReducer from '../features/salesVouchers/salesVoucherSlice'
 import areaReducer from '../features/areas/areaSlice'
+import enquiryReducer from '../features/enquiries/enquirySlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     products: productReducer,
     salesVouchers: salesVoucherReducer,
     areas: areaReducer,
+    enquiries: enquiryReducer,
   },
 })

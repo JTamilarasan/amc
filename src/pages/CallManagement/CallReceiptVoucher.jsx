@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Eye, Pencil, Search, Trash2 } from 'lucide-react'
@@ -15,7 +15,6 @@ import { emptyReportValue } from '../../utils/reportUtils'
 
 const todayValue = () => new Date().toLocaleDateString('en-CA')
 const initialForm = () => ({ date: todayValue(), partyId: '', partyName: '', customerExpiryDate: null, executiveId: '', executiveName: '', category: '', category2: '', callReceiptRemarks: '', callStatus: '', callSubStatus: '', nextAction: '', when: '' })
-const currentYear = () => new Date().getFullYear()
 
 const CallReceiptVoucher = () => {
   const dispatch = useDispatch()
@@ -44,6 +43,7 @@ const CallReceiptVoucher = () => {
   const [deleteVoucher, setDeleteVoucher] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 720)
+  const voucherLookupId = useRef(0)
 
   const loadHistory = async () => {
     setLoadingHistory(true)
@@ -52,9 +52,10 @@ const CallReceiptVoucher = () => {
     finally { setLoadingHistory(false) }
   }
 
-  const loadNextNumber = async () => {
-    try { setVoucherNumber(await callReceiptVoucherService.getNextCallReceiptVoucherNumber()) }
-    catch { setErrors({ voucherNumber: 'Unable to load the next voucher number.' }) }
+  const loadNextNumber = async (date = form.date) => {
+    const lookupId = ++voucherLookupId.current
+    try { const next = await callReceiptVoucherService.getNextCallReceiptVoucherNumber(date); if (lookupId === voucherLookupId.current) setVoucherNumber(next) }
+    catch { if (lookupId === voucherLookupId.current) setErrors({ voucherNumber: 'Unable to load the next voucher number.' }) }
   }
   useEffect(() => {
     let active = true
@@ -74,9 +75,10 @@ const CallReceiptVoucher = () => {
         .catch(() => { if (active) setErrors({ form: 'Unable to load the call receipt voucher.' }) })
         .finally(() => { if (active) setLoadingVoucher(false) })
     } else {
-      callReceiptVoucherService.getNextCallReceiptVoucherNumber()
-        .then((number) => { if (active) setVoucherNumber(number) })
-        .catch(() => { if (active) setErrors({ voucherNumber: 'Unable to load the next voucher number.' }) })
+      const lookupId = ++voucherLookupId.current
+      callReceiptVoucherService.getNextCallReceiptVoucherNumber(todayValue())
+        .then((number) => { if (active && lookupId === voucherLookupId.current) setVoucherNumber(number) })
+        .catch(() => { if (active && lookupId === voucherLookupId.current) setErrors({ voucherNumber: 'Unable to load the next voucher number.' }) })
     }
     return () => { active = false }
   }, [dispatch, editVoucherId])
@@ -95,6 +97,11 @@ const CallReceiptVoucher = () => {
   const filteredCustomers = useMemo(() => customers.filter((item) => !form.partyName || item.customerName.toLowerCase().includes(form.partyName.toLowerCase())), [customers, form.partyName])
   const filteredExecutives = useMemo(() => executives.filter((item) => !form.executiveName || item.name.toLowerCase().includes(form.executiveName.toLowerCase())), [executives, form.executiveName])
   const setField = (field, value) => { setForm((current) => ({ ...current, [field]: value })); setErrors((current) => ({ ...current, [field]: '' })); setMessage('') }
+  const changeVoucherDate = async (value) => {
+    setField('date', value)
+    if (isEditing || !value) return
+    await loadNextNumber(value)
+  }
   const validate = () => {
     const next = {}
     if (!form.partyId) next.partyId = 'Select a valid party from Customer Master.'
@@ -112,7 +119,8 @@ const CallReceiptVoucher = () => {
   const reset = async () => {
     if (editVoucherId) { returnToReport(); return }
     setHistoryEditId('')
-    setForm(initialForm()); setErrors({}); setMessage(''); await loadNextNumber()
+    const nextForm = initialForm()
+    setForm(nextForm); setErrors({}); setMessage(''); await loadNextNumber(nextForm.date)
   }
   const save = async () => {
     if (!validate()) return
@@ -123,7 +131,8 @@ const CallReceiptVoucher = () => {
         if (editVoucherId) {
           navigate(location.state?.returnTo || '/reports/customer-calls-history', { state: { ...(location.state?.reportRange || {}), message: `Call receipt voucher ${saved.voucherNumber} updated successfully.` } })
         } else {
-          setHistoryEditId(''); setForm(initialForm()); setErrors({}); setPage(1); await loadNextNumber(); setMessage(`Call receipt voucher ${saved.voucherNumber} updated successfully.`); await loadHistory()
+          const nextForm = initialForm()
+          setHistoryEditId(''); setForm(nextForm); setErrors({}); setPage(1); await loadNextNumber(nextForm.date); setMessage(`Call receipt voucher ${saved.voucherNumber} updated successfully.`); await loadHistory()
         }
       } else {
         const saved = await callReceiptVoucherService.createCallReceiptVoucher(form)
@@ -153,7 +162,7 @@ const CallReceiptVoucher = () => {
     setDeleting(true)
     try {
       await callReceiptVoucherService.deleteCallReceiptVoucher(deleteVoucher.id)
-      if (historyEditId === deleteVoucher.id) { setHistoryEditId(''); setForm(initialForm()); await loadNextNumber() }
+      if (historyEditId === deleteVoucher.id) { const nextForm = initialForm(); setHistoryEditId(''); setForm(nextForm); await loadNextNumber(nextForm.date) }
       setDeleteVoucher(null); setPage(1); setMessage('Call receipt voucher deleted successfully.'); await loadHistory()
     } catch (error) { setErrors((current) => ({ ...current, history: error.message || 'Unable to delete the call receipt voucher.' })) }
     finally { setDeleting(false) }
@@ -163,8 +172,8 @@ const CallReceiptVoucher = () => {
     <PageHeader title="Call Receipt Voucher" subtitle="Record customer support and installation calls." />
     <section className="panel-card form-card">
       <div className="form-grid two-col" style={{ gap: 18 }}>
-        <label className="field"><span>Voucher Number</span><input value={isEditing ? voucherNumber : voucherNumber ? `${voucherNumber}/${currentYear()}` : ''} readOnly disabled />{errors.voucherNumber && <div className="field-message">{errors.voucherNumber}</div>}</label>
-        <label className="field"><span>Date</span><input type="date" value={form.date} onChange={(event) => setField('date', event.target.value)} /></label>
+        <label className="field"><span>Voucher Number</span><input value={voucherNumber} readOnly disabled />{errors.voucherNumber && <div className="field-message">{errors.voucherNumber}</div>}</label>
+        <label className="field"><span>Date</span><input type="date" value={form.date} onChange={(event) => changeVoucherDate(event.target.value)} /></label>
         <label className="field"><span>Party Name *</span><div className="searchable-select"><input value={form.partyName} onChange={(event) => { changeCustomer(event.target.value); setCustomerOpen(true) }} onFocus={() => setCustomerOpen(true)} onBlur={() => window.setTimeout(() => setCustomerOpen(false), 150)} placeholder="Search and select customer" autoComplete="off" />{customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={async () => { setForm((current) => ({ ...current, partyId: customer.id, partyName: customer.customerName, customerExpiryDate: null })); setErrors((current) => ({ ...current, partyId: '' })); setCustomerOpen(false); const expiry = await callReceiptVoucherService.getCustomerExpiryDate(customer.id); setForm((current) => current.partyId === customer.id ? { ...current, customerExpiryDate: expiry } : current) }}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}</div>}</div>{errors.partyId && <div className="field-message">{errors.partyId}</div>}</label>
         <label className="field"><span>Executive *</span><div className="searchable-select"><input value={form.executiveName} onChange={(event) => { changeExecutive(event.target.value); setExecutiveOpen(true) }} onFocus={() => setExecutiveOpen(true)} onBlur={() => window.setTimeout(() => setExecutiveOpen(false), 150)} placeholder="Search and select executive" autoComplete="off" />{executiveOpen && <div className="searchable-options">{filteredExecutives.length ? filteredExecutives.map((executive) => <button type="button" key={executive.id} onMouseDown={() => { setForm((current) => ({ ...current, executiveId: executive.id, executiveName: executive.name })); setErrors((current) => ({ ...current, executiveId: '' })); setExecutiveOpen(false) }}>{executive.name}</button>) : <div className="searchable-empty">No matching executives</div>}</div>}</div>{errors.executiveId && <div className="field-message">{errors.executiveId}</div>}</label>
         <label className="field"><span>Category *</span><select value={form.category} onChange={(event) => setField('category', event.target.value)}><option value="">Select category</option><option>Support</option><option>Installation</option><option>Monthly Backup</option></select>{errors.category && <div className="field-message">{errors.category}</div>}</label>

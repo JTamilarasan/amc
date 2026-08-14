@@ -72,7 +72,29 @@ export const updateProduct = async (id, productData) => {
   return mapProduct(updatedSnapshot)
 }
 
+export const getProductUsage = async () => {
+  const snapshot = await getDocs(collection(db, 'salesVouchers'))
+  const referencedItems = snapshot.docs.flatMap((voucher) => {
+    const data = voucher.data()
+    return [...(data.items || []), ...(data.item ? [data.item] : [])]
+  })
+  return {
+    ids: [...new Set(referencedItems.map((item) => item.productId).filter(Boolean))],
+    legacyNames: [...new Set(referencedItems.filter((item) => !item.productId).map((item) => (item.itemName || '').trim().toLowerCase()).filter(Boolean))],
+  }
+}
+
+export const getUsedProductIds = async () => (await getProductUsage()).ids
+
+export const isProductUsed = async (id) => {
+  const usage = await getProductUsage()
+  if (usage.ids.includes(id)) return true
+  const snapshot = await getDoc(doc(db, PRODUCTS_COLLECTION, id))
+  return snapshot.exists() && usage.legacyNames.includes((snapshot.data().itemName || '').trim().toLowerCase())
+}
+
 export const deleteProduct = async (id) => {
+  if (await isProductUsed(id)) throw new Error('Product cannot be deleted because transactions already exist.')
   const productRef = doc(db, PRODUCTS_COLLECTION, id)
   await deleteDoc(productRef)
 }
@@ -97,4 +119,7 @@ export const productService = {
   updateProduct,
   deleteProduct,
   searchProducts,
+  getUsedProductIds,
+  getProductUsage,
+  isProductUsed,
 }

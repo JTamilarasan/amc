@@ -7,6 +7,7 @@ const Header = () => {
   const { pathname } = useLocation()
   const breadcrumbByPath = {
     '/dashboard': ['Dashboard'],
+    '/enquiry': ['Enquiry'],
     '/masters': ['Masters'],
     '/masters/executives': ['Masters', 'Executive Master'],
     '/masters/customers': ['Masters', 'Customer Master'],
@@ -23,6 +24,7 @@ const Header = () => {
     '/reports/amc-new': ['Reports', 'New AMC Report'],
     '/reports/amc-going-to-expire': ['Reports', 'Going to Expire AMC Report'],
     '/reports/amc-renewed': ['Reports', 'Renewed AMC Report'],
+    '/reports/enquiry-report': ['Reports', 'Enquiry Report'],
     '/reports/current-month-expiry': ['Reports', 'Current Monthly Expiry Report'],
     '/reports/customer-calls-history': ['Reports', 'AMC Customer Calls History'],
     '/reports/executive-calls': ['Reports', 'Executive Calls Report'],

@@ -14,17 +14,17 @@ export const fetchSalesVouchers = createAsyncThunk('salesVouchers/fetchSalesVouc
   return salesVoucherService.getSalesVouchers()
 })
 
-export const fetchNextVoucherNumber = createAsyncThunk('salesVouchers/fetchNextVoucherNumber', async (startingNumber) => {
-  return salesVoucherService.getNextAvailableVoucherNumber(startingNumber)
+export const fetchNextVoucherNumber = createAsyncThunk('salesVouchers/fetchNextVoucherNumber', async (voucherDate) => {
+  return salesVoucherService.getNextAvailableVoucherNumber(voucherDate)
 })
 
-export const fetchVoucherSequence = createAsyncThunk('salesVouchers/fetchVoucherSequence', async () => {
-  return salesVoucherService.getVoucherSequence()
+export const fetchVoucherSequence = createAsyncThunk('salesVouchers/fetchVoucherSequence', async (voucherDate) => {
+  return salesVoucherService.getVoucherSequence(voucherDate)
 })
 
-export const initializeVoucherCounter = createAsyncThunk('salesVouchers/initializeVoucherCounter', async (startingNumber, { rejectWithValue }) => {
+export const initializeVoucherCounter = createAsyncThunk('salesVouchers/initializeVoucherCounter', async (voucherDate, { rejectWithValue }) => {
   try {
-    return await salesVoucherService.initializeVoucherCounter(startingNumber)
+    return await salesVoucherService.initializeVoucherCounter(voucherDate)
   } catch (error) {
     return rejectWithValue(error.message || 'Failed to initialize voucher number.')
   }

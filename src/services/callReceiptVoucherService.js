@@ -3,7 +3,6 @@ import { db } from '../firebase/firebase'
 import { toDisplayDate } from '../utils/dateUtils'
 
 const COLLECTION = 'callReceiptVouchers'
-const currentYear = () => new Date().getFullYear()
 const counterRef = (year) => doc(db, 'voucherSettings', `callReceiptVoucher_${year}`)
 const claimRef = (year, number) => doc(db, 'callReceiptVoucherNumberClaims', `${year}_${number}`)
 const customerRef = (id) => doc(db, 'customers', id)
@@ -13,6 +12,22 @@ const numberValue = (value) => Math.max(0, Number(value) || 0)
 const zeroDelta = () => ({ total: 0, open: 0, closed: 0, monthlyBackup: 0, visits: 0 })
 const counterDelta = (voucher, direction = 1) => ({ total: direction, open: voucher.callStatus === 'Open' ? direction : 0, closed: voucher.callStatus === 'Closed' ? direction : 0, monthlyBackup: voucher.category === 'Monthly Backup' ? direction : 0, visits: voucher.category2 === 'Visit' ? direction : 0 })
 const combineDelta = (left, right) => ({ total: left.total + right.total, open: left.open + right.open, closed: left.closed + right.closed, monthlyBackup: left.monthlyBackup + right.monthlyBackup, visits: (left.visits || 0) + (right.visits || 0) })
+const voucherYear = (dateValue) => {
+  const match = String(dateValue || '').match(/^(\d{4})-/)
+  if (!match) throw new Error('Voucher date is required.')
+  return Number(match[1])
+}
+const savedVoucherSequence = (voucher, year) => {
+  if (Number(voucher.voucherYear) === year && numberValue(voucher.voucherSequence)) return numberValue(voucher.voucherSequence)
+  const parts = String(voucher.voucherNumber || '').split('/')
+  if (parts.length > 1) return Number(parts[1]) === year ? numberValue(parts[0]) : 0
+  const savedYear = String(voucher.date || voucher.voucherDate || '').match(/^(\d{4})-/)
+  return Number(savedYear?.[1]) === year ? numberValue(voucher.voucherNumber) : 0
+}
+const getHighestCallSequenceForYear = async (year) => {
+  const snapshot = await getDocs(collection(db, COLLECTION))
+  return snapshot.docs.reduce((highest, item) => Math.max(highest, savedVoucherSequence(item.data(), year)), 0)
+}
 const normalizeName = (value) => String(value || '').trim().toLowerCase()
 const isAmcApplicable = (value) => value === true || String(value || '').trim().toLowerCase() === 'yes'
 const startOfDay = (value = new Date()) => {
@@ -75,9 +90,11 @@ const cleanVoucher = (data) => ({
   when: data.callStatus === 'Open' ? data.when || null : null,
 })
 
-export const getNextCallReceiptVoucherNumber = async () => {
-  const snapshot = await getDoc(counterRef(currentYear()))
-  return numberValue(snapshot.exists() ? snapshot.data().lastVoucherNumber : 0) + 1
+export const getNextCallReceiptVoucherNumber = async (voucherDate) => {
+  const year = voucherYear(voucherDate)
+  const [snapshot, existingHighest] = await Promise.all([getDoc(counterRef(year)), getHighestCallSequenceForYear(year)])
+  const sequence = Math.max(numberValue(snapshot.exists() ? snapshot.data().lastVoucherNumber : 0), existingHighest) + 1
+  return `${sequence}/${year}`
 }
 
 export const getCustomerExpiryDate = async (customerId) => {
@@ -89,12 +106,13 @@ export const getCustomerExpiryDate = async (customerId) => {
 
 export const createCallReceiptVoucher = async (data) => {
   const cleaned = cleanVoucher({ ...data, customerExpiryDate: data.customerExpiryDate || await getCustomerExpiryDate(data.partyId) })
+  const year = voucherYear(cleaned.date)
+  const existingHighest = await getHighestCallSequenceForYear(year)
   const createdRef = await runTransaction(db, async (transaction) => {
-    const voucherYear = currentYear()
-    const sequenceRef = counterRef(voucherYear)
+    const sequenceRef = counterRef(year)
     const sequenceSnapshot = await transaction.get(sequenceRef)
-    const voucherSequence = numberValue(sequenceSnapshot.exists() ? sequenceSnapshot.data().lastVoucherNumber : 0) + 1
-    const uniqueRef = claimRef(voucherYear, voucherSequence)
+    const voucherSequence = Math.max(numberValue(sequenceSnapshot.exists() ? sequenceSnapshot.data().lastVoucherNumber : 0), existingHighest) + 1
+    const uniqueRef = claimRef(year, voucherSequence)
     const partyRef = customerRef(cleaned.partyId)
     const execRef = executiveRef(cleaned.executiveId)
     const uniqueSnapshot = await transaction.get(uniqueRef)
@@ -104,10 +122,10 @@ export const createCallReceiptVoucher = async (data) => {
     if (!partySnapshot.exists()) throw new Error('Selected customer no longer exists.')
     if (!execSnapshot.exists()) throw new Error('Selected executive no longer exists.')
     const voucherRef = doc(collection(db, COLLECTION))
-    const voucherNumber = `${voucherSequence}/${voucherYear}`
-    transaction.set(voucherRef, { ...cleaned, voucherSequence, voucherYear, voucherNumber, voucherDate: cleaned.date, status: 'Active', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
-    transaction.set(uniqueRef, { voucherSequence, voucherYear, voucherNumber, voucherId: voucherRef.id, createdAt: serverTimestamp() })
-    transaction.set(sequenceRef, { lastVoucherNumber: voucherSequence, voucherYear, updatedAt: serverTimestamp() }, { merge: true })
+    const voucherNumber = `${voucherSequence}/${year}`
+    transaction.set(voucherRef, { ...cleaned, voucherSequence, voucherYear: year, voucherNumber, voucherDate: cleaned.date, status: 'Active', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
+    transaction.set(uniqueRef, { voucherSequence, voucherYear: year, voucherNumber, voucherId: voucherRef.id, createdAt: serverTimestamp() })
+    transaction.set(sequenceRef, { lastVoucherNumber: voucherSequence, voucherYear: year, updatedAt: serverTimestamp() }, { merge: true })
     const delta = counterDelta(cleaned)
     updateCustomerCounters(transaction, partyRef, partySnapshot, delta)
     updateExecutiveCounters(transaction, execRef, execSnapshot, delta)
@@ -153,11 +171,20 @@ export const getSingleCustomerCallHistory = async (customerId, customerName, fro
   })
 }
 
-export const sortCallVouchersBySequence = (vouchers) => [...vouchers].sort((a, b) =>
-  numberValue(a.voucherSequence) - numberValue(b.voucherSequence)
-  || numberValue(String(a.voucherNumber || '').split('/')[0]) - numberValue(String(b.voucherNumber || '').split('/')[0])
-  || (a.date || '').localeCompare(b.date || '')
-)
+const voucherSortParts = (voucher) => {
+  const parts = String(voucher.voucherNumber || '').split('/')
+  const dateYear = Number(String(voucher.date || voucher.voucherDate || '').slice(0, 4))
+  return {
+    year: numberValue(voucher.voucherYear) || numberValue(parts[1]) || dateYear,
+    sequence: numberValue(voucher.voucherSequence) || numberValue(parts[0]),
+  }
+}
+
+export const sortCallVouchersBySequence = (vouchers) => [...vouchers].sort((a, b) => {
+  const left = voucherSortParts(a)
+  const right = voucherSortParts(b)
+  return left.year - right.year || left.sequence - right.sequence || (a.date || '').localeCompare(b.date || '')
+})
 
 export const groupCallVouchersByDate = (vouchers) => {
   const groups = new Map()

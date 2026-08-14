@@ -5,6 +5,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   orderBy,
   query,
   serverTimestamp,
@@ -12,6 +13,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
+import { INDIAN_STATES } from '../data/indianStates'
 
 const CUSTOMERS_COLLECTION = 'customers'
 
@@ -20,6 +22,7 @@ const normalizeCustomerName = (name) => (name || '').trim().toLowerCase()
 const validateRequiredCustomerFields = (customerData) => {
   if (!(customerData.customerName || '').trim()) throw new Error('Customer name is required.')
   if (!customerData.areaId) throw new Error('Please select an area.')
+  if (!INDIAN_STATES.includes(customerData.state)) throw new Error('Please select State')
   const mobileNo = (customerData.mobileNo || '').trim()
   if (!mobileNo) throw new Error('Mobile number is required.')
   if (!/^\d{10}$/.test(mobileNo)) throw new Error('Enter a valid 10-digit mobile number.')
@@ -125,7 +128,38 @@ export const updateCustomer = async (id, customerData) => {
   return mapCustomer(await getDoc(customerRef))
 }
 
+export const getCustomerUsage = async () => {
+  const [salesSnapshot, callsSnapshot] = await Promise.all([
+    getDocs(collection(db, 'salesVouchers')),
+    getDocs(collection(db, 'callReceiptVouchers')),
+  ])
+  const ids = [...new Set([
+    ...salesSnapshot.docs.map((item) => item.data().customerId),
+    ...callsSnapshot.docs.map((item) => item.data().partyId),
+  ].filter(Boolean))]
+  const legacyNames = [...new Set([
+    ...salesSnapshot.docs.filter((item) => !item.data().customerId).map((item) => normalizeCustomerName(item.data().customerName)),
+    ...callsSnapshot.docs.filter((item) => !item.data().partyId).map((item) => normalizeCustomerName(item.data().partyName)),
+  ].filter(Boolean))]
+  return { ids, legacyNames }
+}
+
+export const getUsedCustomerIds = async () => (await getCustomerUsage()).ids
+
+export const isCustomerUsed = async (id) => {
+  const [salesSnapshot, callsSnapshot] = await Promise.all([
+    getDocs(query(collection(db, 'salesVouchers'), where('customerId', '==', id), limit(1))),
+    getDocs(query(collection(db, 'callReceiptVouchers'), where('partyId', '==', id), limit(1))),
+  ])
+  if (!salesSnapshot.empty || !callsSnapshot.empty) return true
+  const customerSnapshot = await getDoc(doc(db, CUSTOMERS_COLLECTION, id))
+  if (!customerSnapshot.exists()) return false
+  const usage = await getCustomerUsage()
+  return usage.legacyNames.includes(normalizeCustomerName(customerSnapshot.data().customerName))
+}
+
 export const deleteCustomer = async (id) => {
+  if (await isCustomerUsed(id)) throw new Error('Customer cannot be deleted because transactions already exist.')
   const customerRef = doc(db, CUSTOMERS_COLLECTION, id)
   await deleteDoc(customerRef)
 }
@@ -163,4 +197,7 @@ export const customerService = {
   deleteCustomer,
   checkCustomerExists,
   searchCustomers,
+  getUsedCustomerIds,
+  getCustomerUsage,
+  isCustomerUsed,
 }

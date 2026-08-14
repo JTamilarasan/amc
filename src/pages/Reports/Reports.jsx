@@ -1,4 +1,4 @@
-import { CalendarClock, FileSpreadsheet, Headset, Users } from 'lucide-react'
+import { CalendarClock, FileSpreadsheet, Headset, MessageSquareText, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
@@ -10,6 +10,7 @@ const reportCards = [
   { title: 'Current Monthly Expiry Report', description: 'View AMC records expiring in the current month.', path: '/reports/current-month-expiry', icon: CalendarClock },
   { title: 'AMC Customer Calls History', description: 'View AMC customer call and monthly backup history.', path: '/reports/customer-calls-history', icon: Users },
   { title: 'Executive Calls Report', description: 'View executive call totals and detailed status history.', path: '/reports/executive-calls', icon: Headset },
+  { title: 'Enquiry Report', description: 'View enquiry and follow-up records.', path: '/reports/enquiry-report', icon: MessageSquareText },
 ]
 
 const Reports = () => <div className="page-stack">

@@ -3,11 +3,11 @@ import {
   LayoutDashboard,
   BookOpen,
   FileText,
-  BriefcaseBusiness,
   Headset,
   BarChart3,
   LogOut,
   Menu,
+  MessageSquareText,
   X,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Enquiry', path: '/enquiry', icon: MessageSquareText },
   {
     label: 'Masters',
     path: '/masters',
@@ -47,6 +48,7 @@ const navItems = [
       { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry' },
       { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history' },
       { label: 'Executive Calls Report', path: '/reports/executive-calls' },
+      { label: 'Enquiry Report', path: '/reports/enquiry-report' },
     ],
   },
 ]

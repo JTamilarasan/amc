@@ -9,6 +9,8 @@ import Loader from '../../components/common/Loader'
 import { addCustomer, clearCustomerMessage, editCustomer, fetchCustomers, removeCustomer, selectCustomerState } from '../../features/customers/customerSlice'
 import { fetchAreas, selectAreas } from '../../features/areas/areaSlice'
 import { formatDate } from '../../utils/dateUtils'
+import { INDIAN_STATES } from '../../data/indianStates'
+import { customerService } from '../../services/customerService'
 
 const initialForm = {
   customerName: '',
@@ -47,10 +49,12 @@ const CustomerMaster = () => {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 720)
   const [validationErrors, setValidationErrors] = useState({})
   const [areaOpen, setAreaOpen] = useState(false)
+  const [customerUsage, setCustomerUsage] = useState(null)
 
   useEffect(() => {
     dispatch(fetchCustomers())
     dispatch(fetchAreas())
+    customerService.getCustomerUsage().then((usage) => setCustomerUsage({ ids: new Set(usage.ids), legacyNames: new Set(usage.legacyNames) })).catch(() => setCustomerUsage(null))
   }, [dispatch])
 
   useEffect(() => {
@@ -80,10 +84,11 @@ const CustomerMaster = () => {
       return items
     }
 
-    return items.filter((customer) => [customer.customerName, customer.mobileNo, customer.email, customer.areaName].some((value) => (value || '').toLowerCase().includes(query)))
+    return items.filter((customer) => [customer.customerName, customer.mobileNo, customer.email, customer.areaName, customer.state].some((value) => (value || '').toLowerCase().includes(query)))
   }, [items, searchText])
 
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
+  const customerIsUsed = (customer) => customerUsage?.ids.has(customer.id) || customerUsage?.legacyNames.has((customer.customerName || '').trim().toLowerCase())
   const pagedCustomers = useMemo(() => {
     const startIndex = (page - 1) * pageSize
     return filteredCustomers.slice(startIndex, startIndex + pageSize)
@@ -133,6 +138,7 @@ const CustomerMaster = () => {
       nextErrors.customerName = 'Customer name is required.'
     }
     if (!form.areaId) nextErrors.areaId = 'Please select an area.'
+    if (!form.state) nextErrors.state = 'Please select State'
     if (!form.mobileNo.trim()) nextErrors.mobileNo = 'Mobile number is required.'
     else if (!/^\d{10}$/.test(form.mobileNo.trim())) nextErrors.mobileNo = 'Enter a valid 10-digit mobile number.'
     if (!form.email.trim()) nextErrors.email = 'Email ID is required.'
@@ -194,7 +200,7 @@ const CustomerMaster = () => {
       address: customer.address,
       pincode: customer.pincode,
       country: customer.country,
-      state: customer.state,
+      state: customer.state || '',
       gstin: customer.gstin,
       category1: customer.category1,
       category2: customer.category2,
@@ -268,8 +274,11 @@ const CustomerMaster = () => {
               {validationErrors.country ? <div className="field-message field-error">{validationErrors.country}</div> : null}
             </label>
             <label className="field">
-              <span>State</span>
-              <input name="state" value={form.state} onChange={handleChange} placeholder="Maharashtra" />
+              <span>State *</span>
+              <select name="state" value={form.state} onChange={handleChange}>
+                <option value="">Select State</option>
+                {INDIAN_STATES.map((state) => <option value={state} key={state}>{state}</option>)}
+              </select>
               {validationErrors.state ? <div className="field-message field-error">{validationErrors.state}</div> : null}
             </label>
             <label className="field">
@@ -321,7 +330,7 @@ const CustomerMaster = () => {
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <div className="search-box" style={{ minWidth: 240, width: '100%' }}>
             <Search size={16} />
-            <input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search name, mobile, email or area..." />
+            <input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search name, mobile, email, area or state..." />
           </div>
           <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}>
             <option value={10}>10</option>
@@ -337,11 +346,12 @@ const CustomerMaster = () => {
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Mobile</span><span>{customer.mobileNo || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Email</span><span>{customer.email || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Area</span><span>{customer.areaName || '—'}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">State</span><span>{customer.state || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Category</span><span>{customer.category1}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(customer.createdAt)}</span></div>
                 <div className="customer-mobile-actions">
                   <button className="executive-action-btn" onClick={() => handleEdit(customer)}><Pencil size={13} /><span>Edit</span></button>
-                  <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button>
+                  {customerUsage && !customerIsUsed(customer) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                 </div>
               </div>
             ))}
@@ -356,6 +366,7 @@ const CustomerMaster = () => {
                   <th>Mobile No</th>
                   <th>Email ID</th>
                   <th>Area</th>
+                  <th>State</th>
                   <th>Category 1</th>
                   <th>Executive</th>
                   <th>Created Date</th>
@@ -364,8 +375,8 @@ const CustomerMaster = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading && items.length === 0 ? <tr><td colSpan="10"><Loader size="small" label="Loading customers..." /></td></tr> : null}
-                {!loading && filteredCustomers.length === 0 ? <tr><td colSpan="10" className="text-center">{searchText ? 'No matching customers found.' : 'No customers found.'}</td></tr> : null}
+                {loading && items.length === 0 ? <tr><td colSpan="11"><Loader size="small" label="Loading customers..." /></td></tr> : null}
+                {!loading && filteredCustomers.length === 0 ? <tr><td colSpan="11" className="text-center">{searchText ? 'No matching customers found.' : 'No customers found.'}</td></tr> : null}
                 {pagedCustomers.map((customer, index) => (
                   <tr key={customer.id}>
                     <td>{(page - 1) * pageSize + index + 1}</td>
@@ -373,6 +384,7 @@ const CustomerMaster = () => {
                     <td>{customer.mobileNo || '—'}</td>
                     <td>{customer.email || '—'}</td>
                     <td>{customer.areaName || '—'}</td>
+                    <td>{customer.state || '—'}</td>
                     <td>{customer.category1}</td>
                     <td>{customer.executiveName || '—'}</td>
                     <td>{formatDate(customer.createdAt)}</td>
@@ -380,7 +392,7 @@ const CustomerMaster = () => {
                     <td>
                       <div className="table-actions">
                         <button className="executive-action-btn" onClick={() => handleEdit(customer)}><Pencil size={13} /><span>Edit</span></button>
-                        <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button>
+                        {customerUsage && !customerIsUsed(customer) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                       </div>
                     </td>
                   </tr>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Eye, Pencil, Search, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
@@ -11,7 +12,7 @@ import { fetchExecutives, selectExecutives } from '../../features/executives/exe
 import { fetchProducts, selectProducts } from '../../features/products/productSlice'
 import {
   addSalesVoucher, clearSalesVoucherMessage, editSalesVoucher, fetchNextVoucherNumber,
-  fetchSalesVouchers, fetchVoucherSequence, initializeVoucherCounter, removeSalesVoucher,
+  fetchSalesVouchers, fetchVoucherSequence, removeSalesVoucher,
   selectSalesVoucherState, selectSalesVouchers,
 } from '../../features/salesVouchers/salesVoucherSlice'
 import { formatDate } from '../../utils/dateUtils'
@@ -39,28 +40,38 @@ const calculateAmcToDate = (fromDate, duration, amcApplicable) => {
 
 const SalesVoucher = () => {
   const dispatch = useDispatch()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const routeEditVoucher = location.state?.editVoucher || null
+  const routeEditItem = routeEditVoucher?.items?.[0] || routeEditVoucher?.item || null
+  const routeRenewVoucher = location.state?.renewalMode ? location.state?.renewVoucher || null : null
+  const routeRenewItem = routeRenewVoucher?.item || routeRenewVoucher?.items?.[0] || null
+  const initialVoucherDate = routeEditVoucher?.voucherDate || todayValue()
   const customers = useSelector(selectCustomers)
   const executives = useSelector(selectExecutives)
   const products = useSelector(selectProducts)
   const vouchers = useSelector(selectSalesVouchers)
   const { loading, error, successMessage } = useSelector(selectSalesVoucherState)
 
-  const [manualStartingNumber, setManualStartingNumber] = useState('100')
-  const [voucherNumber, setVoucherNumber] = useState('')
-  const [voucherDate, setVoucherDate] = useState(todayValue())
-  const [customerId, setCustomerId] = useState('')
-  const [customerName, setCustomerName] = useState('')
+  const [voucherNumber, setVoucherNumber] = useState(routeEditVoucher?.voucherNumber || '')
+  const [voucherDate, setVoucherDate] = useState(initialVoucherDate)
+  const [customerId, setCustomerId] = useState(routeEditVoucher?.customerId || routeRenewVoucher?.customerId || '')
+  const [customerName, setCustomerName] = useState(routeEditVoucher?.customerName || routeRenewVoucher?.customerName || '')
   const [customerOpen, setCustomerOpen] = useState(false)
   const [partyError, setPartyError] = useState('')
-  const [executiveId, setExecutiveId] = useState('')
-  const [executiveName, setExecutiveName] = useState('')
+  const [executiveId, setExecutiveId] = useState(routeEditVoucher?.executiveId || routeRenewVoucher?.executiveId || '')
+  const [executiveName, setExecutiveName] = useState(routeEditVoucher?.executiveName || routeRenewVoucher?.executiveName || '')
   const [executiveOpen, setExecutiveOpen] = useState(false)
-  const [category, setCategory] = useState('')
-  const [narration, setNarration] = useState('')
-  const [itemForm, setItemForm] = useState(emptyItem)
+  const [category, setCategory] = useState(routeEditVoucher?.category || (routeRenewVoucher ? 'Renewal' : ''))
+  const [narration, setNarration] = useState(routeEditVoucher?.narration || '')
+  const [itemForm, setItemForm] = useState(routeEditItem
+    ? { ...emptyItem, ...routeEditItem, amount: String(routeEditItem.amount || '') }
+    : routeRenewItem
+      ? { ...emptyItem, ...routeRenewItem, amcFromDate: '', amcToDate: '', amount: String(routeRenewItem.amount || '') }
+      : emptyItem)
   const [productSearchText, setProductSearchText] = useState('')
   const [productOpen, setProductOpen] = useState(false)
-  const [editingVoucherId, setEditingVoucherId] = useState(null)
+  const [editingVoucherId, setEditingVoucherId] = useState(routeEditVoucher?.id || null)
   const [formError, setFormError] = useState('')
   const [searchText, setSearchText] = useState('')
   const [page, setPage] = useState(1)
@@ -78,21 +89,19 @@ const SalesVoucher = () => {
   }, [dispatch])
 
   useEffect(() => {
+    if (routeEditVoucher) return undefined
     const loadSequence = async () => {
+      const lookupId = ++voucherLookupId.current
       try {
-        const sequence = await dispatch(fetchVoucherSequence()).unwrap()
-        if (sequence) {
-          setManualStartingNumber(String(sequence.startingNumber))
-          setVoucherNumber(sequence.nextVoucherNumber)
-        } else {
-          setVoucherNumber(await dispatch(initializeVoucherCounter(100)).unwrap())
-        }
+        const sequence = await dispatch(fetchVoucherSequence(initialVoucherDate)).unwrap()
+        if (lookupId === voucherLookupId.current) setVoucherNumber(sequence.nextVoucherNumber)
       } catch {
-        setFormError('Unable to load the next voucher number.')
+        if (lookupId === voucherLookupId.current) setFormError('Unable to load the next voucher number.')
       }
     }
     loadSequence()
-  }, [dispatch])
+    return undefined
+  }, [dispatch, initialVoucherDate, routeEditVoucher])
 
   useEffect(() => {
     const resize = () => setIsMobile(window.innerWidth < 720)
@@ -169,16 +178,18 @@ const SalesVoucher = () => {
   const resetItemForm = () => { setItemForm(emptyItem); setProductSearchText(''); setProductOpen(false) }
 
   const clearVoucher = async () => {
-    setVoucherDate(todayValue()); setCustomerId(''); setCustomerName(''); setExecutiveId(''); setExecutiveName('')
+    const nextDate = todayValue()
+    setVoucherDate(nextDate); setCustomerId(''); setCustomerName(''); setExecutiveId(''); setExecutiveName('')
     setCategory(''); setNarration(''); setEditingVoucherId(null); setFormError(''); setPartyError(''); resetItemForm()
+    const lookupId = ++voucherLookupId.current
     try {
-      const next = await dispatch(fetchNextVoucherNumber(Number(manualStartingNumber))).unwrap()
-      if (next != null) setVoucherNumber(next)
-    } catch { setFormError('Unable to refresh the next voucher number.') }
+      const next = await dispatch(fetchNextVoucherNumber(nextDate)).unwrap()
+      if (lookupId === voucherLookupId.current && next != null) setVoucherNumber(next)
+    } catch { if (lookupId === voucherLookupId.current) setFormError('Unable to refresh the next voucher number.') }
   }
   const handleSaveVoucher = async () => {
     setFormError('')
-    if (!voucherNumber) return setFormError('Set a valid manual starting number.')
+    if (!voucherNumber) return setFormError('Unable to generate the voucher number.')
     if (!voucherDate) return setFormError('Voucher date is required.')
     if (!customerId) { setPartyError('Please select a party.'); return }
     if (!executiveId) return setFormError('Select a valid Executive.')
@@ -195,34 +206,33 @@ const SalesVoucher = () => {
       amcFromDate: itemForm.amcFromDate, amcToDate: itemForm.amcToDate, amount: Number(itemForm.amount),
     }
     const payload = {
-      voucherNumber: Number(voucherNumber), voucherDate, customerId, customerName, executiveId, executiveName, category,
+      voucherNumber, voucherDate, customerId, customerName, executiveId, executiveName, category,
       narration: narration.trim(), items: [voucherItem], totalAmount: Number(itemForm.amount),
     }
     try {
       if (editingVoucherId) {
-        await dispatch(editSalesVoucher({ id: editingVoucherId, voucherData: payload })).unwrap()
+        const updated = await dispatch(editSalesVoucher({ id: editingVoucherId, voucherData: payload })).unwrap()
+        if (location.state?.returnTo) {
+          navigate(location.state.returnTo, { state: { ...(location.state.reportRange || {}), message: `Sales voucher ${updated.voucherNumber} updated successfully.` } })
+          return
+        }
       } else {
         const saved = await dispatch(addSalesVoucher(payload)).unwrap()
-        setVoucherNumber(Number(saved.voucherNumber) + 1)
+        if (routeRenewVoucher && location.state?.returnTo) {
+          navigate(location.state.returnTo, { state: { message: `AMC renewed successfully with Sales voucher ${saved.voucherNumber}.` } })
+          return
+        }
       }
       await clearVoucher()
     } catch { /* Redux displays the service error. */ }
   }
 
-  const handleStartingNumberChange = async (value) => {
-    setManualStartingNumber(value)
+  const changeVoucherDate = async (value) => {
+    setVoucherDate(value)
+    if (editingVoucherId || !value) return
     const lookupId = ++voucherLookupId.current
-    const start = Number(value)
-    if (value === '' || !Number.isFinite(start) || start < 0) { setVoucherNumber(''); return }
-    try {
-      const next = await dispatch(fetchNextVoucherNumber(start)).unwrap()
-      if (lookupId === voucherLookupId.current) setVoucherNumber(next)
-    }
-    catch { setFormError('Unable to calculate the next voucher number.') }
-  }
-  const handleStartingNumberBlur = async () => {
-    try { setVoucherNumber(await dispatch(initializeVoucherCounter(Number(manualStartingNumber))).unwrap()); setFormError('') }
-    catch (reason) { setFormError(typeof reason === 'string' ? reason : 'Unable to set starting number.') }
+    try { const next = await dispatch(fetchNextVoucherNumber(value)).unwrap(); if (lookupId === voucherLookupId.current) { setVoucherNumber(next); setFormError('') } }
+    catch { if (lookupId === voucherLookupId.current) { setVoucherNumber(''); setFormError('Unable to calculate the next voucher number.') } }
   }
   const handleEditVoucher = (voucher) => {
     setEditingVoucherId(voucher.id); setVoucherNumber(voucher.voucherNumber); setVoucherDate(voucher.voucherDate)
@@ -236,7 +246,9 @@ const SalesVoucher = () => {
   const handleDeleteVoucher = async (voucher) => {
     if (!window.confirm(`Delete sales voucher #${voucher.voucherNumber}?`)) return
     await dispatch(removeSalesVoucher(voucher.id)).unwrap()
-    setVoucherNumber(await dispatch(fetchNextVoucherNumber(Number(manualStartingNumber))).unwrap())
+    const lookupId = ++voucherLookupId.current
+    const next = await dispatch(fetchNextVoucherNumber(voucherDate)).unwrap()
+    if (lookupId === voucherLookupId.current) setVoucherNumber(next)
   }
   const getVoucherItemNames = (voucher) => {
     if (Array.isArray(voucher.items)) return voucher.items.map((item) => item?.itemName).filter(Boolean).join(', ') || '—'
@@ -256,9 +268,8 @@ const SalesVoucher = () => {
     <PageHeader title="Sales Voucher" subtitle="Create sales and AMC vouchers." />
     <section className="panel-card form-card">
       <div className="form-grid two-col" style={{ gap: 18 }}>
-        <label className="field"><span>Manual Starting Number</span><input type="number" min="0" value={manualStartingNumber} onChange={(event) => handleStartingNumberChange(event.target.value)} onBlur={handleStartingNumberBlur} disabled={Boolean(editingVoucherId)} /></label>
         <label className="field"><span>Voucher Number</span><input value={voucherNumber} readOnly disabled /></label>
-        <label className="field"><span>Date</span><input type="date" value={voucherDate} onChange={(event) => setVoucherDate(event.target.value)} /></label>
+        <label className="field"><span>Date</span><input type="date" value={voucherDate} onChange={(event) => changeVoucherDate(event.target.value)} /></label>
         <label className="field"><span>Party Name *</span><div className="searchable-select">
           <input value={customerName} onChange={(event) => { handleCustomerInput(event.target.value); setCustomerOpen(true) }} onFocus={() => setCustomerOpen(true)} onBlur={() => window.setTimeout(() => setCustomerOpen(false), 150)} placeholder="Search and select customer" autoComplete="off" />
           {customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={() => selectCustomer(customer)}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}</div>}
