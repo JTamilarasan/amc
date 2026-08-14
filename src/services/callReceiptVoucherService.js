@@ -1,5 +1,6 @@
 import { collection, doc, getDoc, getDocs, query, runTransaction, serverTimestamp, where } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
+import { toDisplayDate } from '../utils/dateUtils'
 
 const COLLECTION = 'callReceiptVouchers'
 const currentYear = () => new Date().getFullYear()
@@ -12,6 +13,36 @@ const numberValue = (value) => Math.max(0, Number(value) || 0)
 const zeroDelta = () => ({ total: 0, open: 0, closed: 0, monthlyBackup: 0, visits: 0 })
 const counterDelta = (voucher, direction = 1) => ({ total: direction, open: voucher.callStatus === 'Open' ? direction : 0, closed: voucher.callStatus === 'Closed' ? direction : 0, monthlyBackup: voucher.category === 'Monthly Backup' ? direction : 0, visits: voucher.category2 === 'Visit' ? direction : 0 })
 const combineDelta = (left, right) => ({ total: left.total + right.total, open: left.open + right.open, closed: left.closed + right.closed, monthlyBackup: left.monthlyBackup + right.monthlyBackup, visits: (left.visits || 0) + (right.visits || 0) })
+const normalizeName = (value) => String(value || '').trim().toLowerCase()
+const isAmcApplicable = (value) => value === true || String(value || '').trim().toLowerCase() === 'yes'
+const startOfDay = (value = new Date()) => {
+  const date = toDisplayDate(value)
+  return date ? new Date(date.getFullYear(), date.getMonth(), date.getDate()) : null
+}
+
+const latestValidAmcToDate = (salesVouchers, today = new Date()) => {
+  const todayDate = startOfDay(today)
+  if (!todayDate) return null
+
+  return salesVouchers
+    .flatMap((voucher) => voucher.items || [])
+    .filter((item) => isAmcApplicable(item.amcApplicable))
+    .map((item) => ({ value: item.amcToDate, date: startOfDay(item.amcToDate) }))
+    .filter((item) => item.date && item.date >= todayDate)
+    .sort((left, right) => right.date.getTime() - left.date.getTime())[0]?.value || null
+}
+
+const getMatchingSalesVouchers = (voucher, salesVouchers) => {
+  const partyName = normalizeName(voucher.partyName)
+  if (voucher.partyId) {
+    const idMatches = salesVouchers.filter((salesVoucher) => salesVoucher.customerId === voucher.partyId)
+    const legacyNameMatches = partyName
+      ? salesVouchers.filter((salesVoucher) => !salesVoucher.customerId && normalizeName(salesVoucher.customerName) === partyName)
+      : []
+    return [...idMatches, ...legacyNameMatches]
+  }
+  return partyName ? salesVouchers.filter((salesVoucher) => normalizeName(salesVoucher.customerName) === partyName) : []
+}
 
 const updateCustomerCounters = (transaction, ref, snapshot, delta) => {
   const current = snapshot.data() || {}
@@ -90,23 +121,39 @@ export const getCallReceiptVoucherById = async (id) => {
   return snapshot.exists() ? mapDocument(snapshot) : null
 }
 
+export const getCallReceiptVouchers = async () => {
+  const snapshot = await getDocs(collection(db, COLLECTION))
+  const timestampValue = (value) => {
+    if (typeof value?.toMillis === 'function') return value.toMillis()
+    if (typeof value?.toDate === 'function') return value.toDate().getTime()
+    const parsed = value ? new Date(value).getTime() : Number.NaN
+    return Number.isNaN(parsed) ? null : parsed
+  }
+  return snapshot.docs.map(mapDocument).filter((item) => item.status !== 'Deleted').sort((a, b) => {
+    const leftCreated = timestampValue(a.createdAt)
+    const rightCreated = timestampValue(b.createdAt)
+    if (leftCreated !== null && rightCreated !== null && leftCreated !== rightCreated) return rightCreated - leftCreated
+    return (b.date || '').localeCompare(a.date || '') || numberValue(b.voucherSequence) - numberValue(a.voucherSequence)
+  })
+}
+
 export const getCallReceiptVouchersByDateRange = async (fromDate, toDate) => {
   const snapshot = await getDocs(query(collection(db, COLLECTION), where('date', '>=', fromDate), where('date', '<=', toDate)))
   return snapshot.docs.map(mapDocument).filter((item) => item.status !== 'Deleted').sort((a, b) => (a.date || '').localeCompare(b.date || '') || numberValue(a.voucherSequence) - numberValue(b.voucherSequence))
 }
 
 export const getCustomerCallsReport = async (fromDate, toDate) => {
-  const [vouchers, customerSnapshot] = await Promise.all([
+  const [vouchers, salesVoucherSnapshot] = await Promise.all([
     getCallReceiptVouchersByDateRange(fromDate, toDate),
-    getDocs(query(collection(db, 'customers'), where('category1', '==', 'AMC'))),
+    getDocs(collection(db, 'salesVouchers')),
   ])
-  const amcCustomers = new Map(customerSnapshot.docs.map((item) => [item.id, mapDocument(item)]))
-  const grouped = new Map([...amcCustomers].map(([id, customer]) => [id, { partyId: id, partyName: customer.customerName, customerExpiryDate: null, expirySourceDate: '', backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [] }]))
+  const salesVouchers = salesVoucherSnapshot.docs.map(mapDocument)
+  const grouped = new Map()
   vouchers.forEach((voucher) => {
-    if (!amcCustomers.has(voucher.partyId)) return
-    const key = voucher.partyId
-    const current = grouped.get(key)
-    if (voucher.customerExpiryDate && voucher.date >= current.expirySourceDate) { current.customerExpiryDate = voucher.customerExpiryDate; current.expirySourceDate = voucher.date }
+    const customerExpiryDate = latestValidAmcToDate(getMatchingSalesVouchers(voucher, salesVouchers))
+    if (!customerExpiryDate) return
+    const key = voucher.partyId || `name:${normalizeName(voucher.partyName)}`
+    const current = grouped.get(key) || { partyId: key, partyName: voucher.partyName, customerExpiryDate, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [] }
     current.totalCalls += 1
     if (voucher.category2 === 'Visit') current.totalVisits += 1
     if (voucher.category === 'Monthly Backup') { current.backupChecklist += 1; current.backupVouchers.push(voucher) }
@@ -180,4 +227,4 @@ export const deleteCallReceiptVoucher = async (id) => {
   })
 }
 
-export const callReceiptVoucherService = { createCallReceiptVoucher, updateCallReceiptVoucher, deleteCallReceiptVoucher, getNextCallReceiptVoucherNumber, getCallReceiptVoucherById, getCallReceiptVouchersByDateRange, getCustomerExpiryDate, getCustomerCallsReport, getExecutiveCallsReport, getExecutiveCallDetails }
+export const callReceiptVoucherService = { createCallReceiptVoucher, updateCallReceiptVoucher, deleteCallReceiptVoucher, getNextCallReceiptVoucherNumber, getCallReceiptVoucherById, getCallReceiptVouchers, getCallReceiptVouchersByDateRange, getCustomerExpiryDate, getCustomerCallsReport, getExecutiveCallsReport, getExecutiveCallDetails }

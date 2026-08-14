@@ -186,7 +186,8 @@ const SalesVoucher = () => {
     if (!itemForm.productId) return setFormError('Select a valid item from Product Master.')
     if (!itemForm.duration) return setFormError('Please select a duration.')
     if (itemForm.amcApplicable && !itemForm.amcFromDate) return setFormError('AMC From Date is required.')
-    if (itemForm.amcApplicable && !itemForm.amcToDate) return setFormError('AMC To Date could not be calculated.')
+    if (itemForm.amcApplicable && !itemForm.amcToDate) return setFormError('AMC To Date is required.')
+    if (itemForm.amcApplicable && itemForm.amcToDate < itemForm.amcFromDate) return setFormError('AMC To Date cannot be earlier than AMC From Date.')
     if (Number(itemForm.amount) <= 0) return setFormError('Amount must be greater than 0.')
     const voucherItem = {
       serialNo: itemForm.serialNo.trim(), productId: itemForm.productId, itemName: itemForm.itemName,
@@ -282,7 +283,7 @@ const SalesVoucher = () => {
         <label className="field"><span>AMC</span><input value={itemForm.amcApplicable ? 'Yes' : 'No'} readOnly /></label>
         <label className="field"><span>Amount *</span><input type="number" min="0.01" step="0.01" value={itemForm.amount} onChange={(event) => changeItemField('amount', event.target.value)} placeholder="Amount" /></label>
         <label className="field"><span>AMC From{itemForm.amcApplicable ? ' *' : ''}</span><input type="date" value={itemForm.amcFromDate} onChange={(event) => changeItemField('amcFromDate', event.target.value)} /></label>
-        <label className="field"><span>AMC To</span><input type="date" value={itemForm.amcToDate} readOnly /></label>
+        <label className="field"><span>AMC To{itemForm.amcApplicable ? ' *' : ''}</span><input type="date" min={itemForm.amcFromDate || undefined} value={itemForm.amcToDate} onChange={(event) => changeItemField('amcToDate', event.target.value)} /></label>
       </div>
       {(formError || error || successMessage) && <div className={successMessage && !formError && !error ? 'auth-success' : 'auth-error'} style={{ marginTop: 12 }}>{formError || error || successMessage}</div>}
       <div className="form-actions voucher-save-actions"><Button type="button" onClick={handleSaveVoucher} disabled={loading}>{loading ? 'Saving...' : editingVoucherId ? 'Update Voucher' : 'Save Voucher'}</Button><Button type="button" variant="secondary" onClick={clearVoucher} disabled={loading}>Clear</Button></div>
