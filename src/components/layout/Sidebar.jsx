@@ -27,7 +27,7 @@ const navItems = [
     ],
   },
   { label: 'Sales Voucher', path: '/sales-voucher', icon: FileText },
-  { label: 'AMC Management', path: '/amc', icon: BriefcaseBusiness },
+  // { label: 'AMC Management', path: '/amc', icon: BriefcaseBusiness },
   {
     label: 'Call Management',
     path: '/call-management/call-receipt-voucher',
