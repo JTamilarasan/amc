@@ -1,6 +1,7 @@
-const StatCard = ({ icon: Icon, title, value, subtitle, accent }) => {
+const StatCard = ({ icon: Icon, title, value, subtitle, accent, onClick }) => {
+  const Component = onClick ? 'button' : 'article'
   return (
-    <article className={`stat-card ${accent || ''}`}>
+    <Component className={`stat-card ${onClick ? 'stat-card-clickable' : ''} ${accent || ''}`} onClick={onClick} type={onClick ? 'button' : undefined}>
       <div className="stat-icon">
         <Icon size={20} />
       </div>
@@ -9,7 +10,7 @@ const StatCard = ({ icon: Icon, title, value, subtitle, accent }) => {
         <h3>{value}</h3>
         {subtitle ? <span>{subtitle}</span> : null}
       </div>
-    </article>
+    </Component>
   )
 }
 

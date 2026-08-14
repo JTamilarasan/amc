@@ -1,105 +1,35 @@
-import { ArrowRight, CalendarClock, CircleDollarSign, PackageCheck, Users, Wallet2, BellRing } from 'lucide-react'
+import { BellRing, CalendarClock, PackageCheck, RefreshCw, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import StatCard from '../../components/common/StatCard'
-import { expiringSoon, vouchers } from '../../data/mockData'
-import Button from '../../components/common/Button'
-import { formatDate } from '../../utils/dateUtils'
-
-const dashboardStats = [
-  { title: 'Total Customers', value: '1,250', subtitle: '+12% this month', icon: Users, accent: 'accent-blue' },
-  { title: 'Active AMC', value: '920', subtitle: 'Healthy renewal base', icon: PackageCheck, accent: 'accent-green' },
-  { title: 'AMC Expiring Soon', value: '145', subtitle: 'Next 30 days', icon: CalendarClock, accent: 'accent-amber' },
-  { title: 'Expired AMC', value: '85', subtitle: 'Needs attention', icon: BellRing, accent: 'accent-red' },
-  { title: "Today's Follow-ups", value: '32', subtitle: 'Scheduled tasks', icon: Users, accent: 'accent-indigo' },
-  { title: 'Total Sales', value: '₹4,85,000', subtitle: 'YTD revenue', icon: CircleDollarSign, accent: 'accent-purple' },
-]
+import Loader from '../../components/common/Loader'
+import { amcDashboardService, EXPIRY_WARNING_DAYS } from '../../services/amcDashboardService'
 
 const Dashboard = () => {
-  return (
-    <div className="page-stack">
-      <PageHeader
-        title="Good Morning, Admin"
-        subtitle="Here's what's happening with your AMC business."
-        action={<Button><span>+ New Sales Voucher</span></Button>}
-      />
+  const navigate = useNavigate()
+  const [data, setData] = useState(null)
+  const [error, setError] = useState('')
 
-      <section className="stats-grid">
-        {dashboardStats.map((stat) => (
-          <StatCard key={stat.title} {...stat} />
-        ))}
-      </section>
+  useEffect(() => {
+    let active = true
+    amcDashboardService.getAmcDashboardData().then((result) => { if (active) setData(result) }).catch(() => { if (active) setError('Unable to load dashboard AMC totals. Please try again.') })
+    return () => { active = false }
+  }, [])
 
-      <section className="panel-card">
-        <div className="panel-heading">
-          <h2>AMC Expiring Soon</h2>
-          <span>Priority follow-up list</span>
-        </div>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Mobile</th>
-                <th>Product</th>
-                <th>AMC End Date</th>
-                <th>Days Left</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {expiringSoon.map((item) => (
-                <tr key={item.customer}>
-                  <td>{item.customer}</td>
-                  <td>{item.mobile}</td>
-                  <td>{item.product}</td>
-                  <td>{formatDate(item.endDate)}</td>
-                  <td>{item.daysLeft} days</td>
-                  <td><span className="status-badge amber">{item.status}</span></td>
-                  <td><button className="text-link">Call <ArrowRight size={14} /></button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+  const stats = data ? [
+    { title: 'Total Active AMC Customers', value: data.active.length, subtitle: 'Active as of today', icon: PackageCheck, accent: 'accent-green', path: '/reports/amc-active' },
+    { title: 'Total Expired Customers', value: data.expired.length, subtitle: 'AMC period completed', icon: BellRing, accent: 'accent-red', path: '/reports/amc-expired' },
+    { title: 'Total New AMC', value: data.newAmc.length, subtitle: 'Sales Voucher category: New', icon: Sparkles, accent: 'accent-blue', path: '/reports/amc-new' },
+    { title: 'Total Going to Expire', value: data.goingToExpire.length, subtitle: `Next ${EXPIRY_WARNING_DAYS} days`, icon: CalendarClock, accent: 'accent-amber', path: '/reports/amc-going-to-expire' },
+    { title: 'Total Renewed AMC', value: data.renewed.length, subtitle: 'Sales Voucher category: Renewal', icon: RefreshCw, accent: 'accent-purple', path: '/reports/amc-renewed' },
+  ] : []
 
-      <section className="panel-card">
-        <div className="panel-heading">
-          <h2>Recent Sales Vouchers</h2>
-          <span>Latest transactions</span>
-        </div>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Voucher No</th>
-                <th>Date</th>
-                <th>Party Name</th>
-                <th>Items</th>
-                <th>Amount</th>
-                <th>AMC</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vouchers.map((voucher) => (
-                <tr key={voucher.id}>
-                  <td>{voucher.id}</td>
-                  <td>{formatDate(voucher.date)}</td>
-                  <td>{voucher.party}</td>
-                  <td>{voucher.items}</td>
-                  <td>{voucher.amount}</td>
-                  <td><span className="status-badge green">{voucher.amc}</span></td>
-                  <td><button className="text-link">View</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-  )
+  return <div className="page-stack dashboard-amc-summary">
+    <PageHeader title="AMC Dashboard" subtitle="Current AMC customer and voucher summary." />
+    {error && <div className="auth-error">{error}</div>}
+    {!data && !error ? <section className="panel-card"><Loader label="Loading dashboard totals..." /></section> : <section className="stats-grid dashboard-five-stats">{stats.map((stat) => <StatCard key={stat.title} {...stat} onClick={() => navigate(stat.path)} />)}</section>}
+  </div>
 }
 
 export default Dashboard

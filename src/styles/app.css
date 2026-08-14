@@ -100,6 +100,12 @@
 .stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .stats-grid.small-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .stat-card { display: flex; gap: 12px; padding: 15px; background: white; border-radius: 16px; box-shadow: 0 10px 24px rgba(15,23,42,0.06); border: 1px solid #f1f5f9; }
+.stat-card-clickable { width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+.stat-card-clickable:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(15,23,42,0.1); }
+.stat-card-clickable:focus-visible { outline: 3px solid rgba(37,99,235,0.25); outline-offset: 2px; }
+.dashboard-five-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.dashboard-amc-summary .stat-title, .amc-summary-report .page-header h1, .amc-summary-report th { font-weight: 700; }
+.amc-summary-report .report-table table { min-width: 920px; }
 .stat-icon { min-width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #eff6ff; color: #2563eb; }
 .stat-card.accent-green .stat-icon { background: #ecfdf3; color: #16a34a; }
 .stat-card.accent-amber .stat-icon { background: #fffbeb; color: #d97706; }

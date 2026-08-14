@@ -20,6 +20,11 @@ import CustomerCallsHistoryReport from './pages/Reports/CustomerCallsHistoryRepo
 import ExecutiveCallsReport from './pages/Reports/ExecutiveCallsReport'
 import CallRegisterReport from './pages/Reports/CallRegisterReport'
 import SingleCustomerCallsHistoryReport from './pages/Reports/SingleCustomerCallsHistoryReport'
+import ActiveAmcCustomersReport from './pages/Reports/ActiveAmcCustomersReport'
+import ExpiredAmcCustomersReport from './pages/Reports/ExpiredAmcCustomersReport'
+import NewAmcReport from './pages/Reports/NewAmcReport'
+import GoingToExpireAmcReport from './pages/Reports/GoingToExpireAmcReport'
+import RenewedAmcReport from './pages/Reports/RenewedAmcReport'
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -53,6 +58,11 @@ function App() {
             <Route path="/reports/executive-calls" element={<ExecutiveCallsReport />} />
             <Route path="/reports/call-register" element={<CallRegisterReport />} />
             <Route path="/reports/single-customer-calls-history" element={<SingleCustomerCallsHistoryReport />} />
+            <Route path="/reports/amc-active" element={<ActiveAmcCustomersReport />} />
+            <Route path="/reports/amc-expired" element={<ExpiredAmcCustomersReport />} />
+            <Route path="/reports/amc-new" element={<NewAmcReport />} />
+            <Route path="/reports/amc-going-to-expire" element={<GoingToExpireAmcReport />} />
+            <Route path="/reports/amc-renewed" element={<RenewedAmcReport />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
