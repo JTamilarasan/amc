@@ -2,16 +2,16 @@ import { collection, doc, getDoc, getDocs, query, runTransaction, serverTimestam
 import { db } from '../firebase/firebase'
 
 const COLLECTION = 'callReceiptVouchers'
-const counterRef = () => doc(db, 'voucherSettings', 'callReceiptVoucher')
-const claimRef = (number) => doc(db, 'callReceiptVoucherNumberClaims', String(number))
+const currentYear = () => new Date().getFullYear()
+const counterRef = (year) => doc(db, 'voucherSettings', `callReceiptVoucher_${year}`)
+const claimRef = (year, number) => doc(db, 'callReceiptVoucherNumberClaims', `${year}_${number}`)
 const customerRef = (id) => doc(db, 'customers', id)
 const executiveRef = (id) => doc(db, 'executives', id)
 const mapDocument = (snapshot) => ({ id: snapshot.id, ...snapshot.data() })
 const numberValue = (value) => Math.max(0, Number(value) || 0)
-const voucherDatePart = (date) => (date || '').split('-').reverse().join('-')
-const zeroDelta = () => ({ total: 0, open: 0, closed: 0, monthlyBackup: 0 })
-const counterDelta = (voucher, direction = 1) => ({ total: direction, open: voucher.callStatus === 'Open' ? direction : 0, closed: voucher.callStatus === 'Closed' ? direction : 0, monthlyBackup: voucher.category === 'Monthly Backup' ? direction : 0 })
-const combineDelta = (left, right) => ({ total: left.total + right.total, open: left.open + right.open, closed: left.closed + right.closed, monthlyBackup: left.monthlyBackup + right.monthlyBackup })
+const zeroDelta = () => ({ total: 0, open: 0, closed: 0, monthlyBackup: 0, visits: 0 })
+const counterDelta = (voucher, direction = 1) => ({ total: direction, open: voucher.callStatus === 'Open' ? direction : 0, closed: voucher.callStatus === 'Closed' ? direction : 0, monthlyBackup: voucher.category === 'Monthly Backup' ? direction : 0, visits: voucher.category2 === 'Visit' ? direction : 0 })
+const combineDelta = (left, right) => ({ total: left.total + right.total, open: left.open + right.open, closed: left.closed + right.closed, monthlyBackup: left.monthlyBackup + right.monthlyBackup, visits: (left.visits || 0) + (right.visits || 0) })
 
 const updateCustomerCounters = (transaction, ref, snapshot, delta) => {
   const current = snapshot.data() || {}
@@ -20,6 +20,7 @@ const updateCustomerCounters = (transaction, ref, snapshot, delta) => {
     customerCallOpen: Math.max(0, numberValue(current.customerCallOpen) + delta.open),
     customerCallClosed: Math.max(0, numberValue(current.customerCallClosed) + delta.closed),
     customerMonthlyBackupCount: Math.max(0, numberValue(current.customerMonthlyBackupCount) + delta.monthlyBackup),
+    customerTotalVisits: Math.max(0, numberValue(current.customerTotalVisits) + (delta.visits || 0)),
     updatedAt: serverTimestamp(),
   }, { merge: true })
 }
@@ -30,20 +31,21 @@ const updateExecutiveCounters = (transaction, ref, snapshot, delta) => {
     executiveTotalCalls: Math.max(0, numberValue(current.executiveTotalCalls) + delta.total),
     executiveCallOpen: Math.max(0, numberValue(current.executiveCallOpen) + delta.open),
     executiveCallClosed: Math.max(0, numberValue(current.executiveCallClosed) + delta.closed),
+    executiveTotalVisits: Math.max(0, numberValue(current.executiveTotalVisits) + (delta.visits || 0)),
     updatedAt: serverTimestamp(),
   }, { merge: true })
 }
 
 const cleanVoucher = (data) => ({
   date: data.date, partyId: data.partyId, partyName: data.partyName, customerExpiryDate: data.customerExpiryDate || null,
-  executiveId: data.executiveId, executiveName: data.executiveName, category: data.category,
+  executiveId: data.executiveId, executiveName: data.executiveName, category: data.category, category2: data.category2 || null,
   callReceiptRemarks: (data.callReceiptRemarks || '').trim(), callStatus: data.callStatus, callSubStatus: data.callSubStatus,
   nextAction: data.callStatus === 'Open' ? data.nextAction || null : null,
   when: data.callStatus === 'Open' ? data.when || null : null,
 })
 
 export const getNextCallReceiptVoucherNumber = async () => {
-  const snapshot = await getDoc(counterRef())
+  const snapshot = await getDoc(counterRef(currentYear()))
   return numberValue(snapshot.exists() ? snapshot.data().lastVoucherNumber : 0) + 1
 }
 
@@ -57,10 +59,11 @@ export const getCustomerExpiryDate = async (customerId) => {
 export const createCallReceiptVoucher = async (data) => {
   const cleaned = cleanVoucher({ ...data, customerExpiryDate: data.customerExpiryDate || await getCustomerExpiryDate(data.partyId) })
   const createdRef = await runTransaction(db, async (transaction) => {
-    const sequenceRef = counterRef()
+    const voucherYear = currentYear()
+    const sequenceRef = counterRef(voucherYear)
     const sequenceSnapshot = await transaction.get(sequenceRef)
     const voucherSequence = numberValue(sequenceSnapshot.exists() ? sequenceSnapshot.data().lastVoucherNumber : 0) + 1
-    const uniqueRef = claimRef(voucherSequence)
+    const uniqueRef = claimRef(voucherYear, voucherSequence)
     const partyRef = customerRef(cleaned.partyId)
     const execRef = executiveRef(cleaned.executiveId)
     const uniqueSnapshot = await transaction.get(uniqueRef)
@@ -70,10 +73,10 @@ export const createCallReceiptVoucher = async (data) => {
     if (!partySnapshot.exists()) throw new Error('Selected customer no longer exists.')
     if (!execSnapshot.exists()) throw new Error('Selected executive no longer exists.')
     const voucherRef = doc(collection(db, COLLECTION))
-    const voucherNumber = `${voucherSequence}/${voucherDatePart(cleaned.date)}`
-    transaction.set(voucherRef, { ...cleaned, voucherSequence, voucherNumber, voucherDate: cleaned.date, status: 'Active', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
-    transaction.set(uniqueRef, { voucherSequence, voucherNumber, voucherId: voucherRef.id, createdAt: serverTimestamp() })
-    transaction.set(sequenceRef, { lastVoucherNumber: voucherSequence, updatedAt: serverTimestamp() }, { merge: true })
+    const voucherNumber = `${voucherSequence}/${voucherYear}`
+    transaction.set(voucherRef, { ...cleaned, voucherSequence, voucherYear, voucherNumber, voucherDate: cleaned.date, status: 'Active', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
+    transaction.set(uniqueRef, { voucherSequence, voucherYear, voucherNumber, voucherId: voucherRef.id, createdAt: serverTimestamp() })
+    transaction.set(sequenceRef, { lastVoucherNumber: voucherSequence, voucherYear, updatedAt: serverTimestamp() }, { merge: true })
     const delta = counterDelta(cleaned)
     updateCustomerCounters(transaction, partyRef, partySnapshot, delta)
     updateExecutiveCounters(transaction, execRef, execSnapshot, delta)
@@ -93,13 +96,20 @@ export const getCallReceiptVouchersByDateRange = async (fromDate, toDate) => {
 }
 
 export const getCustomerCallsReport = async (fromDate, toDate) => {
-  const vouchers = await getCallReceiptVouchersByDateRange(fromDate, toDate)
-  const grouped = new Map()
+  const [vouchers, customerSnapshot] = await Promise.all([
+    getCallReceiptVouchersByDateRange(fromDate, toDate),
+    getDocs(query(collection(db, 'customers'), where('category1', '==', 'AMC'))),
+  ])
+  const amcCustomers = new Map(customerSnapshot.docs.map((item) => [item.id, mapDocument(item)]))
+  const grouped = new Map([...amcCustomers].map(([id, customer]) => [id, { partyId: id, partyName: customer.customerName, customerExpiryDate: null, expirySourceDate: '', backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [] }]))
   vouchers.forEach((voucher) => {
-    const key = voucher.partyId || voucher.partyName
-    const current = grouped.get(key) || { partyId: voucher.partyId, partyName: voucher.partyName, customerExpiryDate: voucher.customerExpiryDate, expirySourceDate: voucher.date, backupChecklist: 0 }
+    if (!amcCustomers.has(voucher.partyId)) return
+    const key = voucher.partyId
+    const current = grouped.get(key)
     if (voucher.customerExpiryDate && voucher.date >= current.expirySourceDate) { current.customerExpiryDate = voucher.customerExpiryDate; current.expirySourceDate = voucher.date }
-    if (voucher.category === 'Monthly Backup') current.backupChecklist += 1
+    current.totalCalls += 1
+    if (voucher.category2 === 'Visit') current.totalVisits += 1
+    if (voucher.category === 'Monthly Backup') { current.backupChecklist += 1; current.backupVouchers.push(voucher) }
     grouped.set(key, current)
   })
   return [...grouped.values()].sort((a, b) => (a.partyName || '').localeCompare(b.partyName || ''))
@@ -110,10 +120,11 @@ export const getExecutiveCallsReport = async (fromDate, toDate) => {
   const grouped = new Map()
   vouchers.forEach((voucher) => {
     const key = voucher.executiveId || voucher.executiveName
-    const current = grouped.get(key) || { executiveId: voucher.executiveId, executiveName: voucher.executiveName, callsReceived: 0, callsOpen: 0, callsClosed: 0, vouchers: [] }
+    const current = grouped.get(key) || { executiveId: voucher.executiveId, executiveName: voucher.executiveName, callsReceived: 0, callsOpen: 0, callsClosed: 0, totalVisits: 0, vouchers: [] }
     current.callsReceived += 1
     if (voucher.callStatus === 'Open') current.callsOpen += 1
     if (voucher.callStatus === 'Closed') current.callsClosed += 1
+    if (voucher.category2 === 'Visit') current.totalVisits += 1
     current.vouchers.push(voucher)
     grouped.set(key, current)
   })
@@ -122,7 +133,7 @@ export const getExecutiveCallsReport = async (fromDate, toDate) => {
 
 export const getExecutiveCallDetails = async (executiveId, fromDate, toDate, callStatus) => {
   const vouchers = await getCallReceiptVouchersByDateRange(fromDate, toDate)
-  return vouchers.filter((voucher) => voucher.executiveId === executiveId && (!callStatus || voucher.callStatus === callStatus))
+  return vouchers.filter((voucher) => voucher.executiveId === executiveId && (!callStatus || (callStatus === 'Visit' ? voucher.category2 === 'Visit' : voucher.callStatus === callStatus)))
 }
 
 export const updateCallReceiptVoucher = async (id, changes) => {
@@ -148,9 +159,7 @@ export const updateCallReceiptVoucher = async (id, changes) => {
     executiveDeltas.set(updated.executiveId, combineDelta(executiveDeltas.get(updated.executiveId), counterDelta(updated)))
     customerRefs.forEach((ref, index) => updateCustomerCounters(transaction, ref, customerSnapshots[index], customerDeltas.get(customerIds[index])))
     executiveRefs.forEach((ref, index) => updateExecutiveCounters(transaction, ref, executiveSnapshots[index], executiveDeltas.get(executiveIds[index])))
-    const voucherNumber = `${oldVoucher.voucherSequence}/${voucherDatePart(updated.date)}`
-    transaction.update(voucherRef, { ...updated, voucherNumber, voucherDate: updated.date, updatedAt: serverTimestamp() })
-    transaction.set(claimRef(oldVoucher.voucherSequence), { voucherNumber }, { merge: true })
+    transaction.update(voucherRef, { ...updated, voucherDate: updated.date, updatedAt: serverTimestamp() })
   })
   return getCallReceiptVoucherById(id)
 }
