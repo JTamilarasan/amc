@@ -42,6 +42,8 @@ const navItems = [
     icon: BarChart3,
     children: [
       { label: 'Sales Register Report', path: '/reports/sales-register' },
+      { label: 'Call Register Report', path: '/reports/call-register' },
+      { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history' },
       { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry' },
       { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history' },
       { label: 'Executive Calls Report', path: '/reports/executive-calls' },

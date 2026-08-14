@@ -16,6 +16,8 @@ const Header = () => {
     '/amc': ['AMC Management'],
     '/reports': ['Reports'],
     '/reports/sales-register': ['Reports', 'Sales Register Report'],
+    '/reports/call-register': ['Reports', 'Call Register Report'],
+    '/reports/single-customer-calls-history': ['Reports', 'Single Customer Calls History Report'],
     '/reports/current-month-expiry': ['Reports', 'Current Monthly Expiry Report'],
     '/reports/customer-calls-history': ['Reports', 'AMC Customer Calls History'],
     '/reports/executive-calls': ['Reports', 'Executive Calls Report'],

@@ -18,6 +18,8 @@ import CurrentMonthlyExpiryReport from './pages/Reports/CurrentMonthlyExpiryRepo
 import CallReceiptVoucher from './pages/CallManagement/CallReceiptVoucher'
 import CustomerCallsHistoryReport from './pages/Reports/CustomerCallsHistoryReport'
 import ExecutiveCallsReport from './pages/Reports/ExecutiveCallsReport'
+import CallRegisterReport from './pages/Reports/CallRegisterReport'
+import SingleCustomerCallsHistoryReport from './pages/Reports/SingleCustomerCallsHistoryReport'
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -49,6 +51,8 @@ function App() {
             <Route path="/reports/current-month-expiry" element={<CurrentMonthlyExpiryReport />} />
             <Route path="/reports/customer-calls-history" element={<CustomerCallsHistoryReport />} />
             <Route path="/reports/executive-calls" element={<ExecutiveCallsReport />} />
+            <Route path="/reports/call-register" element={<CallRegisterReport />} />
+            <Route path="/reports/single-customer-calls-history" element={<SingleCustomerCallsHistoryReport />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
