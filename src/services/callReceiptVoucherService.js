@@ -142,6 +142,41 @@ export const getCallReceiptVouchersByDateRange = async (fromDate, toDate) => {
   return snapshot.docs.map(mapDocument).filter((item) => item.status !== 'Deleted').sort((a, b) => (a.date || '').localeCompare(b.date || '') || numberValue(a.voucherSequence) - numberValue(b.voucherSequence))
 }
 
+export const getCallRegisterReport = async (fromDate, toDate) => getCallReceiptVouchersByDateRange(fromDate, toDate)
+
+export const getSingleCustomerCallHistory = async (customerId, customerName, fromDate, toDate) => {
+  const vouchers = await getCallReceiptVouchersByDateRange(fromDate, toDate)
+  const partyName = normalizeName(customerName)
+  return vouchers.filter((voucher) => {
+    if (voucher.partyId) return voucher.partyId === customerId
+    return Boolean(partyName) && normalizeName(voucher.partyName) === partyName
+  })
+}
+
+export const sortCallVouchersBySequence = (vouchers) => [...vouchers].sort((a, b) =>
+  numberValue(a.voucherSequence) - numberValue(b.voucherSequence)
+  || numberValue(String(a.voucherNumber || '').split('/')[0]) - numberValue(String(b.voucherNumber || '').split('/')[0])
+  || (a.date || '').localeCompare(b.date || '')
+)
+
+export const groupCallVouchersByDate = (vouchers) => {
+  const groups = new Map()
+  vouchers.forEach((voucher) => {
+    const date = voucher.date || ''
+    if (!groups.has(date)) groups.set(date, [])
+    groups.get(date).push(voucher)
+  })
+  return [...groups.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([date, entries]) => ({ date, entries: sortCallVouchersBySequence(entries) }))
+}
+
+export const getCallRegisterSummary = (vouchers) => ({
+  totalEntries: vouchers.length,
+  totalOpenCalls: vouchers.filter((voucher) => voucher.callStatus === 'Open').length,
+  totalClosedCalls: vouchers.filter((voucher) => voucher.callStatus === 'Closed').length,
+  totalCalls: vouchers.filter((voucher) => voucher.category2 === 'Call').length,
+  totalVisits: vouchers.filter((voucher) => voucher.category2 === 'Visit').length,
+})
+
 export const getCustomerCallsReport = async (fromDate, toDate) => {
   const [vouchers, salesVoucherSnapshot] = await Promise.all([
     getCallReceiptVouchersByDateRange(fromDate, toDate),
@@ -227,4 +262,4 @@ export const deleteCallReceiptVoucher = async (id) => {
   })
 }
 
-export const callReceiptVoucherService = { createCallReceiptVoucher, updateCallReceiptVoucher, deleteCallReceiptVoucher, getNextCallReceiptVoucherNumber, getCallReceiptVoucherById, getCallReceiptVouchers, getCallReceiptVouchersByDateRange, getCustomerExpiryDate, getCustomerCallsReport, getExecutiveCallsReport, getExecutiveCallDetails }
+export const callReceiptVoucherService = { createCallReceiptVoucher, updateCallReceiptVoucher, deleteCallReceiptVoucher, getNextCallReceiptVoucherNumber, getCallReceiptVoucherById, getCallReceiptVouchers, getCallReceiptVouchersByDateRange, getCallRegisterReport, getSingleCustomerCallHistory, getCustomerExpiryDate, getCustomerCallsReport, getExecutiveCallsReport, getExecutiveCallDetails }
