@@ -52,6 +52,7 @@ const AreaMaster = () => {
         if (location.state?.returnTo) {
           navigate(location.state.returnTo, {
             state: {
+              ...location.state,
               createdAreaId: savedArea.id,
               createdAreaName: savedArea.areaName,
               customerForm: location.state.customerForm,

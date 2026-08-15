@@ -34,6 +34,7 @@ const CustomerMaster = () => {
   const location = useLocation()
   const { items, loading, error, successMessage } = useSelector(selectCustomerState)
   const areas = useSelector(selectAreas)
+  const [returnContext] = useState(() => location.state?.returnTo ? location.state : null)
   const returnedCustomerState = location.state?.createdAreaId ? location.state : null
   const [form, setForm] = useState(() => returnedCustomerState ? {
     ...initialForm,
@@ -127,6 +128,7 @@ const CustomerMaster = () => {
         returnTo: '/masters/customers',
         customerForm: form,
         customerEditingId: editingId,
+        customerReturnContext: returnContext,
       },
     })
   }
@@ -181,7 +183,12 @@ const CustomerMaster = () => {
       if (editingId) {
         await dispatch(editCustomer({ id: editingId, customerData: payload })).unwrap()
       } else {
-        await dispatch(addCustomer(payload)).unwrap()
+        const savedCustomer = await dispatch(addCustomer(payload)).unwrap()
+        const context = returnContext?.customerReturnContext || returnContext
+        if (context?.returnTo) {
+          navigate(context.returnTo, { state: { ...context, createdCustomerId: savedCustomer.id, createdCustomerName: savedCustomer.customerName } })
+          return
+        }
       }
       resetForm()
     } catch {

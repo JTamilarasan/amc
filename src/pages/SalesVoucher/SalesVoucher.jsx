@@ -46,32 +46,33 @@ const SalesVoucher = () => {
   const routeEditItem = routeEditVoucher?.items?.[0] || routeEditVoucher?.item || null
   const routeRenewVoucher = location.state?.renewalMode ? location.state?.renewVoucher || null : null
   const routeRenewItem = routeRenewVoucher?.item || routeRenewVoucher?.items?.[0] || null
-  const initialVoucherDate = routeEditVoucher?.voucherDate || todayValue()
+  const returnedSalesForm = location.state?.customerReturnSource === 'sales-voucher' ? location.state.salesVoucherForm : null
+  const initialVoucherDate = returnedSalesForm?.voucherDate || routeEditVoucher?.voucherDate || todayValue()
   const customers = useSelector(selectCustomers)
   const executives = useSelector(selectExecutives)
   const products = useSelector(selectProducts)
   const vouchers = useSelector(selectSalesVouchers)
   const { loading, error, successMessage } = useSelector(selectSalesVoucherState)
 
-  const [voucherNumber, setVoucherNumber] = useState(routeEditVoucher?.voucherNumber || '')
+  const [voucherNumber, setVoucherNumber] = useState(returnedSalesForm?.voucherNumber || routeEditVoucher?.voucherNumber || '')
   const [voucherDate, setVoucherDate] = useState(initialVoucherDate)
-  const [customerId, setCustomerId] = useState(routeEditVoucher?.customerId || routeRenewVoucher?.customerId || '')
-  const [customerName, setCustomerName] = useState(routeEditVoucher?.customerName || routeRenewVoucher?.customerName || '')
+  const [customerId, setCustomerId] = useState(location.state?.createdCustomerId || returnedSalesForm?.customerId || routeEditVoucher?.customerId || routeRenewVoucher?.customerId || '')
+  const [customerName, setCustomerName] = useState(location.state?.createdCustomerName || returnedSalesForm?.customerName || routeEditVoucher?.customerName || routeRenewVoucher?.customerName || '')
   const [customerOpen, setCustomerOpen] = useState(false)
   const [partyError, setPartyError] = useState('')
-  const [executiveId, setExecutiveId] = useState(routeEditVoucher?.executiveId || routeRenewVoucher?.executiveId || '')
-  const [executiveName, setExecutiveName] = useState(routeEditVoucher?.executiveName || routeRenewVoucher?.executiveName || '')
+  const [executiveId, setExecutiveId] = useState(returnedSalesForm?.executiveId || routeEditVoucher?.executiveId || routeRenewVoucher?.executiveId || '')
+  const [executiveName, setExecutiveName] = useState(returnedSalesForm?.executiveName || routeEditVoucher?.executiveName || routeRenewVoucher?.executiveName || '')
   const [executiveOpen, setExecutiveOpen] = useState(false)
-  const [category, setCategory] = useState(routeEditVoucher?.category || (routeRenewVoucher ? 'Renewal' : ''))
-  const [narration, setNarration] = useState(routeEditVoucher?.narration || '')
-  const [itemForm, setItemForm] = useState(routeEditItem
+  const [category, setCategory] = useState(returnedSalesForm?.category || routeEditVoucher?.category || (routeRenewVoucher ? 'Renewal' : ''))
+  const [narration, setNarration] = useState(returnedSalesForm?.narration || routeEditVoucher?.narration || '')
+  const [itemForm, setItemForm] = useState(returnedSalesForm?.itemForm || (routeEditItem
     ? { ...emptyItem, ...routeEditItem, amount: String(routeEditItem.amount || '') }
     : routeRenewItem
       ? { ...emptyItem, ...routeRenewItem, amcFromDate: '', amcToDate: '', amount: String(routeRenewItem.amount || '') }
-      : emptyItem)
+      : emptyItem))
   const [productSearchText, setProductSearchText] = useState('')
   const [productOpen, setProductOpen] = useState(false)
-  const [editingVoucherId, setEditingVoucherId] = useState(routeEditVoucher?.id || null)
+  const [editingVoucherId, setEditingVoucherId] = useState(returnedSalesForm?.editingVoucherId || routeEditVoucher?.id || null)
   const [formError, setFormError] = useState('')
   const [searchText, setSearchText] = useState('')
   const [page, setPage] = useState(1)
@@ -234,6 +235,7 @@ const SalesVoucher = () => {
     try { const next = await dispatch(fetchNextVoucherNumber(value)).unwrap(); if (lookupId === voucherLookupId.current) { setVoucherNumber(next); setFormError('') } }
     catch { if (lookupId === voucherLookupId.current) { setVoucherNumber(''); setFormError('Unable to calculate the next voucher number.') } }
   }
+  const createCustomer = () => navigate('/masters/customers', { state: { returnTo: '/sales-voucher', customerReturnSource: 'sales-voucher', salesVoucherForm: { voucherNumber, voucherDate, customerId, customerName, executiveId, executiveName, category, narration, itemForm, editingVoucherId } } })
   const handleEditVoucher = (voucher) => {
     setEditingVoucherId(voucher.id); setVoucherNumber(voucher.voucherNumber); setVoucherDate(voucher.voucherDate)
     setCustomerId(voucher.customerId || ''); setCustomerName(voucher.customerName || '')
@@ -272,7 +274,7 @@ const SalesVoucher = () => {
         <label className="field"><span>Date</span><input type="date" value={voucherDate} onChange={(event) => changeVoucherDate(event.target.value)} /></label>
         <label className="field"><span>Party Name *</span><div className="searchable-select">
           <input value={customerName} onChange={(event) => { handleCustomerInput(event.target.value); setCustomerOpen(true) }} onFocus={() => setCustomerOpen(true)} onBlur={() => window.setTimeout(() => setCustomerOpen(false), 150)} placeholder="Search and select customer" autoComplete="off" />
-          {customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={() => selectCustomer(customer)}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}</div>}
+          {customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={() => selectCustomer(customer)}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}<button type="button" className="searchable-create-option" onMouseDown={createCustomer}>+ Create Customer</button></div>}
         </div>{partyError && <div className="field-message">{partyError}</div>}</label>
         <label className="field"><span>Executive *</span><div className="searchable-select">
           <input value={executiveName} onChange={(event) => { handleExecutiveInput(event.target.value); setExecutiveOpen(true) }} onFocus={() => setExecutiveOpen(true)} onBlur={() => window.setTimeout(() => setExecutiveOpen(false), 150)} placeholder="Search and select executive" autoComplete="off" />

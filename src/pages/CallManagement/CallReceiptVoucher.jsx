@@ -21,13 +21,14 @@ const CallReceiptVoucher = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const editVoucherId = location.state?.editVoucherId || ''
+  const returnedCallForm = location.state?.customerReturnSource === 'call-receipt-voucher' ? location.state.callReceiptForm : null
   const [historyEditId, setHistoryEditId] = useState('')
   const activeEditId = historyEditId || editVoucherId
   const isEditing = Boolean(activeEditId)
   const customers = useSelector(selectActiveCustomers)
   const executives = useSelector(selectActiveExecutives)
-  const [voucherNumber, setVoucherNumber] = useState('')
-  const [form, setForm] = useState(initialForm)
+  const [voucherNumber, setVoucherNumber] = useState(returnedCallForm?.voucherNumber || '')
+  const [form, setForm] = useState(() => returnedCallForm ? { ...initialForm(), ...returnedCallForm.form, partyId: location.state.createdCustomerId || returnedCallForm.form.partyId, partyName: location.state.createdCustomerName || returnedCallForm.form.partyName } : initialForm())
   const [errors, setErrors] = useState({})
   const [customerOpen, setCustomerOpen] = useState(false)
   const [executiveOpen, setExecutiveOpen] = useState(false)
@@ -76,12 +77,12 @@ const CallReceiptVoucher = () => {
         .finally(() => { if (active) setLoadingVoucher(false) })
     } else {
       const lookupId = ++voucherLookupId.current
-      callReceiptVoucherService.getNextCallReceiptVoucherNumber(todayValue())
+      callReceiptVoucherService.getNextCallReceiptVoucherNumber(returnedCallForm?.form?.date || todayValue())
         .then((number) => { if (active && lookupId === voucherLookupId.current) setVoucherNumber(number) })
         .catch(() => { if (active && lookupId === voucherLookupId.current) setErrors({ voucherNumber: 'Unable to load the next voucher number.' }) })
     }
     return () => { active = false }
-  }, [dispatch, editVoucherId])
+  }, [dispatch, editVoucherId, returnedCallForm?.form?.date])
   useEffect(() => { loadHistory() }, [])
   useEffect(() => {
     const resize = () => setIsMobile(window.innerWidth < 720)
@@ -147,6 +148,7 @@ const CallReceiptVoucher = () => {
     setMessage('')
   }
   const changeCustomer = (value) => { const match = customers.find((item) => item.customerName.toLowerCase() === value.trim().toLowerCase()); setForm((current) => ({ ...current, partyName: value, partyId: match?.id || '' })); setErrors((current) => ({ ...current, partyId: '' })) }
+  const createCustomer = () => navigate('/masters/customers', { state: { returnTo: '/call-management/call-receipt-voucher', customerReturnSource: 'call-receipt-voucher', callReceiptForm: { voucherNumber, form } } })
   const changeExecutive = (value) => { const match = executives.find((item) => item.name.toLowerCase() === value.trim().toLowerCase()); setForm((current) => ({ ...current, executiveName: value, executiveId: match?.id || '' })); setErrors((current) => ({ ...current, executiveId: '' })) }
   const editFromHistory = (voucher) => {
     setHistoryEditId(voucher.id); setVoucherNumber(voucher.voucherNumber || '')
@@ -174,7 +176,7 @@ const CallReceiptVoucher = () => {
       <div className="form-grid two-col" style={{ gap: 18 }}>
         <label className="field"><span>Voucher Number</span><input value={voucherNumber} readOnly disabled />{errors.voucherNumber && <div className="field-message">{errors.voucherNumber}</div>}</label>
         <label className="field"><span>Date</span><input type="date" value={form.date} onChange={(event) => changeVoucherDate(event.target.value)} /></label>
-        <label className="field"><span>Party Name *</span><div className="searchable-select"><input value={form.partyName} onChange={(event) => { changeCustomer(event.target.value); setCustomerOpen(true) }} onFocus={() => setCustomerOpen(true)} onBlur={() => window.setTimeout(() => setCustomerOpen(false), 150)} placeholder="Search and select customer" autoComplete="off" />{customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={async () => { setForm((current) => ({ ...current, partyId: customer.id, partyName: customer.customerName, customerExpiryDate: null })); setErrors((current) => ({ ...current, partyId: '' })); setCustomerOpen(false); const expiry = await callReceiptVoucherService.getCustomerExpiryDate(customer.id); setForm((current) => current.partyId === customer.id ? { ...current, customerExpiryDate: expiry } : current) }}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}</div>}</div>{errors.partyId && <div className="field-message">{errors.partyId}</div>}</label>
+        <label className="field"><span>Party Name *</span><div className="searchable-select"><input value={form.partyName} onChange={(event) => { changeCustomer(event.target.value); setCustomerOpen(true) }} onFocus={() => setCustomerOpen(true)} onBlur={() => window.setTimeout(() => setCustomerOpen(false), 150)} placeholder="Search and select customer" autoComplete="off" />{customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={async () => { setForm((current) => ({ ...current, partyId: customer.id, partyName: customer.customerName, customerExpiryDate: null })); setErrors((current) => ({ ...current, partyId: '' })); setCustomerOpen(false); const expiry = await callReceiptVoucherService.getCustomerExpiryDate(customer.id); setForm((current) => current.partyId === customer.id ? { ...current, customerExpiryDate: expiry } : current) }}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}<button type="button" className="searchable-create-option" onMouseDown={createCustomer}>+ Create Customer</button></div>}</div>{errors.partyId && <div className="field-message">{errors.partyId}</div>}</label>
         <label className="field"><span>Executive *</span><div className="searchable-select"><input value={form.executiveName} onChange={(event) => { changeExecutive(event.target.value); setExecutiveOpen(true) }} onFocus={() => setExecutiveOpen(true)} onBlur={() => window.setTimeout(() => setExecutiveOpen(false), 150)} placeholder="Search and select executive" autoComplete="off" />{executiveOpen && <div className="searchable-options">{filteredExecutives.length ? filteredExecutives.map((executive) => <button type="button" key={executive.id} onMouseDown={() => { setForm((current) => ({ ...current, executiveId: executive.id, executiveName: executive.name })); setErrors((current) => ({ ...current, executiveId: '' })); setExecutiveOpen(false) }}>{executive.name}</button>) : <div className="searchable-empty">No matching executives</div>}</div>}</div>{errors.executiveId && <div className="field-message">{errors.executiveId}</div>}</label>
         <label className="field"><span>Category *</span><select value={form.category} onChange={(event) => setField('category', event.target.value)}><option value="">Select category</option><option>Support</option><option>Installation</option><option>Monthly Backup</option></select>{errors.category && <div className="field-message">{errors.category}</div>}</label>
         <label className="field"><span>Category 2 *</span><select value={form.category2} onChange={(event) => setField('category2', event.target.value)}><option value="">Select category 2</option><option>Call</option><option>Visit</option></select>{errors.category2 && <div className="field-message">{errors.category2}</div>}</label>

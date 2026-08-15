@@ -14,7 +14,7 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'Enquiry Dashboard', path: '/dashboard/enquiry' }] },
   { label: 'Enquiry', path: '/enquiry', icon: MessageSquareText },
   {
     label: 'Masters',

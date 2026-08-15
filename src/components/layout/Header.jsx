@@ -7,6 +7,7 @@ const Header = () => {
   const { pathname } = useLocation()
   const breadcrumbByPath = {
     '/dashboard': ['Dashboard'],
+    '/dashboard/enquiry': ['Dashboard', 'Enquiry Dashboard'],
     '/enquiry': ['Enquiry'],
     '/masters': ['Masters'],
     '/masters/executives': ['Masters', 'Executive Master'],

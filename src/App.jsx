@@ -26,6 +26,7 @@ import NewAmcReport from './pages/Reports/NewAmcReport'
 import GoingToExpireAmcReport from './pages/Reports/GoingToExpireAmcReport'
 import RenewedAmcReport from './pages/Reports/RenewedAmcReport'
 import Enquiry from './pages/Enquiry/Enquiry'
+import EnquiryDashboard from './pages/Enquiry/EnquiryDashboard'
 import EnquiryReport from './pages/Reports/EnquiryReport'
 import { AuthProvider } from './context/AuthContext'
 
@@ -45,6 +46,7 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/enquiry" element={<EnquiryDashboard />} />
             <Route path="/enquiry" element={<Enquiry />} />
             <Route path="/masters" element={<Masters />} />
             <Route path="/masters/executives" element={<ExecutiveMaster />} />
