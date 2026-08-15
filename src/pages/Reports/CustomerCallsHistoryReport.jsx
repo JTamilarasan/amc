@@ -26,7 +26,7 @@ const CustomerCallsHistoryReport = () => {
   const [searchText, setSearchText] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [backupDetails, setBackupDetails] = useState(null)
+  const [callDetails, setCallDetails] = useState(null)
   const [viewVoucher, setViewVoucher] = useState(null)
   const filtered = useMemo(() => { const search = searchText.trim().toLowerCase(); return rows.filter((row) => !search || [row.partyName, row.customerExpiryDate, row.backupChecklist, row.totalCalls, row.totalVisits].some((value) => String(value || '').toLowerCase().includes(search))) }, [rows, searchText])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
@@ -61,7 +61,7 @@ const CustomerCallsHistoryReport = () => {
   const clear = () => { setFromDate(''); setToDate(''); setRange(null); setRows([]); setErrors({}); setError(''); setMessage(''); setSearchText(''); setPage(1) }
   const download = () => exportToCsv({ filename: `amc-customer-calls-history-${range.from}-to-${range.to}.csv`, headers: ['S.No', 'AMC Customer Name', 'AMC Expiry', 'Backup Count', 'Total Calls', 'Total Visits'], rows: filtered.map((row, index) => [index + 1, row.partyName, formatDate(row.customerExpiryDate), row.backupChecklist, row.totalCalls, row.totalVisits]) })
   const editVoucher = (voucher) => {
-    setBackupDetails(null)
+    setCallDetails(null)
     navigate('/call-management/call-receipt-voucher', { state: { editVoucherId: voucher.id, returnTo: '/reports/customer-calls-history', reportRange: { fromDate: range.from, toDate: range.to } } })
   }
 
@@ -79,15 +79,15 @@ const CustomerCallsHistoryReport = () => {
       <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>AMC Customer Name</th><th>AMC Expiry</th><th>Backup Count</th><th>Total Calls</th><th>Total Visits</th></tr></thead><tbody>
         {!range && <tr><td colSpan="6" className="text-center">Select a date range and generate the report.</td></tr>}
         {range && !filtered.length && <tr><td colSpan="6" className="text-center">No records found.</td></tr>}
-        {paged.map((row, index) => <tr key={row.partyId}><td>{(page - 1) * pageSize + index + 1}</td><td>{emptyReportValue(row.partyName)}</td><td>{formatDate(row.customerExpiryDate)}</td><td><button type="button" className="report-count-link" onClick={() => setBackupDetails(row)}>{row.backupChecklist}</button></td><td>{row.totalCalls}</td><td>{row.totalVisits}</td></tr>)}
+        {paged.map((row, index) => <tr key={row.partyId}><td>{(page - 1) * pageSize + index + 1}</td><td>{emptyReportValue(row.partyName)}</td><td>{formatDate(row.customerExpiryDate)}</td><td><button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'backup' })}>{row.backupChecklist}</button></td><td><button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'all' })}>{row.totalCalls}</button></td><td>{row.totalVisits}</td></tr>)}
       </tbody></table></div>
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" />
     </section>
 
-    <DetailsModal isOpen={Boolean(backupDetails)} title={`${backupDetails?.partyName || ''} - Monthly Backup Details`} onClose={() => setBackupDetails(null)} size="large">
-      <div className="table-wrap call-details-table backup-details-table"><table><thead><tr><th>S.No</th><th>Voucher No</th><th>Date</th><th>Executive</th><th>Category</th><th>Category 2</th><th>Call Status</th><th>Call Sub Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>
-        {!backupDetails?.backupVouchers.length && <tr><td colSpan="10" className="text-center">No Monthly Backup entries found.</td></tr>}
-        {backupDetails?.backupVouchers.map((voucher, index) => <tr key={voucher.id}><td>{index + 1}</td><td>{emptyReportValue(voucher.voucherNumber)}</td><td>{formatDate(voucher.date)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(voucher.category2)}</td><td>{emptyReportValue(voucher.callStatus)}</td><td>{emptyReportValue(voucher.callSubStatus)}</td><td>{emptyReportValue(voucher.callReceiptRemarks)}</td><td><div className="table-actions"><button type="button" className="executive-action-btn" onClick={() => setViewVoucher(voucher)}><Eye size={13} /> View</button><button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button></div></td></tr>)}
+    <DetailsModal isOpen={Boolean(callDetails)} title={`${callDetails?.row.partyName || ''} - ${callDetails?.type === 'all' ? 'All Call Details' : 'Monthly Backup Details'}`} onClose={() => setCallDetails(null)} size="large">
+      <div className="table-wrap call-details-table backup-details-table"><table><thead><tr><th>S.No</th><th>Voucher No</th><th>Date</th><th>Party Name</th><th>Executive</th><th>Category</th><th>Category 2</th><th>Call Status</th><th>Call Sub Status</th><th>Next Action</th><th>When</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>
+        {!((callDetails?.type === 'all' ? callDetails?.row.callVouchers : callDetails?.row.backupVouchers) || []).length && <tr><td colSpan="13" className="text-center">No call entries found.</td></tr>}
+        {((callDetails?.type === 'all' ? callDetails?.row.callVouchers : callDetails?.row.backupVouchers) || []).map((voucher, index) => <tr key={voucher.id}><td>{index + 1}</td><td>{emptyReportValue(voucher.voucherNumber)}</td><td>{formatDate(voucher.date)}</td><td>{emptyReportValue(voucher.partyName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(voucher.category2)}</td><td>{emptyReportValue(voucher.callStatus)}</td><td>{emptyReportValue(voucher.callSubStatus)}</td><td>{emptyReportValue(voucher.nextAction)}</td><td>{formatDate(voucher.when)}</td><td>{emptyReportValue(voucher.callReceiptRemarks)}</td><td><div className="table-actions"><button type="button" className="executive-action-btn" onClick={() => setViewVoucher(voucher)}><Eye size={13} /> View</button><button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button></div></td></tr>)}
       </tbody></table></div>
     </DetailsModal>
 

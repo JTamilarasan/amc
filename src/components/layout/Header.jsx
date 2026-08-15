@@ -1,9 +1,16 @@
+import { useEffect, useRef, useState } from 'react'
 import { Bell, ChevronDown } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import Button from '../common/Button'
 
 const Header = () => {
-  const { user } = useAuth()
+  const { user, updateDisplayName } = useAuth()
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [profileError, setProfileError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const profileRef = useRef(null)
   const { pathname } = useLocation()
   const breadcrumbByPath = {
     '/dashboard': ['Dashboard'],
@@ -40,6 +47,29 @@ const Header = () => {
     .join('')
     .toUpperCase()
 
+  useEffect(() => {
+    if (!profileOpen) return undefined
+    const closeOutside = (event) => { if (!profileRef.current?.contains(event.target)) setProfileOpen(false) }
+    document.addEventListener('mousedown', closeOutside)
+    return () => document.removeEventListener('mousedown', closeOutside)
+  }, [profileOpen])
+
+  const toggleProfile = () => {
+    setProfileOpen((open) => {
+      if (!open) { setNameInput(user?.displayName || ''); setProfileError('') }
+      return !open
+    })
+  }
+
+  const saveProfile = async (event) => {
+    event.preventDefault()
+    if (!nameInput.trim()) { setProfileError('Display Name is required.'); return }
+    setSaving(true); setProfileError('')
+    try { await updateDisplayName(nameInput); setProfileOpen(false) }
+    catch (error) { setProfileError(error.message || 'Unable to update Display Name.') }
+    finally { setSaving(false) }
+  }
+
   return (
     <header className="topbar">
       <nav className="header-breadcrumb" aria-label="Breadcrumb">
@@ -53,13 +83,21 @@ const Header = () => {
         <button className="icon-btn" aria-label="Notifications">
           <Bell size={18} />
         </button>
-        <div className="profile-pill">
-          <div className="avatar">{initials || 'U'}</div>
-          <div>
-            <strong>Welcome, {displayName}</strong>
-            <p>{user?.email || 'Signed in'}</p>
-          </div>
-          <ChevronDown size={16} />
+        <div className="profile-menu" ref={profileRef}>
+          <button type="button" className="profile-pill" onClick={toggleProfile} aria-expanded={profileOpen}>
+            <div className="avatar">{initials || 'U'}</div>
+            <div>
+              <strong>Welcome, {displayName}</strong>
+              <p>{user?.email || 'Signed in'}</p>
+            </div>
+            <ChevronDown size={16} />
+          </button>
+          {profileOpen && <form className="profile-popup" onSubmit={saveProfile}>
+            <h3>Profile</h3>
+            <label className="field"><span>Display Name</span><input value={nameInput} onChange={(event) => { setNameInput(event.target.value); setProfileError('') }} autoFocus />{profileError && <div className="field-message">{profileError}</div>}</label>
+            <label className="field"><span>Email</span><input value={user?.email || ''} readOnly disabled /></label>
+            <div className="profile-popup-actions"><Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button><Button type="button" variant="secondary" onClick={() => setProfileOpen(false)} disabled={saving}>Cancel</Button></div>
+          </form>}
         </div>
       </div>
     </header>

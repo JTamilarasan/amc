@@ -215,8 +215,9 @@ export const getCustomerCallsReport = async (fromDate, toDate) => {
     const customerExpiryDate = latestValidAmcToDate(getMatchingSalesVouchers(voucher, salesVouchers))
     if (!customerExpiryDate) return
     const key = voucher.partyId || `name:${normalizeName(voucher.partyName)}`
-    const current = grouped.get(key) || { partyId: key, partyName: voucher.partyName, customerExpiryDate, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [] }
+    const current = grouped.get(key) || { partyId: key, partyName: voucher.partyName, customerExpiryDate, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [] }
     current.totalCalls += 1
+    current.callVouchers.push(voucher)
     if (voucher.category2 === 'Visit') current.totalVisits += 1
     if (voucher.category === 'Monthly Backup') { current.backupChecklist += 1; current.backupVouchers.push(voucher) }
     grouped.set(key, current)

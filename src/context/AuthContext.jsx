@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import {
   browserLocalPersistence,
   browserSessionPersistence,
@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState('')
+  const [profileVersion, setProfileVersion] = useState(0)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -69,25 +70,22 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const updateDisplayName = async (displayName) => {
+    const nextName = displayName.trim()
+    if (!nextName) throw new Error('Display Name is required.')
+    if (!auth.currentUser) throw new Error('No authenticated user found.')
+    await updateProfile(auth.currentUser, { displayName: nextName })
+    setUser(auth.currentUser)
+    setProfileVersion((current) => current + 1)
+    return nextName
+  }
+
   const logout = async () => {
     setAuthError('')
     await signOut(auth)
   }
 
-  const value = useMemo(
-    () => ({
-      user,
-      currentUser: user,
-      loading,
-      authError,
-      login,
-      signup,
-      resetPassword,
-      logout,
-      setAuthError,
-    }),
-    [user, loading, authError]
-  )
+  const value = { user, currentUser: user, loading, authError, profileVersion, login, signup, resetPassword, updateDisplayName, logout, setAuthError }
 
   if (loading) {
     return <Loader fullScreen />
@@ -96,4 +94,5 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext)
