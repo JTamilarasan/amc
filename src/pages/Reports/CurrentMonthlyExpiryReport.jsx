@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { AlertTriangle, Download, Search } from 'lucide-react'
+import { AlertTriangle, Download, RefreshCw, Search } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import CommonPagination from '../../components/common/CommonPagination'
@@ -14,22 +15,23 @@ const formatFilenameDate = (value) => value.split('-').reverse().join('-')
 
 const CurrentMonthlyExpiryReport = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
   const vouchers = useSelector(selectSalesVouchers)
   const { loading, error } = useSelector(selectSalesVoucherState)
-  const shouldFetch = useRef(vouchers.length === 0 && !loading)
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
-  const [range, setRange] = useState(null)
+  const [fromDate, setFromDate] = useState(location.state?.fromDate || '')
+  const [toDate, setToDate] = useState(location.state?.toDate || '')
+  const [range, setRange] = useState(location.state?.fromDate && location.state?.toDate ? { from: location.state.fromDate, to: location.state.toDate } : null)
   const [errors, setErrors] = useState({})
   const [searchText, setSearchText] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  useEffect(() => { if (shouldFetch.current) dispatch(fetchSalesVouchers()) }, [dispatch])
+  useEffect(() => { dispatch(fetchSalesVouchers()) }, [dispatch])
 
   const generated = useMemo(() => !range ? [] : vouchers.filter((voucher) => {
     const amcToDate = getVoucherItem(voucher)?.amcToDate
-    return Boolean(amcToDate) && amcToDate >= range.from && amcToDate <= range.to
+    return Boolean(amcToDate) && amcToDate >= range.from && amcToDate <= range.to && voucher.expiryRenewed !== true && voucher.expiryRenewed !== 'Yes'
   }), [vouchers, range])
   const filtered = useMemo(() => {
     const search = searchText.trim().toLowerCase()
@@ -67,11 +69,13 @@ const CurrentMonthlyExpiryReport = () => {
       return [voucher.customerName, voucher.executiveName, voucher.category, item?.itemName, item?.serialNo, formatDate(item?.amcToDate), item?.amount]
     }),
   })
+  const renew = (voucher) => navigate('/sales-voucher', { state: { renewalMode: true, renewVoucher: voucher, customerId: voucher.customerId, oldSalesVoucherId: voucher.id, oldVoucherNumber: voucher.voucherNumber, oldAMCToDate: getVoucherItem(voucher)?.amcToDate || '', returnTo: '/reports/current-month-expiry', reportRange: { fromDate: range?.from || '', toDate: range?.to || '' } } })
 
   if (loading && !vouchers.length) return <div className="page-stack"><PageHeader title="Current Monthly Expiry Report" subtitle="View AMC records expiring in a selected date range." /><section className="panel-card"><Loader label="Loading report data..." /></section></div>
 
   return <div className="page-stack">
     <PageHeader title="Current Monthly Expiry Report" subtitle="View AMC records expiring in a selected date range." />
+    {location.state?.message && <div className="auth-success">{location.state.message}</div>}
     {error && <div className="auth-error">Unable to load report data. Please try again.</div>}
     <section className="panel-card report-section expiry-report-section">
       <div className="report-filter-grid">
@@ -81,10 +85,10 @@ const CurrentMonthlyExpiryReport = () => {
       <div className="form-actions report-actions"><Button type="button" onClick={generate}>Generate Report</Button><Button type="button" variant="secondary" onClick={clear}>Clear</Button><Button type="button" variant="ghost" onClick={download} disabled={!filtered.length}><Download size={15} /> Download Report</Button></div>
       {showNoResultsWarning && <div className="report-empty-warning" role="status"><AlertTriangle size={16} aria-hidden="true" /><span>No AMC expiry records found for the selected date range.</span></div>}
       <div className="toolbar report-toolbar"><div className="search-box"><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search customer, executive, category, product or serial no..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
-      <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>Customer Name</th><th>Executive</th><th>Category</th><th>Product</th><th>Serial No</th><th>To Date</th><th>Amount</th></tr></thead><tbody>
-        {!range && <tr><td colSpan="8" className="text-center">Select a date range and generate the report.</td></tr>}
-        {range && !filtered.length && <tr><td colSpan="8" className="text-center">No records found.</td></tr>}
-        {paged.map((voucher, index) => { const item = getVoucherItem(voucher); return <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>{emptyReportValue(voucher.customerName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(item?.itemName)}</td><td>{emptyReportValue(item?.serialNo)}</td><td>{formatDate(item?.amcToDate)}</td><td>{formatReportCurrency(item?.amount)}</td></tr> })}
+      <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>Customer Name</th><th>Executive</th><th>Category</th><th>Product</th><th>Serial No</th><th>To Date</th><th>Amount</th><th>Actions</th></tr></thead><tbody>
+        {!range && <tr><td colSpan="9" className="text-center">Select a date range and generate the report.</td></tr>}
+        {range && !filtered.length && <tr><td colSpan="9" className="text-center">No records found.</td></tr>}
+        {paged.map((voucher, index) => { const item = getVoucherItem(voucher); return <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>{emptyReportValue(voucher.customerName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(item?.itemName)}</td><td>{emptyReportValue(item?.serialNo)}</td><td>{formatDate(item?.amcToDate)}</td><td>{formatReportCurrency(item?.amount)}</td><td><button type="button" className="executive-action-btn" onClick={() => renew(voucher)}><RefreshCw size={13} /> Renew</button></td></tr> })}
       </tbody></table></div>
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" />
     </section>

@@ -70,6 +70,10 @@ export const createSalesVoucher = async (voucherData) => {
     const numberClaimRef = claimRef(year, sequence)
     const numberClaimSnapshot = await transaction.get(numberClaimRef)
     if (numberClaimSnapshot.exists()) throw new Error('Voucher number already exists. Please try again.')
+    const oldVoucherRef = voucherData.renewalSourceVoucherId ? doc(db, vouchersCollection, voucherData.renewalSourceVoucherId) : null
+    const oldVoucherSnapshot = oldVoucherRef ? await transaction.get(oldVoucherRef) : null
+    if (oldVoucherRef && !oldVoucherSnapshot?.exists()) throw new Error('The AMC voucher selected for renewal no longer exists.')
+    if (oldVoucherSnapshot?.data()?.expiryRenewed === true || oldVoucherSnapshot?.data()?.expiryRenewed === 'Yes') throw new Error('This AMC voucher has already been renewed.')
     const voucherRef = doc(collection(db, vouchersCollection))
     const voucherNumber = `${sequence}/${year}`
     const payload = {
@@ -77,12 +81,14 @@ export const createSalesVoucher = async (voucherData) => {
       customerId: voucherData.customerId, customerName: voucherData.customerName,
       executiveId: voucherData.executiveId, executiveName: voucherData.executiveName,
       category: voucherData.category, narration: (voucherData.narration || '').trim(),
+      renewedFromVoucherId: voucherData.renewalSourceVoucherId || '', renewedFromVoucherNumber: voucherData.renewalSourceVoucherNumber || '',
       items: cleanItems(voucherData.items), totalAmount: Number(voucherData.totalAmount),
       status: 'Active', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     }
     transaction.set(numberClaimRef, { voucherSequence: sequence, voucherYear: year, voucherNumber, voucherId: voucherRef.id, createdAt: serverTimestamp() })
     transaction.set(sequenceRef, { lastVoucherNumber: sequence, voucherYear: year, updatedAt: serverTimestamp() }, { merge: true })
     transaction.set(voucherRef, payload)
+    if (oldVoucherRef) transaction.update(oldVoucherRef, { expiryRenewed: true, renewedVoucherId: voucherRef.id, renewedVoucherNumber: voucherNumber, updatedAt: serverTimestamp() })
     return voucherRef
   })
   return mapVoucher(await getDoc(createdRef))

@@ -209,6 +209,8 @@ const SalesVoucher = () => {
     const payload = {
       voucherNumber, voucherDate, customerId, customerName, executiveId, executiveName, category,
       narration: narration.trim(), items: [voucherItem], totalAmount: Number(itemForm.amount),
+      renewalSourceVoucherId: routeRenewVoucher?.id || location.state?.oldSalesVoucherId || '',
+      renewalSourceVoucherNumber: routeRenewVoucher?.voucherNumber || location.state?.oldVoucherNumber || '',
     }
     try {
       if (editingVoucherId) {
@@ -220,7 +222,7 @@ const SalesVoucher = () => {
       } else {
         const saved = await dispatch(addSalesVoucher(payload)).unwrap()
         if (routeRenewVoucher && location.state?.returnTo) {
-          navigate(location.state.returnTo, { state: { message: `AMC renewed successfully with Sales voucher ${saved.voucherNumber}.` } })
+          navigate(location.state.returnTo, { state: { ...(location.state.reportRange || {}), message: `AMC renewed successfully with Sales voucher ${saved.voucherNumber}.` } })
           return
         }
       }
@@ -283,6 +285,7 @@ const SalesVoucher = () => {
         <label className="field"><span>Category *</span><select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">Select category</option><option value="New">New</option><option value="Renewal">Renewal</option></select></label>
       </div>
       <label className="field"><span>Narration</span><textarea value={narration} onChange={(event) => setNarration(event.target.value)} placeholder="Enter voucher narration..." /></label>
+      {routeRenewVoucher && <label className="field"><span>Old Voucher Reference</span><input value={routeRenewVoucher.voucherNumber || location.state?.oldVoucherNumber || ''} readOnly disabled /></label>}
 
       <div className="panel-heading voucher-products-heading"><h2>Item Details</h2></div>
       <div className="form-grid voucher-item-grid">
