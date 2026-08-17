@@ -110,7 +110,7 @@ const CallReceiptVoucher = () => {
     if (!form.category) next.category = 'Category is required.'
     if (!form.category2) next.category2 = 'Category 2 is required.'
     if (!form.callStatus) next.callStatus = 'Call status is required.'
-    if (!form.callSubStatus) next.callSubStatus = 'Call sub status is required.'
+    if (form.callStatus === 'Open' && !form.callSubStatus) next.callSubStatus = 'Call sub status is required.'
     if (form.callStatus === 'Open' && !form.nextAction) next.nextAction = 'Next action is required.'
     if (form.callStatus === 'Open' && form.nextAction && !form.when) next.when = 'Action date is required.'
     setErrors(next)
@@ -143,8 +143,8 @@ const CallReceiptVoucher = () => {
     finally { setSaving(false) }
   }
   const changeStatus = (value) => {
-    setForm((current) => ({ ...current, callStatus: value, ...(value === 'Closed' ? { nextAction: '', when: '' } : {}) }))
-    setErrors((current) => ({ ...current, callStatus: '', ...(value === 'Closed' ? { nextAction: '', when: '' } : {}) }))
+    setForm((current) => ({ ...current, callStatus: value, ...(value === 'Closed' ? { callSubStatus: '', nextAction: '', when: '' } : {}) }))
+    setErrors((current) => ({ ...current, callStatus: '', ...(value === 'Closed' ? { callSubStatus: '', nextAction: '', when: '' } : {}) }))
     setMessage('')
   }
   const changeCustomer = (value) => { const match = customers.find((item) => item.customerName.toLowerCase() === value.trim().toLowerCase()); setForm((current) => ({ ...current, partyName: value, partyId: match?.id || '' })); setErrors((current) => ({ ...current, partyId: '' })) }
@@ -181,7 +181,7 @@ const CallReceiptVoucher = () => {
         <label className="field"><span>Category *</span><select value={form.category} onChange={(event) => setField('category', event.target.value)}><option value="">Select category</option><option>Support</option><option>Installation</option><option>Monthly Backup</option></select>{errors.category && <div className="field-message">{errors.category}</div>}</label>
         <label className="field"><span>Category 2 *</span><select value={form.category2} onChange={(event) => setField('category2', event.target.value)}><option value="">Select category 2</option><option>Call</option><option>Visit</option></select>{errors.category2 && <div className="field-message">{errors.category2}</div>}</label>
         <label className="field"><span>Call Status *</span><select value={form.callStatus} onChange={(event) => changeStatus(event.target.value)}><option value="">Select status</option><option>Open</option><option>Closed</option></select>{errors.callStatus && <div className="field-message">{errors.callStatus}</div>}</label>
-        <label className="field"><span>Call Sub Status *</span><select value={form.callSubStatus} onChange={(event) => setField('callSubStatus', event.target.value)}><option value="">Select sub status</option><option>Successful</option><option>Unsuccessful</option><option>Cancelled</option></select>{errors.callSubStatus && <div className="field-message">{errors.callSubStatus}</div>}</label>
+        {form.callStatus === 'Open' && <label className="field"><span>Call Sub Status *</span><select value={form.callSubStatus} onChange={(event) => setField('callSubStatus', event.target.value)}><option value="">Select sub status</option><option>Successful</option><option>Unsuccessful</option><option>Cancelled</option></select>{errors.callSubStatus && <div className="field-message">{errors.callSubStatus}</div>}</label>}
         {form.callStatus === 'Open' && <label className="field"><span>Next Action *</span><select value={form.nextAction} onChange={(event) => setField('nextAction', event.target.value)}><option value="">Select next action</option><option>Call</option><option>Visit</option></select>{errors.nextAction && <div className="field-message">{errors.nextAction}</div>}</label>}
         {form.callStatus === 'Open' && <label className="field"><span>When *</span><input type="date" value={form.when} onChange={(event) => setField('when', event.target.value)} />{errors.when && <div className="field-message">{errors.when}</div>}</label>}
       </div>

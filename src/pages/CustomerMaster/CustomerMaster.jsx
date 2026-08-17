@@ -143,8 +143,7 @@ const CustomerMaster = () => {
     if (!form.state) nextErrors.state = 'Please select State'
     if (!form.mobileNo.trim()) nextErrors.mobileNo = 'Mobile number is required.'
     else if (!/^\d{10}$/.test(form.mobileNo.trim())) nextErrors.mobileNo = 'Enter a valid 10-digit mobile number.'
-    if (!form.email.trim()) nextErrors.email = 'Email ID is required.'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextErrors.email = 'Enter a valid email address.'
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextErrors.email = 'Enter a valid email address.'
     if (form.pincode.trim() && !/^\d{6}$/.test(form.pincode.trim())) {
       nextErrors.pincode = 'Pincode must be 6 digits.'
     }
@@ -261,7 +260,7 @@ const CustomerMaster = () => {
               {validationErrors.mobileNo ? <div className="field-message field-error">{validationErrors.mobileNo}</div> : null}
             </label>
             <label className="field">
-              <span>Email ID *</span>
+              <span>Email ID</span>
               <input name="email" type="text" inputMode="email" value={form.email} onChange={handleChange} placeholder="customer@example.com" />
               {validationErrors.email ? <div className="field-message field-error">{validationErrors.email}</div> : null}
             </label>

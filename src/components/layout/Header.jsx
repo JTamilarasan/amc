@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell, ChevronDown } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import { useAuth } from '../../context/AuthContext'
+import { fetchExecutives, selectActiveExecutives } from '../../features/executives/executiveSlice'
 import Button from '../common/Button'
 
 const Header = () => {
   const { user, updateDisplayName } = useAuth()
+  const dispatch = useDispatch()
+  const executives = useSelector(selectActiveExecutives)
   const [profileOpen, setProfileOpen] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [profileError, setProfileError] = useState('')
@@ -54,6 +58,8 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', closeOutside)
   }, [profileOpen])
 
+  useEffect(() => { dispatch(fetchExecutives()) }, [dispatch])
+
   const toggleProfile = () => {
     setProfileOpen((open) => {
       if (!open) { setNameInput(user?.displayName || ''); setProfileError('') }
@@ -94,7 +100,7 @@ const Header = () => {
           </button>
           {profileOpen && <form className="profile-popup" onSubmit={saveProfile}>
             <h3>Profile</h3>
-            <label className="field"><span>Display Name</span><input value={nameInput} onChange={(event) => { setNameInput(event.target.value); setProfileError('') }} autoFocus />{profileError && <div className="field-message">{profileError}</div>}</label>
+            <label className="field"><span>Executive</span><select value={executives.find((executive) => executive.name === nameInput)?.id || ''} onChange={(event) => { setNameInput(executives.find((executive) => executive.id === event.target.value)?.name || ''); setProfileError('') }} autoFocus><option value="">Select executive</option>{executives.map((executive) => <option key={executive.id} value={executive.id}>{executive.name}</option>)}</select>{profileError && <div className="field-message">{profileError}</div>}</label>
             <label className="field"><span>Email</span><input value={user?.email || ''} readOnly disabled /></label>
             <div className="profile-popup-actions"><Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button><Button type="button" variant="secondary" onClick={() => setProfileOpen(false)} disabled={saving}>Cancel</Button></div>
           </form>}

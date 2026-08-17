@@ -22,7 +22,7 @@ const clean = (data) => ({
   productId: data.productId || '', productName: data.productName || '',
   callDisposition: data.callDisposition || '',
   assignedExecutiveId: data.assignedExecutiveId || '', assignedExecutiveName: data.assignedExecutiveName || '',
-  followUpLeadId: data.followUpLeadId, followUpLeadName: data.followUpLeadName,
+  followUpLeadId: data.assignedExecutiveId || data.followUpLeadId, followUpLeadName: data.assignedExecutiveName || data.followUpLeadName,
 })
 
 const validate = (data) => {
