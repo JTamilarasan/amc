@@ -85,7 +85,7 @@ const updateExecutiveCounters = (transaction, ref, snapshot, delta) => {
 const cleanVoucher = (data) => ({
   date: data.date, partyId: data.partyId, partyName: data.partyName, customerExpiryDate: data.customerExpiryDate || null,
   executiveId: data.executiveId, executiveName: data.executiveName, category: data.category, category2: data.category2 || null,
-  callReceiptRemarks: (data.callReceiptRemarks || '').trim(), callStatus: data.callStatus, callSubStatus: data.callSubStatus,
+  callReceiptRemarks: (data.callReceiptRemarks || '').trim(), callStatus: data.callStatus, callSubStatus: data.callStatus === 'Closed' ? data.callSubStatus || '' : '',
   nextAction: data.callStatus === 'Open' ? data.nextAction || null : null,
   when: data.callStatus === 'Open' ? data.when || null : null,
 })
@@ -215,10 +215,10 @@ export const getCustomerCallsReport = async (fromDate, toDate) => {
     const customerExpiryDate = latestValidAmcToDate(getMatchingSalesVouchers(voucher, salesVouchers))
     if (!customerExpiryDate) return
     const key = voucher.partyId || `name:${normalizeName(voucher.partyName)}`
-    const current = grouped.get(key) || { partyId: key, partyName: voucher.partyName, customerExpiryDate, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [] }
+    const current = grouped.get(key) || { partyId: key, partyName: voucher.partyName, customerExpiryDate, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [], visitVouchers: [] }
     current.totalCalls += 1
     current.callVouchers.push(voucher)
-    if (voucher.category2 === 'Visit') current.totalVisits += 1
+    if (voucher.category2 === 'Visit') { current.totalVisits += 1; current.visitVouchers.push(voucher) }
     if (voucher.category === 'Monthly Backup') { current.backupChecklist += 1; current.backupVouchers.push(voucher) }
     grouped.set(key, current)
   })
