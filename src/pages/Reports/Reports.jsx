@@ -4,7 +4,7 @@ import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 
 const reportCards = [
-  { title: 'Sales Register Report', description: 'View sales vouchers by selected date range.', path: '/reports/sales-register', icon: FileSpreadsheet },
+  { title: 'AMC Register Report', description: 'View AMC vouchers by selected date range.', path: '/reports/sales-register', icon: FileSpreadsheet },
   { title: 'Call Register Report', description: 'View call receipt vouchers by date or voucher number.', path: '/reports/call-register', icon: Headset },
   { title: 'Single Customer Calls History Report', description: 'View complete call history for any selected customer.', path: '/reports/single-customer-calls-history', icon: Users },
   { title: 'Current Monthly Expiry Report', description: 'View AMC records expiring in the current month.', path: '/reports/current-month-expiry', icon: CalendarClock },

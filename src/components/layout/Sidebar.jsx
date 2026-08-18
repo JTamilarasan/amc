@@ -3,19 +3,26 @@ import {
   LayoutDashboard,
   BookOpen,
   FileText,
-  Headset,
   BarChart3,
   LogOut,
   Menu,
-  MessageSquareText,
   X,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'Enquiry Dashboard', path: '/dashboard/enquiry' }] },
-  { label: 'Enquiry', path: '/enquiry', icon: MessageSquareText },
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'AMC Dashboard', path: '/dashboard' }, { label: 'Enquiry and Support Dashboard', path: '/dashboard/enquiry' }] },
+  {
+    label: 'Vouchers',
+    path: '/sales-voucher',
+    icon: FileText,
+    children: [
+      { label: 'AMC Voucher', path: '/sales-voucher' },
+      { label: 'Call Receipt Voucher', path: '/call-management/call-receipt-voucher' },
+      { label: 'Enquiry Voucher', path: '/enquiry' },
+    ],
+  },
   {
     label: 'Masters',
     path: '/masters',
@@ -27,22 +34,12 @@ const navItems = [
       { label: 'Area Master', path: '/masters/areas' },
     ],
   },
-  { label: 'Sales Voucher', path: '/sales-voucher', icon: FileText },
-  // { label: 'AMC Management', path: '/amc', icon: BriefcaseBusiness },
-  {
-    label: 'Call Management',
-    path: '/call-management/call-receipt-voucher',
-    icon: Headset,
-    children: [
-      { label: 'Call Receipt Voucher', path: '/call-management/call-receipt-voucher' },
-    ],
-  },
   {
     label: 'Reports',
     path: '/reports',
     icon: BarChart3,
     children: [
-      { label: 'Sales Register Report', path: '/reports/sales-register' },
+      { label: 'AMC Register Report', path: '/reports/sales-register' },
       { label: 'Call Register Report', path: '/reports/call-register' },
       { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history' },
       { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry' },

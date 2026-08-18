@@ -17,18 +17,18 @@ const Header = () => {
   const profileRef = useRef(null)
   const { pathname } = useLocation()
   const breadcrumbByPath = {
-    '/dashboard': ['Dashboard'],
-    '/dashboard/enquiry': ['Dashboard', 'Enquiry Dashboard'],
-    '/enquiry': ['Enquiry'],
+    '/dashboard': ['Dashboard', 'AMC Dashboard'],
+    '/dashboard/enquiry': ['Dashboard', 'Enquiry and Support Dashboard'],
+    '/enquiry': ['Vouchers', 'Enquiry Voucher'],
     '/masters': ['Masters'],
     '/masters/executives': ['Masters', 'Executive Master'],
     '/masters/customers': ['Masters', 'Customer Master'],
     '/masters/products': ['Masters', 'Product Master'],
     '/masters/areas': ['Masters', 'Area Master'],
-    '/sales-voucher': ['Sales Voucher'],
+    '/sales-voucher': ['Vouchers', 'AMC Voucher'],
     '/amc': ['AMC Management'],
     '/reports': ['Reports'],
-    '/reports/sales-register': ['Reports', 'Sales Register Report'],
+    '/reports/sales-register': ['Reports', 'AMC Register Report'],
     '/reports/call-register': ['Reports', 'Call Register Report'],
     '/reports/single-customer-calls-history': ['Reports', 'Single Customer Calls History Report'],
     '/reports/amc-active': ['Reports', 'Active AMC Customers Report'],
@@ -40,7 +40,7 @@ const Header = () => {
     '/reports/current-month-expiry': ['Reports', 'Current Monthly Expiry Report'],
     '/reports/customer-calls-history': ['Reports', 'AMC Customer Calls History'],
     '/reports/executive-calls': ['Reports', 'Executive Calls Report'],
-    '/call-management/call-receipt-voucher': ['Call Management', 'Call Receipt Voucher'],
+    '/call-management/call-receipt-voucher': ['Vouchers', 'Call Receipt Voucher'],
   }
   const breadcrumb = breadcrumbByPath[pathname] || ['Dashboard']
   const displayName = user?.displayName || user?.email || 'User'

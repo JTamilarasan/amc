@@ -139,7 +139,6 @@ const CustomerMaster = () => {
     if (!form.customerName.trim() || form.customerName.trim().length < 2) {
       nextErrors.customerName = 'Customer name is required.'
     }
-    if (!form.areaId) nextErrors.areaId = 'Please select an area.'
     if (!form.state) nextErrors.state = 'Please select State'
     if (!form.mobileNo.trim()) nextErrors.mobileNo = 'Mobile number is required.'
     else if (!/^\d{10}$/.test(form.mobileNo.trim())) nextErrors.mobileNo = 'Enter a valid 10-digit mobile number.'
@@ -244,7 +243,7 @@ const CustomerMaster = () => {
               {validationErrors.customerName ? <div className="field-message field-error">{validationErrors.customerName}</div> : null}
             </label>
             <label className="field">
-              <span>Area *</span>
+              <span>Area</span>
               <div className="searchable-select">
                 <input value={form.areaName} onChange={(event) => { handleAreaInput(event.target.value); setAreaOpen(true) }} onFocus={() => setAreaOpen(true)} onBlur={() => window.setTimeout(() => setAreaOpen(false), 150)} placeholder="Search and select area" autoComplete="off" />
                 {areaOpen ? <div className="searchable-options">

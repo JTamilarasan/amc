@@ -20,9 +20,9 @@ const Dashboard = () => {
   const stats = data ? [
     { title: 'Total Active AMC Customers', value: data.active.length, subtitle: 'Active as of today', icon: PackageCheck, accent: 'accent-green', path: '/reports/amc-active' },
     { title: 'Total Expired Customers', value: data.expired.length, subtitle: 'AMC period completed', icon: BellRing, accent: 'accent-red', path: '/reports/amc-expired' },
-    { title: 'Total New AMC', value: data.newAmc.length, subtitle: 'Sales Voucher category: New', icon: Sparkles, accent: 'accent-blue', path: '/reports/amc-new' },
+    { title: 'Total New AMC', value: data.newAmc.length, subtitle: 'AMC Voucher category: New', icon: Sparkles, accent: 'accent-blue', path: '/reports/amc-new' },
     { title: 'Total Going to Expire', value: data.goingToExpire.length, subtitle: `Next ${EXPIRY_WARNING_DAYS} days`, icon: CalendarClock, accent: 'accent-amber', path: '/reports/amc-going-to-expire' },
-    { title: 'Total Renewed AMC', value: data.renewed.length, subtitle: 'Sales Voucher category: Renewal', icon: RefreshCw, accent: 'accent-purple', path: '/reports/amc-renewed' },
+    { title: 'Total Renewed AMC', value: data.renewed.length, subtitle: 'AMC Voucher category: Renewal', icon: RefreshCw, accent: 'accent-purple', path: '/reports/amc-renewed' },
   ] : []
 
   return <div className="page-stack dashboard-amc-summary">

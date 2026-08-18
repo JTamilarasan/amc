@@ -269,7 +269,7 @@ const SalesVoucher = () => {
   }
 
   return <div className="page-stack">
-    <PageHeader title="Sales Voucher" subtitle="Create sales and AMC vouchers." />
+    <PageHeader title="AMC Voucher" subtitle="Create and manage AMC vouchers." />
     <section className="panel-card form-card">
       <div className="form-grid two-col" style={{ gap: 18 }}>
         <label className="field"><span>Voucher Number</span><input value={voucherNumber} readOnly disabled /></label>
@@ -306,7 +306,7 @@ const SalesVoucher = () => {
     </section>
 
     <section className="panel-card" style={{ marginTop: 18 }}>
-      <div className="panel-heading"><h2>Recent Sales Vouchers</h2><span>Saved voucher history</span></div>
+      <div className="panel-heading"><h2>Recent AMC Vouchers</h2><span>Saved voucher history</span></div>
       <div className="toolbar" style={{ marginBottom: 12 }}><div className="search-box" style={{ width: '100%' }}><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search by voucher number or customer..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
       {loading && !vouchers.length ? <Loader size="small" label="Loading vouchers..." /> : isMobile ? <div className="customer-mobile-list">{pagedVouchers.map((voucher) => <div className="customer-mobile-card" key={voucher.id}>
         <div className="customer-mobile-row"><span className="customer-mobile-label">Voucher</span><span>#{voucher.voucherNumber}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Party</span><span>{voucher.customerName}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Executive</span><span>{voucher.executiveName || '—'}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Category</span><span>{voucher.category || '—'}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(voucher.voucherDate)}</span></div>
@@ -318,7 +318,7 @@ const SalesVoucher = () => {
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filteredVouchers.length} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(totalPages, current + 1))} className="history-pagination" />
     </section>
 
-    <DetailsModal isOpen={viewModalOpen} title="Sales Voucher Details" onClose={handleCloseView}>
+    <DetailsModal isOpen={viewModalOpen} title="AMC Voucher Details" onClose={handleCloseView}>
       {selectedVoucher && <>
         <div className="voucher-modal-number">Voucher #{displayValue(selectedVoucher.voucherNumber)}</div>
         <h3 className="details-section-title">Voucher Information</h3>

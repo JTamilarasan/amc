@@ -67,7 +67,7 @@ const EnquiryDashboard = () => {
   const selectedLeadName = executives.find((lead) => lead.id === followUpLeadId)?.name || ''
   const openReport = (card) => navigate('/reports/enquiry-report', { state: { fromDate: card.range?.[0] || '', toDate: card.range?.[1] || '', followUpLeadId, followUpLeadName: selectedLeadName, disposition: card.disposition || '' } })
   return <div className="page-stack">
-    <PageHeader title="Enquiry Dashboard" subtitle="Enquiry follow-up and outcome summary." />
+    <PageHeader title="Enquiry and Support Dashboard" subtitle="Enquiry follow-up and outcome summary." />
     <section className="panel-card"><label className="field"><span>Executive</span><select value={followUpLeadId} onChange={(event) => setFollowUpLeadId(event.target.value)}><option value="">All Executives</option>{executives.map((executive) => <option key={executive.id} value={executive.id}>{executive.name}</option>)}</select></label></section>
     {error && <div className="auth-error">Unable to load enquiry dashboard.</div>}
     {loading && !items.length ? <section className="panel-card">Loading enquiry summary...</section> : <section className="stats-grid enquiry-stats">{existingCards.map((card) => <StatCard key={card.title} {...card} onClick={() => openReport(card)} />)}</section>}
