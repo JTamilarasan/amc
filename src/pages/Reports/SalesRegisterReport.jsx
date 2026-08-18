@@ -65,16 +65,16 @@ const SalesRegisterReport = () => {
   }
   const clear = () => { setFromDate(''); setToDate(''); setRange(null); setErrors({}); setSearchText(''); setPage(1) }
   const download = () => exportToCsv({
-    filename: `sales-register-${range.from}-to-${range.to}.csv`,
+    filename: `amc-register-${range.from}-to-${range.to}.csv`,
     headers: ['Voucher No', 'Date', 'Customer Name', 'Executive', 'Category', 'Product', 'Serial No', 'Duration', 'AMC From', 'AMC To', 'Amount', 'Status'],
     rows: [...generated].sort(compareVoucherNumbers).map((voucher) => { const item = getVoucherItem(voucher); return [voucher.voucherNumber, formatReportDate(voucher.voucherDate), voucher.customerName, voucher.executiveName, voucher.category, item?.itemName, item?.serialNo, item?.duration, formatReportDate(item?.amcFromDate), formatReportDate(item?.amcToDate), item?.amount, voucher.status] }),
   })
   const editVoucher = (voucher) => navigate('/sales-voucher', { state: { editVoucherId: voucher.id, editVoucher: voucher, returnTo: '/reports/sales-register', reportRange: { fromDate: range.from, toDate: range.to } } })
 
-  if (loading && !vouchers.length) return <div className="page-stack"><PageHeader title="Sales Register Report" subtitle="View sales vouchers by selected date range." /><section className="panel-card"><Loader label="Loading report data..." /></section></div>
+  if (loading && !vouchers.length) return <div className="page-stack"><PageHeader title="AMC Register Report" subtitle="View AMC vouchers by selected date range." /><section className="panel-card"><Loader label="Loading report data..." /></section></div>
 
   return <div className="page-stack">
-    <PageHeader title="Sales Register Report" subtitle="View sales vouchers by selected date range." />
+    <PageHeader title="AMC Register Report" subtitle="View AMC vouchers by selected date range." />
     {error && <div className="auth-error">Unable to load report data. Please try again.</div>}
     {location.state?.message && <div className="auth-success">{location.state.message}</div>}
     <section className="panel-card report-section">
@@ -83,7 +83,7 @@ const SalesRegisterReport = () => {
         <label className="field"><span>To Date *</span><input type="date" value={toDate} onChange={(event) => { setToDate(event.target.value); setErrors((value) => ({ ...value, toDate: '' })); setPage(1) }} />{errors.toDate && <div className="field-message">{errors.toDate}</div>}</label>
       </div>
       <div className="form-actions report-actions"><Button type="button" onClick={generate}>Generate Report</Button><Button type="button" variant="secondary" onClick={clear}>Clear</Button><Button type="button" variant="ghost" onClick={download} disabled={!generated.length}><Download size={15} /> Download Report</Button></div>
-      {showNoResultsWarning && <div className="report-empty-warning" role="status"><AlertTriangle size={16} aria-hidden="true" /><span>No sales records found for the selected date range.</span></div>}
+      {showNoResultsWarning && <div className="report-empty-warning" role="status"><AlertTriangle size={16} aria-hidden="true" /><span>No AMC records found for the selected date range.</span></div>}
       <div className="toolbar report-toolbar"><div className="search-box"><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search voucher, customer, executive, product or serial no..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
       <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>Voucher No</th><th>Date</th><th>Customer Name</th><th>Executive</th><th>Category</th><th>Product</th><th>Serial No</th><th>Duration</th><th>AMC From</th><th>AMC To</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>
         {range && !filtered.length && <tr><td colSpan="14" className="text-center">No records found.</td></tr>}{!range && <tr><td colSpan="14" className="text-center">Select a date range and generate the report.</td></tr>}
