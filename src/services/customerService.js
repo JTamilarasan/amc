@@ -21,14 +21,12 @@ const normalizeCustomerName = (name) => (name || '').trim().toLowerCase()
 
 const validateRequiredCustomerFields = (customerData) => {
   if (!(customerData.customerName || '').trim()) throw new Error('Customer name is required.')
-  if (!customerData.areaId) throw new Error('Please select an area.')
   if (!INDIAN_STATES.includes(customerData.state)) throw new Error('Please select State')
   const mobileNo = (customerData.mobileNo || '').trim()
   if (!mobileNo) throw new Error('Mobile number is required.')
   if (!/^\d{10}$/.test(mobileNo)) throw new Error('Enter a valid 10-digit mobile number.')
   const email = (customerData.email || '').trim()
-  if (!email) throw new Error('Email ID is required.')
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid email address.')
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid email address.')
 }
 
 const mapCustomer = (docSnapshot) => {

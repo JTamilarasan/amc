@@ -195,7 +195,7 @@ th { color: #64748b; font-weight: 600; }
 .report-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; }
 .call-register-filters { grid-template-columns: repeat(3, minmax(0, 260px)); }
 .call-register-report .page-header h1, .call-register-report .field > span, .call-register-report th { font-weight: 700; }
-.call-register-table table { min-width: 980px; }
+.call-register-table table { min-width: 820px; }
 .call-register-day-heading td { background: #eef2ff; font-weight: 700; }
 .call-register-day-total td { background: #f8fafc; font-weight: 700; text-align: right; }
 .call-register-summary { margin-top: 18px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
