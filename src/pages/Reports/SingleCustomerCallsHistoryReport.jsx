@@ -9,6 +9,7 @@ import DetailsModal from '../../components/common/DetailsModal'
 import { fetchCustomers, selectActiveCustomers } from '../../features/customers/customerSlice'
 import { callReceiptVoucherService, getCallRegisterSummary, sortCallVouchersBySequence } from '../../services/callReceiptVoucherService'
 import { exportToCsv } from '../../utils/exportCsv'
+import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
 import { emptyReportValue, formatReportDate } from '../../utils/reportUtils'
 
 const initialReturnedRange = (state) => state?.customerId && state?.fromDate && state?.toDate ? state : null
@@ -20,12 +21,13 @@ const SingleCustomerCallsHistoryReport = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const returned = initialReturnedRange(location.state)
+  const defaultRange = getCurrentMonthDateRange()
   const customers = useSelector(selectActiveCustomers)
   const [customerId, setCustomerId] = useState(returned?.customerId || '')
   const [customerName, setCustomerName] = useState(returned?.customerName || '')
   const [customerOpen, setCustomerOpen] = useState(false)
-  const [fromDate, setFromDate] = useState(returned?.fromDate || '')
-  const [toDate, setToDate] = useState(returned?.toDate || '')
+  const [fromDate, setFromDate] = useState(returned?.fromDate || defaultRange.fromDate)
+  const [toDate, setToDate] = useState(returned?.toDate || defaultRange.toDate)
   const [range, setRange] = useState(returned)
   const [records, setRecords] = useState([])
   const [errors, setErrors] = useState({})

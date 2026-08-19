@@ -7,6 +7,7 @@ import CommonPagination from '../../components/common/CommonPagination'
 import Loader from '../../components/common/Loader'
 import { callReceiptVoucherService, getCallRegisterSummary, groupCallVouchersByDate, sortCallVouchersBySequence } from '../../services/callReceiptVoucherService'
 import { exportToCsv } from '../../utils/exportCsv'
+import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
 import { emptyReportValue, formatReportDate } from '../../utils/reportUtils'
 
 const matchesSearch = (voucher, search) => !search || [voucher.voucherNumber, voucher.partyName, voucher.executiveName, voucher.category, voucher.callStatus]
@@ -21,8 +22,9 @@ const CallRegisterReport = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const returned = location.state?.fromDate && location.state?.toDate && location.state?.viewType ? location.state : null
-  const [fromDate, setFromDate] = useState(returned?.fromDate || '')
-  const [toDate, setToDate] = useState(returned?.toDate || '')
+  const defaultRange = getCurrentMonthDateRange()
+  const [fromDate, setFromDate] = useState(returned?.fromDate || defaultRange.fromDate)
+  const [toDate, setToDate] = useState(returned?.toDate || defaultRange.toDate)
   const [viewType, setViewType] = useState(returned?.viewType || '')
   const [range, setRange] = useState(returned ? { from: returned.fromDate, to: returned.toDate, viewType: returned.viewType } : null)
   const [records, setRecords] = useState([])

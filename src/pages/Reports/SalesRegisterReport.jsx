@@ -9,6 +9,7 @@ import Loader from '../../components/common/Loader'
 import { fetchSalesVouchers, selectSalesVoucherState, selectSalesVouchers } from '../../features/salesVouchers/salesVoucherSlice'
 import { exportToCsv } from '../../utils/exportCsv'
 import { emptyReportValue, formatReportCurrency, formatReportDate, getVoucherItem, voucherMatchesReportSearch } from '../../utils/reportUtils'
+import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
 
 const voucherNumberParts = (voucher) => {
   const [sequencePart, yearPart] = String(voucher.voucherNumber ?? '').split('/')
@@ -34,8 +35,9 @@ const SalesRegisterReport = () => {
   const vouchers = useSelector(selectSalesVouchers)
   const { loading, error } = useSelector(selectSalesVoucherState)
   const shouldFetch = useRef(vouchers.length === 0 && !loading)
-  const [fromDate, setFromDate] = useState(location.state?.fromDate || '')
-  const [toDate, setToDate] = useState(location.state?.toDate || '')
+  const defaultRange = getCurrentMonthDateRange()
+  const [fromDate, setFromDate] = useState(location.state?.fromDate || defaultRange.fromDate)
+  const [toDate, setToDate] = useState(location.state?.toDate || defaultRange.toDate)
   const [range, setRange] = useState(location.state?.fromDate && location.state?.toDate ? { from: location.state.fromDate, to: location.state.toDate } : null)
   const [errors, setErrors] = useState({})
   const [searchText, setSearchText] = useState('')

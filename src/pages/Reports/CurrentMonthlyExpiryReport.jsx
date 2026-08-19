@@ -10,6 +10,7 @@ import { fetchSalesVouchers, selectSalesVoucherState, selectSalesVouchers } from
 import { exportToCsv } from '../../utils/exportCsv'
 import { formatDate } from '../../utils/dateUtils'
 import { emptyReportValue, formatReportCurrency, getVoucherItem, voucherMatchesReportSearch } from '../../utils/reportUtils'
+import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
 
 const formatFilenameDate = (value) => value.split('-').reverse().join('-')
 
@@ -19,8 +20,9 @@ const CurrentMonthlyExpiryReport = () => {
   const location = useLocation()
   const vouchers = useSelector(selectSalesVouchers)
   const { loading, error } = useSelector(selectSalesVoucherState)
-  const [fromDate, setFromDate] = useState(location.state?.fromDate || '')
-  const [toDate, setToDate] = useState(location.state?.toDate || '')
+  const defaultRange = getCurrentMonthDateRange()
+  const [fromDate, setFromDate] = useState(location.state?.fromDate || defaultRange.fromDate)
+  const [toDate, setToDate] = useState(location.state?.toDate || defaultRange.toDate)
   const [range, setRange] = useState(location.state?.fromDate && location.state?.toDate ? { from: location.state.fromDate, to: location.state.toDate } : null)
   const [errors, setErrors] = useState({})
   const [searchText, setSearchText] = useState('')

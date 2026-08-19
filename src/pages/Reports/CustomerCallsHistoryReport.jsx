@@ -7,14 +7,16 @@ import DetailsModal from '../../components/common/DetailsModal'
 import CommonPagination from '../../components/common/CommonPagination'
 import { callReceiptVoucherService } from '../../services/callReceiptVoucherService'
 import { exportToCsv } from '../../utils/exportCsv'
+import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
 import { formatDate } from '../../utils/dateUtils'
 import { emptyReportValue } from '../../utils/reportUtils'
 
 const CustomerCallsHistoryReport = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const returnedFromDate = location.state?.fromDate || ''
-  const returnedToDate = location.state?.toDate || ''
+  const defaultRange = getCurrentMonthDateRange()
+  const returnedFromDate = location.state?.fromDate || defaultRange.fromDate
+  const returnedToDate = location.state?.toDate || defaultRange.toDate
   const [fromDate, setFromDate] = useState(returnedFromDate)
   const [toDate, setToDate] = useState(returnedToDate)
   const [range, setRange] = useState(returnedFromDate && returnedToDate ? { from: returnedFromDate, to: returnedToDate } : null)
