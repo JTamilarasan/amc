@@ -11,7 +11,7 @@ import { fetchExecutives, selectActiveExecutives } from '../../features/executiv
 import { ENQUIRY_LEAD_SOURCES } from '../../data/enquiryOptions'
 import { exportToCsv } from '../../utils/exportCsv'
 import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
-import { matchesEnquiryExecutive } from '../../utils/enquiryFilters'
+import { enquiryDateValue, matchesEnquiryExecutive } from '../../utils/enquiryFilters'
 
 const STATUSES = ['Open', 'Closed', 'Dropped']
 const statusOf = (item) => {
@@ -37,7 +37,7 @@ const EnquiryLeadsReport = () => {
   const [selection, setSelection] = useState(null)
   useEffect(() => { dispatch(fetchEnquiries()); dispatch(fetchExecutives()) }, [dispatch])
   const generated = useMemo(() => items.filter((item) => {
-    const leadCreationDate = item.leadCreationDate || item.enquiryDate || ''
+    const leadCreationDate = enquiryDateValue(item.leadCreationDate || item.enquiryDate)
     return (!range.fromDate || leadCreationDate >= range.fromDate)
       && (!range.toDate || leadCreationDate <= range.toDate)
       && matchesEnquiryExecutive(item, range.followUpLeadId)

@@ -11,7 +11,7 @@ import { fetchExecutives, selectActiveExecutives } from '../../features/executiv
 import { exportToCsv } from '../../utils/exportCsv'
 import { emptyReportValue, formatReportDate } from '../../utils/reportUtils'
 import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
-import { isUpcomingEnquiry, matchesEnquiryExecutive } from '../../utils/enquiryFilters'
+import { enquiryDateValue, isUpcomingEnquiry, matchesEnquiryExecutive } from '../../utils/enquiryFilters'
 
 const dateValue = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 
@@ -28,7 +28,14 @@ const EnquiryReport = () => {
   const [searchText, setSearchText] = useState(''); const [page, setPage] = useState(1); const [pageSize, setPageSize] = useState(10); const [validation, setValidation] = useState({})
   useEffect(() => { dispatch(fetchEnquiries()); dispatch(fetchExecutives()) }, [dispatch])
   const leadOptions = useMemo(() => { const options = new Map(items.filter((item) => item.followUpLeadId).map((item) => [item.followUpLeadId, { id: item.followUpLeadId, name: item.followUpLeadName }])); executives.forEach((executive) => { const existing = [...options.values()].find((lead) => lead.name?.toLowerCase() === executive.name?.toLowerCase()); if (!existing) options.set(executive.id, { id: executive.id, name: executive.name }) }); if (returned.followUpLeadId && !options.has(returned.followUpLeadId)) options.set(returned.followUpLeadId, { id: returned.followUpLeadId, name: returned.followUpLeadName || 'Selected Follow Up Lead' }); return [...options.values()].sort((a, b) => (a.name || '').localeCompare(b.name || '')) }, [items, executives, returned.followUpLeadId, returned.followUpLeadName])
-  const generated = useMemo(() => items.filter((item) => (range.dashboardFilter === 'upcoming' ? isUpcomingEnquiry(item, dateValue(new Date())) : ((!range.fromDate || item.nextFollowUp >= range.fromDate) && (!range.toDate || item.nextFollowUp <= range.toDate) && (!range.disposition || item.callDisposition === range.disposition))) && matchesEnquiryExecutive(item, range.followUpLeadId)), [items, range])
+  const generated = useMemo(() => items.filter((item) => {
+    if (!matchesEnquiryExecutive(item, range.followUpLeadId)) return false
+    if (range.dashboardFilter === 'upcoming') return isUpcomingEnquiry(item, dateValue(new Date()))
+    const filterDate = enquiryDateValue(range.fromDashboard ? item.nextFollowUp : (item.leadCreationDate || item.enquiryDate))
+    return (!range.fromDate || filterDate >= range.fromDate)
+      && (!range.toDate || filterDate <= range.toDate)
+      && (!range.disposition || item.callDisposition === range.disposition)
+  }), [items, range])
   const filtered = useMemo(() => { const search = searchText.trim().toLowerCase(); return generated.filter((item) => !search || [item.contactName, item.companyName, item.customerName, item.contactNumber, item.areaName, item.leadGeneratedBy, item.followUpLeadName].some((value) => String(value || '').toLowerCase().includes(search))) }, [generated, searchText])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize)); const paged = filtered.slice((page - 1) * pageSize, page * pageSize)
   const generate = () => { const next = {}; if (fromDate && toDate && toDate < fromDate) next.toDate = 'To Date cannot be earlier than From Date.'; setValidation(next); if (Object.keys(next).length) return; setRange({ fromDashboard: false, fromDate, toDate, followUpLeadId, disposition: '', dashboardFilter: '' }); setPage(1) }
