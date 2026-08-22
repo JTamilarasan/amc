@@ -9,6 +9,7 @@ import { fetchEnquiries, selectEnquiryState } from '../../features/enquiries/enq
 import { fetchExecutives, selectActiveExecutives } from '../../features/executives/executiveSlice'
 import { callReceiptVoucherService } from '../../services/callReceiptVoucherService'
 import { toDisplayDate } from '../../utils/dateUtils'
+import { isUpcomingEnquiry, matchesEnquiryExecutive } from '../../utils/enquiryFilters'
 
 const dateValue = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 const getRanges = () => {
@@ -38,7 +39,7 @@ const EnquiryDashboard = () => {
   const ranges = useMemo(() => getRanges(), [])
   const inRange = (item, range) => Boolean(item.nextFollowUp) && item.nextFollowUp >= range[0] && item.nextFollowUp <= range[1]
   const isPending = (item) => item.callDisposition === 'FOLLOWUP'
-  const selectedEnquiries = items.filter((item) => !followUpLeadId || item.followUpLeadId === followUpLeadId || item.assignedExecutiveId === followUpLeadId)
+  const selectedEnquiries = items.filter((item) => matchesEnquiryExecutive(item, followUpLeadId))
   const supportItems = callVouchers.filter((voucher) => !followUpLeadId || voucher.executiveId === followUpLeadId)
   const normalizedTime = (value) => { const date = toDisplayDate(value); return date ? new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() : null }
   const rangeRecords = (range) => { const from = normalizedTime(range[0]); const to = normalizedTime(range[1]); return supportItems.filter((voucher) => { const when = normalizedTime(voucher.when); return when !== null && when >= from && when <= to }) }
@@ -62,10 +63,10 @@ const EnquiryDashboard = () => {
     { title: 'Overall Completed', value: selectedEnquiries.filter((item) => item.callDisposition === 'COMPLETED').length, icon: CheckCircle2, accent: 'accent-green', disposition: 'COMPLETED' },
     { title: 'Next Month Followup', value: selectedEnquiries.filter((item) => inRange(item, ranges.nextMonth)).length, icon: Snowflake, accent: 'accent-purple', range: ranges.nextMonth },
     { title: 'Expired Follow-up', value: selectedEnquiries.filter((item) => isPending(item) && item.nextFollowUp && item.nextFollowUp < ranges.today[0]).length, icon: AlertTriangle, accent: 'accent-red', range: ['', dateValue(yesterday)], disposition: 'FOLLOWUP' },
-    { title: 'Upcoming Follow-up', value: selectedEnquiries.filter((item) => isPending(item) && item.nextFollowUp > ranges.today[0]).length, icon: CalendarClock, accent: 'accent-indigo', range: [ranges.tomorrow[0], ''], disposition: 'FOLLOWUP' },
+    { title: 'Upcoming Follow-up', value: selectedEnquiries.filter((item) => isUpcomingEnquiry(item, ranges.today[0])).length, icon: CalendarClock, accent: 'accent-indigo', range: [ranges.tomorrow[0], selectedEnquiries.filter((item) => isUpcomingEnquiry(item, ranges.today[0])).reduce((latest, item) => item.nextFollowUp > latest ? item.nextFollowUp : latest, '')], dashboardFilter: 'upcoming' },
   ]
   const selectedLeadName = executives.find((lead) => lead.id === followUpLeadId)?.name || ''
-  const openReport = (card) => navigate('/reports/enquiry-report', { state: { fromDate: card.range?.[0] || '', toDate: card.range?.[1] || '', followUpLeadId, followUpLeadName: selectedLeadName, disposition: card.disposition || '' } })
+  const openReport = (card) => navigate('/reports/enquiry-report', { state: { fromDashboard: true, fromDate: card.range?.[0] || '', toDate: card.range?.[1] || '', followUpLeadId, followUpLeadName: selectedLeadName, disposition: card.disposition || '', dashboardFilter: card.dashboardFilter || '' } })
   return <div className="page-stack">
     <PageHeader title="Enquiry and Support Dashboard" subtitle="Enquiry follow-up and outcome summary." />
     <section className="panel-card"><label className="field"><span>Executive</span><select value={followUpLeadId} onChange={(event) => setFollowUpLeadId(event.target.value)}><option value="">All Executives</option>{executives.map((executive) => <option key={executive.id} value={executive.id}>{executive.name}</option>)}</select></label></section>

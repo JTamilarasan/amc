@@ -46,6 +46,7 @@ const navItems = [
       { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history' },
       { label: 'Executive Calls Report', path: '/reports/executive-calls' },
       { label: 'Enquiry Report', path: '/reports/enquiry-report' },
+      { label: 'Enquiry Leads Report', path: '/reports/enquiry-leads' },
     ],
   },
 ]
