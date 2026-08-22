@@ -36,7 +36,12 @@ const EnquiryLeadsReport = () => {
   const [validation, setValidation] = useState({})
   const [selection, setSelection] = useState(null)
   useEffect(() => { dispatch(fetchEnquiries()); dispatch(fetchExecutives()) }, [dispatch])
-  const generated = useMemo(() => items.filter((item) => (!range.fromDate || item.nextFollowUp >= range.fromDate) && (!range.toDate || item.nextFollowUp <= range.toDate) && matchesEnquiryExecutive(item, range.followUpLeadId)), [items, range])
+  const generated = useMemo(() => items.filter((item) => {
+    const leadCreationDate = item.leadCreationDate || item.enquiryDate || ''
+    return (!range.fromDate || leadCreationDate >= range.fromDate)
+      && (!range.toDate || leadCreationDate <= range.toDate)
+      && matchesEnquiryExecutive(item, range.followUpLeadId)
+  }), [items, range])
   const rows = useMemo(() => {
     const summary = Object.fromEntries(STATUSES.map((status) => [status, Object.fromEntries(ENQUIRY_LEAD_SOURCES.map((source) => [source, 0]))]))
     generated.forEach((item) => {
