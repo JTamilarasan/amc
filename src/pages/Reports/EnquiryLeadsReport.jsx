@@ -8,12 +8,14 @@ import Loader from '../../components/common/Loader'
 import EnquiryDetailsModal from '../../components/common/EnquiryDetailsModal'
 import { fetchEnquiries, selectEnquiryState } from '../../features/enquiries/enquirySlice'
 import { fetchExecutives, selectActiveExecutives } from '../../features/executives/executiveSlice'
-import { ENQUIRY_LEAD_SOURCES } from '../../data/enquiryOptions'
+import { ENQUIRY_REPORT_LEAD_SOURCES } from '../../data/enquiryOptions'
 import { exportToCsv } from '../../utils/exportCsv'
 import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
 import { enquiryDateValue, matchesEnquiryExecutive } from '../../utils/enquiryFilters'
 
 const STATUSES = ['Open', 'Closed', 'Dropped']
+const ENQUIRY_LEAD_SOURCES = ENQUIRY_REPORT_LEAD_SOURCES
+const sourceLabel = (value) => value.replaceAll('Reference', 'Ref')
 const statusOf = (item) => {
   if (['HOT', 'WARM'].includes(item.priority) && item.callDisposition === 'COMPLETED') return 'Closed'
   if (item.priority === 'COLD' && item.callDisposition === 'DROPPED') return 'Dropped'
@@ -57,13 +59,13 @@ const EnquiryLeadsReport = () => {
   const selectedRecords = useMemo(() => !selection ? [] : generated.filter((item) => (selection.status === 'Total' || statusOf(item) === selection.status) && (selection.source === 'Total' || sourceOf(item) === selection.source) && Boolean(statusOf(item))), [generated, selection])
   const generate = () => { const next = {}; if (fromDate && toDate && toDate < fromDate) next.toDate = 'To Date cannot be earlier than From Date.'; setValidation(next); if (!Object.keys(next).length) setRange({ fromDate, toDate, followUpLeadId }) }
   const clear = () => { setFromDate(defaults.fromDate); setToDate(defaults.toDate); setFollowUpLeadId(''); setRange({ ...defaults, followUpLeadId: '' }); setValidation({}) }
-  const download = () => exportToCsv({ filename: 'enquiry-leads-report.csv', headers: ['Status', ...ENQUIRY_LEAD_SOURCES, 'Total'], rows })
+  const download = () => exportToCsv({ filename: 'enquiry-leads-report.csv', headers: ['Status', ...ENQUIRY_LEAD_SOURCES.map(sourceLabel), 'Total'], rows })
   const edit = (item) => navigate('/enquiry', { state: { editEnquiryId: item.id, returnTo: '/reports/enquiry-leads', reportRange: range } })
   if (loading && !items.length) return <div className="page-stack"><PageHeader title="Enquiry Leads Report" subtitle="View enquiry lead-source totals." /><section className="panel-card"><Loader label="Loading enquiry leads report..." /></section></div>
   return <div className="page-stack enquiry-report"><PageHeader title="Enquiry Leads Report" subtitle="View enquiry lead-source totals." />{error && <div className="auth-error">Unable to load enquiry leads report.</div>}<section className="panel-card report-section">
     <div className="report-filter-grid enquiry-report-filters"><label className="field"><span>From Date</span><input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} /></label><label className="field"><span>To Date</span><input type="date" value={toDate} onChange={(event) => { setToDate(event.target.value); setValidation({}) }} />{validation.toDate && <div className="field-message">{validation.toDate}</div>}</label><label className="field"><span>Follow Up Lead</span><select value={followUpLeadId} onChange={(event) => setFollowUpLeadId(event.target.value)}><option value="">All Follow Up Leads</option>{executives.map((lead) => <option value={lead.id} key={lead.id}>{lead.name}</option>)}</select></label></div>
     <div className="form-actions report-actions"><Button type="button" onClick={generate}>Generate Report</Button><Button type="button" variant="secondary" onClick={clear}>Clear</Button><Button type="button" variant="ghost" onClick={download}><Download size={15} /> Download Report</Button></div>
-    <div className="enquiry-leads-summary"><h3>Enquiry Report Leads</h3><div className="table-wrap report-table enquiry-leads-summary-table"><table><thead><tr><th>Status</th>{ENQUIRY_LEAD_SOURCES.map((source) => <th key={source}>{source}</th>)}<th>Total</th></tr></thead><tbody>{rows.map(([status, ...counts]) => <tr key={status} className={status === 'Total' ? 'report-total-row' : undefined}><th scope="row">{status}</th>{counts.map((count, index) => { const source = index < ENQUIRY_LEAD_SOURCES.length ? ENQUIRY_LEAD_SOURCES[index] : 'Total'; return <td key={`${status}-${source}`}>{count > 0 ? <button type="button" className="report-count-link" onClick={() => setSelection({ status, source })}>{count}</button> : count}</td> })}</tr>)}</tbody></table></div></div>
+    <div className="enquiry-leads-summary"><h3>Enquiry Report Leads</h3><div className="table-wrap report-table enquiry-leads-summary-table"><table><thead><tr><th>Status</th>{ENQUIRY_LEAD_SOURCES.map((source) => <th key={source}>{sourceLabel(source)}</th>)}<th>Total</th></tr></thead><tbody>{rows.map(([status, ...counts]) => <tr key={status} className={status === 'Total' ? 'report-total-row' : undefined}><th scope="row">{status}</th>{counts.map((count, index) => { const source = index < ENQUIRY_LEAD_SOURCES.length ? ENQUIRY_LEAD_SOURCES[index] : 'Total'; return <td key={`${status}-${source}`}>{count > 0 ? <button type="button" className="report-count-link" onClick={() => setSelection({ status, source })}>{count}</button> : count}</td> })}</tr>)}</tbody></table></div></div>
   </section><EnquiryDetailsModal selection={selection} enquiries={selectedRecords} onClose={() => setSelection(null)} onEdit={edit} /></div>
 }
 export default EnquiryLeadsReport
