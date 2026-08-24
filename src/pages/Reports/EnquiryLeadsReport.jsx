@@ -51,8 +51,8 @@ const EnquiryLeadsReport = () => {
       const source = sourceOf(item)
       if (status) summary[status][source] += 1
     })
-    return [...STATUSES, 'Balance'].map((status) => {
-      const counts = ENQUIRY_LEAD_SOURCES.map((source) => status === 'Balance' ? summary.Open[source] - summary.Closed[source] - summary.Dropped[source] : summary[status][source])
+    return [...STATUSES, 'Total'].map((status) => {
+      const counts = ENQUIRY_LEAD_SOURCES.map((source) => status === 'Total' ? STATUSES.reduce((sum, row) => sum + summary[row][source], 0) : summary[status][source])
       return [status, ...counts, counts.reduce((sum, count) => sum + count, 0)]
     })
   }, [generated])
@@ -65,7 +65,7 @@ const EnquiryLeadsReport = () => {
   return <div className="page-stack enquiry-report"><PageHeader title="Enquiry Leads Report" subtitle="View enquiry lead-source totals." />{error && <div className="auth-error">Unable to load enquiry leads report.</div>}<section className="panel-card report-section">
     <div className="report-filter-grid enquiry-report-filters"><label className="field"><span>From Date</span><input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} /></label><label className="field"><span>To Date</span><input type="date" value={toDate} onChange={(event) => { setToDate(event.target.value); setValidation({}) }} />{validation.toDate && <div className="field-message">{validation.toDate}</div>}</label><label className="field"><span>Follow Up Lead</span><select value={followUpLeadId} onChange={(event) => setFollowUpLeadId(event.target.value)}><option value="">All Follow Up Leads</option>{executives.map((lead) => <option value={lead.id} key={lead.id}>{lead.name}</option>)}</select></label></div>
     <div className="form-actions report-actions"><Button type="button" onClick={generate}>Generate Report</Button><Button type="button" variant="secondary" onClick={clear}>Clear</Button><Button type="button" variant="ghost" onClick={download}><Download size={15} /> Download Report</Button></div>
-    <div className="enquiry-leads-summary"><h3>Enquiry Report Leads</h3><div className="table-wrap report-table enquiry-leads-summary-table"><table><thead><tr><th>Status</th>{ENQUIRY_LEAD_SOURCES.map((source) => <th key={source}>{sourceLabel(source)}</th>)}<th>Total</th></tr></thead><tbody>{rows.map(([status, ...counts]) => <tr key={status} className={status === 'Balance' ? 'report-total-row' : undefined}><th scope="row">{status}</th>{counts.map((count, index) => { const source = index < ENQUIRY_LEAD_SOURCES.length ? ENQUIRY_LEAD_SOURCES[index] : 'Total'; return <td key={`${status}-${source}`}>{status !== 'Balance' && count > 0 ? <button type="button" className="report-count-link" onClick={() => setSelection({ status, source })}>{count}</button> : count}</td> })}</tr>)}</tbody></table></div></div>
+    <div className="enquiry-leads-summary"><h3>Enquiry Report Leads</h3><div className="table-wrap report-table enquiry-leads-summary-table"><table><thead><tr><th>Status</th>{ENQUIRY_LEAD_SOURCES.map((source) => <th key={source}>{sourceLabel(source)}</th>)}<th>Total</th></tr></thead><tbody>{rows.map(([status, ...counts]) => <tr key={status} className={status === 'Total' ? 'report-total-row' : undefined}><th scope="row">{status}</th>{counts.map((count, index) => { const source = index < ENQUIRY_LEAD_SOURCES.length ? ENQUIRY_LEAD_SOURCES[index] : 'Total'; return <td key={`${status}-${source}`}>{count > 0 ? <button type="button" className="report-count-link" onClick={() => setSelection({ status, source })}>{count}</button> : count}</td> })}</tr>)}</tbody></table></div></div>
   </section><EnquiryDetailsModal selection={selection} enquiries={selectedRecords} onClose={() => setSelection(null)} onEdit={edit} /></div>
 }
 export default EnquiryLeadsReport
