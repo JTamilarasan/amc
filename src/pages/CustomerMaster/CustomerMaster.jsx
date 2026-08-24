@@ -11,6 +11,10 @@ import { fetchAreas, selectAreas } from '../../features/areas/areaSlice'
 import { formatDate } from '../../utils/dateUtils'
 import { INDIAN_STATES } from '../../data/indianStates'
 import { customerService } from '../../services/customerService'
+import { ENQUIRY_LEAD_SOURCES } from '../../data/enquiryOptions'
+
+const leadSourceLabel = (value) => value.replaceAll('Reference', 'Ref')
+const CUSTOMER_CATEGORY_2_OPTIONS = ['Direct', 'Reference', ...ENQUIRY_LEAD_SOURCES].filter((value, index, options) => options.indexOf(value) === index)
 
 const initialForm = {
   customerName: '',
@@ -300,16 +304,16 @@ const CustomerMaster = () => {
                 <option value="AMC">AMC</option>
                 <option value="Remote AMC">Remote AMC</option>
                 <option value="Support">Support</option>
+                <option value="New">New</option>
+                <option value="Renewal">Renewal</option>
+                <option value="Others">Others</option>
               </select>
               {validationErrors.category1 ? <div className="field-message field-error">{validationErrors.category1}</div> : null}
             </label>
             <label className="field">
               <span>Category 2</span>
               <select name="category2" value={form.category2} onChange={handleChange}>
-                <option value="Direct">Direct</option>
-                <option value="Google">Google</option>
-                <option value="IndiaMART">IndiaMART</option>
-                <option value="Reference">Reference</option>
+                {CUSTOMER_CATEGORY_2_OPTIONS.map((value) => <option value={value} key={value}>{leadSourceLabel(value)}</option>)}
               </select>
               {validationErrors.category2 ? <div className="field-message field-error">{validationErrors.category2}</div> : null}
             </label>

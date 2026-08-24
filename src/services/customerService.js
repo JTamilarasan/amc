@@ -127,17 +127,20 @@ export const updateCustomer = async (id, customerData) => {
 }
 
 export const getCustomerUsage = async () => {
-  const [salesSnapshot, callsSnapshot] = await Promise.all([
+  const [salesSnapshot, callsSnapshot, enquiriesSnapshot] = await Promise.all([
     getDocs(collection(db, 'salesVouchers')),
     getDocs(collection(db, 'callReceiptVouchers')),
+    getDocs(collection(db, 'enquiries')),
   ])
   const ids = [...new Set([
     ...salesSnapshot.docs.map((item) => item.data().customerId),
     ...callsSnapshot.docs.map((item) => item.data().partyId),
+    ...enquiriesSnapshot.docs.map((item) => item.data().customerId),
   ].filter(Boolean))]
   const legacyNames = [...new Set([
-    ...salesSnapshot.docs.filter((item) => !item.data().customerId).map((item) => normalizeCustomerName(item.data().customerName)),
-    ...callsSnapshot.docs.filter((item) => !item.data().partyId).map((item) => normalizeCustomerName(item.data().partyName)),
+    ...salesSnapshot.docs.map((item) => normalizeCustomerName(item.data().customerName)),
+    ...callsSnapshot.docs.map((item) => normalizeCustomerName(item.data().partyName)),
+    ...enquiriesSnapshot.docs.map((item) => normalizeCustomerName(item.data().customerName)),
   ].filter(Boolean))]
   return { ids, legacyNames }
 }
@@ -145,11 +148,12 @@ export const getCustomerUsage = async () => {
 export const getUsedCustomerIds = async () => (await getCustomerUsage()).ids
 
 export const isCustomerUsed = async (id) => {
-  const [salesSnapshot, callsSnapshot] = await Promise.all([
+  const [salesSnapshot, callsSnapshot, enquiriesSnapshot] = await Promise.all([
     getDocs(query(collection(db, 'salesVouchers'), where('customerId', '==', id), limit(1))),
     getDocs(query(collection(db, 'callReceiptVouchers'), where('partyId', '==', id), limit(1))),
+    getDocs(query(collection(db, 'enquiries'), where('customerId', '==', id), limit(1))),
   ])
-  if (!salesSnapshot.empty || !callsSnapshot.empty) return true
+  if (!salesSnapshot.empty || !callsSnapshot.empty || !enquiriesSnapshot.empty) return true
   const customerSnapshot = await getDoc(doc(db, CUSTOMERS_COLLECTION, id))
   if (!customerSnapshot.exists()) return false
   const usage = await getCustomerUsage()

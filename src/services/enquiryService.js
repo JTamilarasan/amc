@@ -15,6 +15,7 @@ const clean = (data) => ({
   leadGeneratedBy: data.leadGeneratedBy,
   priority: data.priority,
   nextFollowUp: ['HOT', 'WARM'].includes(data.priority) && data.callDisposition === 'FOLLOWUP' ? data.nextFollowUp || '' : '',
+  closedOn: data.callDisposition === 'COMPLETED' ? data.closedOn || '' : '',
   remarks: (data.remarks || '').trim(),
   customerId: data.customerId || '', customerName: data.customerName || '',
   areaId: data.areaId || '', areaName: data.areaName || '',
@@ -33,6 +34,7 @@ const validate = (data) => {
   const allowed = data.priority === 'COLD' ? ['NOT INTERESTED', 'DROPPED'] : ['FOLLOWUP', 'COMPLETED']
   if (!data.callDisposition || !allowed.includes(data.callDisposition)) throw new Error('Select a valid Call Disposition for the selected Priority.')
   if (['HOT', 'WARM'].includes(data.priority) && data.callDisposition === 'FOLLOWUP' && !data.nextFollowUp) throw new Error('Next Follow Up is required.')
+  if (data.callDisposition === 'COMPLETED' && !data.closedOn) throw new Error('Closed On date is required.')
   if (!data.followUpLeadId || !data.followUpLeadName) throw new Error('Logged-in Follow Up Lead is required.')
 }
 
