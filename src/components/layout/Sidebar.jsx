@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { PERMISSION_KEYS } from '../../constants/userAccess'
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'AMC Dashboard', path: '/dashboard', permission: 'dashboard' }, { label: 'Enquiry and Support Dashboard', path: '/dashboard/enquiry', permission: 'enquiries' }] },
@@ -39,15 +40,16 @@ const navItems = [
     label: 'Reports',
     path: '/reports',
     icon: BarChart3,
+    permission: PERMISSION_KEYS.reports,
     children: [
-      { label: 'AMC Register Report', path: '/reports/sales-register', permission: 'salesVouchers' },
-      { label: 'Call Register Report', path: '/reports/call-register', permission: 'voucherSettings' },
-      { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history', permission: 'customers' },
-      { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry', permission: 'salesVouchers' },
-      { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history', permission: 'customers' },
-      { label: 'Executive Calls Report', path: '/reports/executive-calls', permission: 'executives' },
-      { label: 'Enquiry Report', path: '/reports/enquiry-report', permission: 'enquiries' },
-      { label: 'Enquiry Leads Report', path: '/reports/enquiry-leads', permission: 'enquiries' },
+      { label: 'AMC Register Report', path: '/reports/sales-register', permission: PERMISSION_KEYS.reports },
+      { label: 'Call Register Report', path: '/reports/call-register', permission: PERMISSION_KEYS.reports },
+      { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history', permission: PERMISSION_KEYS.reports },
+      { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry', permission: PERMISSION_KEYS.reports },
+      { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history', permission: PERMISSION_KEYS.reports },
+      { label: 'Executive Calls Report', path: '/reports/executive-calls', permission: PERMISSION_KEYS.reports },
+      { label: 'Enquiry Report', path: '/reports/enquiry-report', permission: PERMISSION_KEYS.reports },
+      { label: 'Enquiry Leads Report', path: '/reports/enquiry-leads', permission: PERMISSION_KEYS.reports },
     ],
   },
   { label: 'User Management', path: '/user-management', icon: Users, adminOnly: true },
@@ -60,7 +62,7 @@ const Sidebar = () => {
   const visibleItems = navItems.map((item) => {
     const children = item.children?.filter((child) => isAdmin || hasPermission(child.permission))
     return { ...item, path: !isAdmin && children?.length ? children[0].path : item.path, children }
-  }).filter((item) => item.adminOnly ? isAdmin : item.children ? item.children.length > 0 : (isAdmin || !item.permission || hasPermission(item.permission)))
+  }).filter((item) => item.adminOnly ? isAdmin : item.children ? (isAdmin || !item.permission || hasPermission(item.permission)) && item.children.length > 0 : (isAdmin || !item.permission || hasPermission(item.permission)))
 
   const handleLogout = async () => {
     await logout()
