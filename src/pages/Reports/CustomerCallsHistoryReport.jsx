@@ -10,8 +10,11 @@ import { exportToCsv } from '../../utils/exportCsv'
 import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
 import { formatDate } from '../../utils/dateUtils'
 import { emptyReportValue } from '../../utils/reportUtils'
+import { useAuth } from '../../context/AuthContext'
 
 const CustomerCallsHistoryReport = () => {
+  const { hasPermission } = useAuth()
+  const canEdit = hasPermission('voucherSettings', 'edit')
   const location = useLocation()
   const navigate = useNavigate()
   const defaultRange = getCurrentMonthDateRange()
@@ -89,7 +92,7 @@ const CustomerCallsHistoryReport = () => {
     <DetailsModal isOpen={Boolean(callDetails)} title={`${callDetails?.row.partyName || ''} - ${callDetails?.type === 'all' ? 'All Call Details' : callDetails?.type === 'visits' ? 'Visit Details' : 'Monthly Backup Details'}`} onClose={() => setCallDetails(null)} size="large">
       <div className="table-wrap call-details-table backup-details-table"><table><thead><tr><th>S.No</th><th>Voucher No</th><th>Date</th><th>Party Name</th><th>Executive</th><th>Category</th><th>Category 2</th><th>Call Status</th><th>Call Sub Status</th><th>Next Action</th><th>When</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>
         {!((callDetails?.type === 'all' ? callDetails?.row.callVouchers : callDetails?.type === 'visits' ? callDetails?.row.visitVouchers : callDetails?.row.backupVouchers) || []).length && <tr><td colSpan="13" className="text-center">No call entries found.</td></tr>}
-        {((callDetails?.type === 'all' ? callDetails?.row.callVouchers : callDetails?.type === 'visits' ? callDetails?.row.visitVouchers : callDetails?.row.backupVouchers) || []).map((voucher, index) => <tr key={voucher.id}><td>{index + 1}</td><td>{emptyReportValue(voucher.voucherNumber)}</td><td>{formatDate(voucher.date)}</td><td>{emptyReportValue(voucher.partyName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(voucher.category2)}</td><td>{emptyReportValue(voucher.callStatus)}</td><td>{emptyReportValue(voucher.callSubStatus)}</td><td>{emptyReportValue(voucher.nextAction)}</td><td>{formatDate(voucher.when)}</td><td>{emptyReportValue(voucher.callReceiptRemarks)}</td><td><div className="table-actions"><button type="button" className="executive-action-btn" onClick={() => setViewVoucher(voucher)}><Eye size={13} /> View</button><button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button></div></td></tr>)}
+        {((callDetails?.type === 'all' ? callDetails?.row.callVouchers : callDetails?.type === 'visits' ? callDetails?.row.visitVouchers : callDetails?.row.backupVouchers) || []).map((voucher, index) => <tr key={voucher.id}><td>{index + 1}</td><td>{emptyReportValue(voucher.voucherNumber)}</td><td>{formatDate(voucher.date)}</td><td>{emptyReportValue(voucher.partyName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(voucher.category2)}</td><td>{emptyReportValue(voucher.callStatus)}</td><td>{emptyReportValue(voucher.callSubStatus)}</td><td>{emptyReportValue(voucher.nextAction)}</td><td>{formatDate(voucher.when)}</td><td>{emptyReportValue(voucher.callReceiptRemarks)}</td><td><div className="table-actions"><button type="button" className="executive-action-btn" onClick={() => setViewVoucher(voucher)}><Eye size={13} /> View</button>{canEdit && <button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button>}</div></td></tr>)}
       </tbody></table></div>
     </DetailsModal>
 

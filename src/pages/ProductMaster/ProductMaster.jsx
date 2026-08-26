@@ -8,6 +8,7 @@ import Loader from '../../components/common/Loader'
 import { addProduct, clearProductMessage, editProduct, fetchProducts, removeProduct, selectProductState } from '../../features/products/productSlice'
 import { formatDate } from '../../utils/dateUtils'
 import { productService } from '../../services/productService'
+import { useAuth } from '../../context/AuthContext'
 
 const initialForm = {
   itemName: '',
@@ -18,6 +19,7 @@ const initialForm = {
 
 const ProductMaster = () => {
   const dispatch = useDispatch()
+  const { hasPermission } = useAuth(); const canAdd = hasPermission('products', 'add'); const canEdit = hasPermission('products', 'edit'); const canDelete = hasPermission('products', 'delete')
   const { items, loading, error, successMessage } = useSelector(selectProductState)
   const [form, setForm] = useState(initialForm)
   const [editingId, setEditingId] = useState(null)
@@ -199,7 +201,7 @@ const ProductMaster = () => {
 
           {(error || successMessage) ? <div className={successMessage ? 'auth-success' : 'auth-error'} style={{ marginTop: 16 }}>{error || successMessage}</div> : null}
           <div className="form-actions master-form-actions">
-            <Button type="submit" disabled={loading}>{loading ? 'Saving...' : editingId ? 'Update Product' : 'Save Product'}</Button>
+            {(editingId ? canEdit : canAdd) && <Button type="submit" disabled={loading}>{loading ? 'Saving...' : editingId ? 'Update Product' : 'Save Product'}</Button>}
             <Button type="button" variant="secondary" onClick={resetForm}>Clear</Button>
           </div>
         </form>
@@ -231,8 +233,8 @@ const ProductMaster = () => {
                 <div className="customer-mobile-row"><span className="customer-mobile-label">AMC</span><span>{product.amcApplicable ? 'Yes' : 'No'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(product.createdAt)}</span></div>
                 <div className="customer-mobile-actions">
-                  <button className="executive-action-btn" onClick={() => handleEdit(product)}><Pencil size={13} /><span>Edit</span></button>
-                  {productUsage && !productIsUsed(product) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
+                  {canEdit && <button className="executive-action-btn" onClick={() => handleEdit(product)}><Pencil size={13} /><span>Edit</span></button>}
+                  {canDelete && productUsage && !productIsUsed(product) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                 </div>
               </div>
             ))}
@@ -266,8 +268,8 @@ const ProductMaster = () => {
                     <td><span className={`status-badge ${product.status === 'Active' ? 'green' : 'amber'}`}>{product.status}</span></td>
                     <td>
                       <div className="table-actions">
-                        <button className="executive-action-btn" onClick={() => handleEdit(product)}><Pencil size={13} /><span>Edit</span></button>
-                        {productUsage && !productIsUsed(product) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
+                        {canEdit && <button className="executive-action-btn" onClick={() => handleEdit(product)}><Pencil size={13} /><span>Edit</span></button>}
+                        {canDelete && productUsage && !productIsUsed(product) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(product.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                       </div>
                     </td>
                   </tr>

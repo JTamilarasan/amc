@@ -228,9 +228,15 @@ th { color: #64748b; font-weight: 600; }
 .report-count-link:hover { color: #1d4ed8; }
 .access-denied-card { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; color: #475569; }
 .access-denied-card p { margin: 0; }
-.user-management-table table { min-width: 980px; }
-.user-management-table select { min-width: 118px; padding: 8px 10px; border: 1px solid #dbe4f0; border-radius: 10px; background: white; color: #0f172a; font: inherit; }
-.permission-grid { display: grid; grid-template-columns: repeat(2, minmax(130px, 1fr)); gap: 8px 14px; min-width: 310px; }
+.user-access-list { display: flex; flex-direction: column; gap: 16px; }
+.user-access-card { padding: 16px; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; }
+.user-access-heading { display: grid; grid-template-columns: minmax(200px, 1fr) 150px 150px auto; align-items: end; gap: 12px; margin-bottom: 14px; }
+.user-access-heading > strong { align-self: center; overflow-wrap: anywhere; }
+.permission-matrix table { min-width: 680px; background: white; }
+.permission-matrix th:not(:first-child), .permission-matrix td { text-align: center; }
+.permission-matrix input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; }
+.permission-matrix input:disabled { cursor: not-allowed; }
+@media (max-width: 720px) { .user-access-heading { grid-template-columns: 1fr; align-items: stretch; } }
 .customer-calls-report-section th, .backup-details-table th { font-weight: 700; }
 .executive-calls-report-section th, .executive-call-details-table th { font-weight: 700; }
 .report-total-row { background: #f8fafc; font-weight: 700; }

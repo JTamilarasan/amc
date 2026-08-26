@@ -12,6 +12,7 @@ import { formatDate } from '../../utils/dateUtils'
 import { INDIAN_STATES } from '../../data/indianStates'
 import { customerService } from '../../services/customerService'
 import { ENQUIRY_LEAD_SOURCES } from '../../data/enquiryOptions'
+import { useAuth } from '../../context/AuthContext'
 
 const leadSourceLabel = (value) => value.replaceAll('Reference', 'Ref')
 const CUSTOMER_CATEGORY_2_OPTIONS = ['Direct', 'Reference', ...ENQUIRY_LEAD_SOURCES].filter((value, index, options) => options.indexOf(value) === index)
@@ -34,6 +35,8 @@ const initialForm = {
 
 const CustomerMaster = () => {
   const dispatch = useDispatch()
+  const { hasPermission } = useAuth()
+  const canAdd = hasPermission('customers', 'add'); const canEdit = hasPermission('customers', 'edit'); const canDelete = hasPermission('customers', 'delete'); const canAddArea = hasPermission('areas', 'add')
   const navigate = useNavigate()
   const location = useLocation()
   const { items, loading, error, successMessage } = useSelector(selectCustomerState)
@@ -252,7 +255,7 @@ const CustomerMaster = () => {
                 <input value={form.areaName} onChange={(event) => { handleAreaInput(event.target.value); setAreaOpen(true) }} onFocus={() => setAreaOpen(true)} onBlur={() => window.setTimeout(() => setAreaOpen(false), 150)} placeholder="Search and select area" autoComplete="off" />
                 {areaOpen ? <div className="searchable-options">
                   {filteredAreas.length ? filteredAreas.map((area) => <button type="button" key={area.id} onMouseDown={() => selectArea(area)}>{area.areaName}</button>) : <div className="searchable-empty">No matching areas</div>}
-                  {areaSearchText && !exactAreaExists ? <button type="button" className="searchable-create-option" onMouseDown={navigateToCreateArea}>+ Create &quot;{areaSearchText}&quot; Area</button> : null}
+                  {canAddArea && areaSearchText && !exactAreaExists ? <button type="button" className="searchable-create-option" onMouseDown={navigateToCreateArea}>+ Create &quot;{areaSearchText}&quot; Area</button> : null}
                 </div> : null}
               </div>
               {validationErrors.areaId ? <div className="field-message field-error">{validationErrors.areaId}</div> : null}
@@ -324,7 +327,7 @@ const CustomerMaster = () => {
           </div>
           {(error || successMessage) ? <div className={successMessage ? 'auth-success' : 'auth-error'} style={{ marginTop: 16 }}>{error || successMessage}</div> : null}
           <div className="form-actions master-form-actions">
-            <Button type="submit" disabled={loading}>{loading ? 'Saving...' : editingId ? 'Update Customer' : 'Save Customer'}</Button>
+            {(editingId ? canEdit : canAdd) && <Button type="submit" disabled={loading}>{loading ? 'Saving...' : editingId ? 'Update Customer' : 'Save Customer'}</Button>}
             <Button type="button" variant="secondary" onClick={resetForm}>Clear</Button>
             {/* <Button type="button" variant="ghost" onClick={() => setForm(initialForm)}>Cancel</Button> */}
           </div>
@@ -359,8 +362,8 @@ const CustomerMaster = () => {
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Category</span><span>{customer.category1}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(customer.createdAt)}</span></div>
                 <div className="customer-mobile-actions">
-                  <button className="executive-action-btn" onClick={() => handleEdit(customer)}><Pencil size={13} /><span>Edit</span></button>
-                  {customerUsage && !customerIsUsed(customer) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
+                  {canEdit && <button className="executive-action-btn" onClick={() => handleEdit(customer)}><Pencil size={13} /><span>Edit</span></button>}
+                  {canDelete && customerUsage && !customerIsUsed(customer) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                 </div>
               </div>
             ))}
@@ -400,8 +403,8 @@ const CustomerMaster = () => {
                     <td><span className={`status-badge ${customer.status === 'Active' ? 'green' : 'amber'}`}>{customer.status}</span></td>
                     <td>
                       <div className="table-actions">
-                        <button className="executive-action-btn" onClick={() => handleEdit(customer)}><Pencil size={13} /><span>Edit</span></button>
-                        {customerUsage && !customerIsUsed(customer) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
+                        {canEdit && <button className="executive-action-btn" onClick={() => handleEdit(customer)}><Pencil size={13} /><span>Edit</span></button>}
+                        {canDelete && customerUsage && !customerIsUsed(customer) ? <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(customer.id)}><Trash2 size={13} /><span>Delete</span></button> : null}
                       </div>
                     </td>
                   </tr>

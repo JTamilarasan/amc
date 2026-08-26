@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react'
+import { Search, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import CommonPagination from '../../components/common/CommonPagination'
 import Loader from '../../components/common/Loader'
 import { formatDate } from '../../utils/dateUtils'
 import { addExecutive, clearExecutiveMessage, editExecutive, fetchExecutives, removeExecutive, selectExecutiveState } from '../../features/executives/executiveSlice'
+import { useAuth } from '../../context/AuthContext'
 
 const ExecutiveMaster = () => {
   const dispatch = useDispatch()
+  const { hasPermission } = useAuth(); const canAdd = hasPermission('executives', 'add'); const canEdit = hasPermission('executives', 'edit'); const canDelete = hasPermission('executives', 'delete')
   const { items, loading, error, successMessage } = useSelector(selectExecutiveState)
   const [name, setName] = useState('')
   const [editingId, setEditingId] = useState(null)
@@ -36,10 +38,6 @@ const ExecutiveMaster = () => {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
-
-  useEffect(() => {
-    setPage(1)
-  }, [searchText])
 
   const filteredExecutives = useMemo(() => {
     const query = searchText.trim().toLowerCase()
@@ -117,14 +115,14 @@ const ExecutiveMaster = () => {
         <td><span className={`status-badge ${executive.status === 'Active' ? 'green' : 'amber'}`}>{executive.status}</span></td>
         <td>
           <div className="table-actions">
-            <button className="executive-action-btn" onClick={() => handleEdit(executive)}>
+            {canEdit && <button className="executive-action-btn" onClick={() => handleEdit(executive)}>
               <Pencil size={13} />
               <span>Edit</span>
-            </button>
-            <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(executive.id)}>
+            </button>}
+            {canDelete && <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(executive.id)}>
               <Trash2 size={13} />
               <span>Delete</span>
-            </button>
+            </button>}
           </div>
         </td>
       </tr>
@@ -155,7 +153,7 @@ const ExecutiveMaster = () => {
             </label>
           </div>
           <div className="form-actions master-form-actions">
-            <Button type="submit" disabled={loading}>{loading ? (editingId ? 'Updating...' : 'Saving...') : (editingId ? 'Update Executive' : 'Save Executive')}</Button>
+            {(editingId ? canEdit : canAdd) && <Button type="submit" disabled={loading}>{loading ? (editingId ? 'Updating...' : 'Saving...') : (editingId ? 'Update Executive' : 'Save Executive')}</Button>}
             <Button type="button" variant="secondary" onClick={resetForm}>Clear</Button>
             {/* <Button type="button" variant="ghost" onClick={() => setName('')}>Cancel</Button> */}
           </div>
@@ -170,7 +168,7 @@ const ExecutiveMaster = () => {
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <div className="search-box" style={{ minWidth: 240, width: '100%' }}>
             <Search size={16} />
-            <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search executive by name..." />
+            <input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search executive by name..." />
           </div>
           <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}>
             <option value={10}>10</option>
@@ -180,7 +178,7 @@ const ExecutiveMaster = () => {
         </div>
         {loading && items.length === 0 ? <Loader size="small" label="Loading executives..." /> : isMobile ? (
           <div className="executive-mobile-list">
-            {pagedExecutives.map((executive, index) => (
+            {pagedExecutives.map((executive) => (
               <div className="executive-mobile-card" key={executive.id}>
                 <div className="executive-mobile-row">
                   <span className="executive-mobile-label">Executive Name</span>
@@ -195,14 +193,14 @@ const ExecutiveMaster = () => {
                   <span>{formatDate(executive.createdAt)}</span>
                 </div>
                 <div className="executive-mobile-actions">
-                  <button className="executive-action-btn" onClick={() => handleEdit(executive)}>
+                  {canEdit && <button className="executive-action-btn" onClick={() => handleEdit(executive)}>
                     <Pencil size={13} />
                     <span>Edit</span>
-                  </button>
-                  <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(executive.id)}>
+                  </button>}
+                  {canDelete && <button className="executive-action-btn delete" onClick={() => setConfirmDeleteId(executive.id)}>
                     <Trash2 size={13} />
                     <span>Delete</span>
-                  </button>
+                  </button>}
                 </div>
               </div>
             ))}

@@ -10,6 +10,7 @@ import { fetchSalesVouchers, selectSalesVoucherState, selectSalesVouchers } from
 import { exportToCsv } from '../../utils/exportCsv'
 import { emptyReportValue, formatReportCurrency, formatReportDate, getVoucherItem, voucherMatchesReportSearch } from '../../utils/reportUtils'
 import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
+import { useAuth } from '../../context/AuthContext'
 
 const voucherNumberParts = (voucher) => {
   const [sequencePart, yearPart] = String(voucher.voucherNumber ?? '').split('/')
@@ -29,6 +30,7 @@ const compareVoucherNumbers = (left, right) => {
 }
 
 const SalesRegisterReport = () => {
+  const { hasPermission } = useAuth(); const canEdit = hasPermission('salesVouchers', 'edit')
   const dispatch = useDispatch()
   const location = useLocation()
   const navigate = useNavigate()
@@ -89,7 +91,7 @@ const SalesRegisterReport = () => {
       <div className="toolbar report-toolbar"><div className="search-box"><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search voucher, customer, executive, product or serial no..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
       <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>Voucher No</th><th>Date</th><th>Customer Name</th><th>Executive</th><th>Category</th><th>Product</th><th>Serial No</th><th>Duration</th><th>AMC From</th><th>AMC To</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>
         {range && !filtered.length && <tr><td colSpan="14" className="text-center">No records found.</td></tr>}{!range && <tr><td colSpan="14" className="text-center">Select a date range and generate the report.</td></tr>}
-        {paged.map((voucher, index) => { const item = getVoucherItem(voucher); return <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{emptyReportValue(voucher.voucherNumber)}</td><td>{formatReportDate(voucher.voucherDate)}</td><td>{emptyReportValue(voucher.customerName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(item?.itemName)}</td><td>{emptyReportValue(item?.serialNo)}</td><td>{emptyReportValue(item?.duration)}</td><td>{formatReportDate(item?.amcFromDate)}</td><td>{formatReportDate(item?.amcToDate)}</td><td>{formatReportCurrency(item?.amount)}</td><td>{emptyReportValue(voucher.status)}</td><td><button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button></td></tr> })}
+        {paged.map((voucher, index) => { const item = getVoucherItem(voucher); return <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{emptyReportValue(voucher.voucherNumber)}</td><td>{formatReportDate(voucher.voucherDate)}</td><td>{emptyReportValue(voucher.customerName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(item?.itemName)}</td><td>{emptyReportValue(item?.serialNo)}</td><td>{emptyReportValue(item?.duration)}</td><td>{formatReportDate(item?.amcFromDate)}</td><td>{formatReportDate(item?.amcToDate)}</td><td>{formatReportCurrency(item?.amount)}</td><td>{emptyReportValue(voucher.status)}</td><td>{canEdit && <button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button>}</td></tr> })}
       </tbody></table></div>
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" />
     </section>

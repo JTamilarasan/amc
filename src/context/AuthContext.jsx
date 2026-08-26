@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   const refreshUserProfile = async () => { if (!auth.currentUser) return null; const profile = await acceptAuthenticatedUser(auth.currentUser); setProfileVersion((current) => current + 1); return profile }
   const logout = async () => { setAuthError(''); setUser(null); setUserProfile(null); await signOut(auth) }
   const isAdmin = userProfile?.role === 'admin'
-  const hasPermission = (permission) => Boolean(isAdmin || userProfile?.permissions?.[permission])
+  const hasPermission = (permission, action = 'view') => Boolean(isAdmin || userProfile?.permissions?.[permission]?.[action])
   const value = { user, currentUser: user, userProfile, role: userProfile?.role || 'user', permissions: userProfile?.permissions || {}, isAdmin, hasPermission, loading, authError, profileVersion, login, signup, resetPassword, updateDisplayName, refreshUserProfile, logout, setAuthError }
   if (loading) return <Loader fullScreen />
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

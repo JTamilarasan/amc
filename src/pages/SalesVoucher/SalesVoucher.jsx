@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import { Eye, Pencil, Search, Trash2 } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
@@ -39,6 +40,7 @@ const calculateAmcToDate = (fromDate, duration, amcApplicable) => {
 }
 
 const SalesVoucher = () => {
+  const { hasPermission } = useAuth(); const canAdd = hasPermission('salesVouchers', 'add'); const canEdit = hasPermission('salesVouchers', 'edit'); const canDelete = hasPermission('salesVouchers', 'delete'); const canAddCustomer = hasPermission('customers', 'add')
   const dispatch = useDispatch()
   const location = useLocation()
   const navigate = useNavigate()
@@ -276,7 +278,7 @@ const SalesVoucher = () => {
         <label className="field"><span>Date</span><input type="date" value={voucherDate} onChange={(event) => changeVoucherDate(event.target.value)} /></label>
         <label className="field"><span>Party Name *</span><div className="searchable-select">
           <input value={customerName} onChange={(event) => { handleCustomerInput(event.target.value); setCustomerOpen(true) }} onFocus={() => setCustomerOpen(true)} onBlur={() => window.setTimeout(() => setCustomerOpen(false), 150)} placeholder="Search and select customer" autoComplete="off" />
-          {customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={() => selectCustomer(customer)}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}<button type="button" className="searchable-create-option" onMouseDown={createCustomer}>+ Create Customer</button></div>}
+          {customerOpen && <div className="searchable-options">{filteredCustomers.length ? filteredCustomers.map((customer) => <button type="button" key={customer.id} onMouseDown={() => selectCustomer(customer)}>{customer.customerName}</button>) : <div className="searchable-empty">No matching customers</div>}{canAddCustomer && <button type="button" className="searchable-create-option" onMouseDown={createCustomer}>+ Create Customer</button>}</div>}
         </div>{partyError && <div className="field-message">{partyError}</div>}</label>
         <label className="field"><span>Executive *</span><div className="searchable-select">
           <input value={executiveName} onChange={(event) => { handleExecutiveInput(event.target.value); setExecutiveOpen(true) }} onFocus={() => setExecutiveOpen(true)} onBlur={() => window.setTimeout(() => setExecutiveOpen(false), 150)} placeholder="Search and select executive" autoComplete="off" />
@@ -302,7 +304,7 @@ const SalesVoucher = () => {
         <label className="field"><span>AMC To{itemForm.amcApplicable ? ' *' : ''}</span><input type="date" min={itemForm.amcFromDate || undefined} value={itemForm.amcToDate} onChange={(event) => changeItemField('amcToDate', event.target.value)} /></label>
       </div>
       {(formError || error || successMessage) && <div className={successMessage && !formError && !error ? 'auth-success' : 'auth-error'} style={{ marginTop: 12 }}>{formError || error || successMessage}</div>}
-      <div className="form-actions voucher-save-actions"><Button type="button" onClick={handleSaveVoucher} disabled={loading}>{loading ? 'Saving...' : editingVoucherId ? 'Update Voucher' : 'Save Voucher'}</Button><Button type="button" variant="secondary" onClick={clearVoucher} disabled={loading}>Clear</Button></div>
+      <div className="form-actions voucher-save-actions">{(editingVoucherId ? canEdit : canAdd) && <Button type="button" onClick={handleSaveVoucher} disabled={loading}>{loading ? 'Saving...' : editingVoucherId ? 'Update Voucher' : 'Save Voucher'}</Button>}<Button type="button" variant="secondary" onClick={clearVoucher} disabled={loading}>Clear</Button></div>
     </section>
 
     <section className="panel-card" style={{ marginTop: 18 }}>
@@ -310,10 +312,10 @@ const SalesVoucher = () => {
       <div className="toolbar" style={{ marginBottom: 12 }}><div className="search-box" style={{ width: '100%' }}><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search by voucher number or customer..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
       {loading && !vouchers.length ? <Loader size="small" label="Loading vouchers..." /> : isMobile ? <div className="customer-mobile-list">{pagedVouchers.map((voucher) => <div className="customer-mobile-card" key={voucher.id}>
         <div className="customer-mobile-row"><span className="customer-mobile-label">Voucher</span><span>#{voucher.voucherNumber}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Party</span><span>{voucher.customerName}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Executive</span><span>{voucher.executiveName || '—'}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Category</span><span>{voucher.category || '—'}</span></div><div className="customer-mobile-row"><span className="customer-mobile-label">Created</span><span>{formatDate(voucher.voucherDate)}</span></div>
-        <div className="customer-mobile-actions"><button className="executive-action-btn" onClick={() => handleViewVoucher(voucher)}><Eye size={13} /> View</button><button className="executive-action-btn" onClick={() => handleEditVoucher(voucher)}><Pencil size={13} /> Edit</button><button className="executive-action-btn delete" onClick={() => handleDeleteVoucher(voucher)}><Trash2 size={13} /> Delete</button></div>
+        <div className="customer-mobile-actions"><button className="executive-action-btn" onClick={() => handleViewVoucher(voucher)}><Eye size={13} /> View</button>{canEdit && <button className="executive-action-btn" onClick={() => handleEditVoucher(voucher)}><Pencil size={13} /> Edit</button>}{canDelete && <button className="executive-action-btn delete" onClick={() => handleDeleteVoucher(voucher)}><Trash2 size={13} /> Delete</button>}</div>
       </div>)}</div> : <div className="table-wrap"><table><thead><tr><th>S.No</th><th>Voucher No</th><th>Date</th><th>Party Name</th><th>Executive</th><th>Category</th><th>Items</th><th>Created Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>
         {loading && !vouchers.length && <tr><td colSpan="10"><Loader size="small" label="Loading vouchers..." /></td></tr>}{!loading && !filteredVouchers.length && <tr><td colSpan="10" className="text-center">{searchText ? 'No matching vouchers found.' : 'No vouchers found.'}</td></tr>}
-        {pagedVouchers.map((voucher, index) => <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{voucher.voucherNumber}</td><td>{formatDate(voucher.voucherDate)}</td><td>{voucher.customerName}</td><td>{voucher.executiveName || '—'}</td><td>{voucher.category || '—'}</td><td>{getVoucherItemNames(voucher)}</td><td>{formatDate(voucher.voucherDate)}</td><td><span className="status-badge green">{voucher.status}</span></td><td><div className="table-actions"><button className="executive-action-btn" onClick={() => handleViewVoucher(voucher)}><Eye size={13} /> View</button><button className="executive-action-btn" onClick={() => handleEditVoucher(voucher)}><Pencil size={13} /> Edit</button><button className="executive-action-btn delete" onClick={() => handleDeleteVoucher(voucher)}><Trash2 size={13} /> Delete</button></div></td></tr>)}
+        {pagedVouchers.map((voucher, index) => <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{voucher.voucherNumber}</td><td>{formatDate(voucher.voucherDate)}</td><td>{voucher.customerName}</td><td>{voucher.executiveName || '—'}</td><td>{voucher.category || '—'}</td><td>{getVoucherItemNames(voucher)}</td><td>{formatDate(voucher.voucherDate)}</td><td><span className="status-badge green">{voucher.status}</span></td><td><div className="table-actions"><button className="executive-action-btn" onClick={() => handleViewVoucher(voucher)}><Eye size={13} /> View</button>{canEdit && <button className="executive-action-btn" onClick={() => handleEditVoucher(voucher)}><Pencil size={13} /> Edit</button>}{canDelete && <button className="executive-action-btn delete" onClick={() => handleDeleteVoucher(voucher)}><Trash2 size={13} /> Delete</button>}</div></td></tr>)}
       </tbody></table></div>}
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filteredVouchers.length} onPrevious={() => setPage((current) => Math.max(1, current - 1))} onNext={() => setPage((current) => Math.min(totalPages, current + 1))} className="history-pagination" />
     </section>
