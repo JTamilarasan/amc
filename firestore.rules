@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/user/$(request.auth.uid)).data; }
+    function active() { return signedIn() && profile().status == 'active'; }
+    function admin() { return active() && profile().role == 'admin'; }
+    function permitted(key) { return active() && (admin() || profile().permissions[key] == true); }
+    function validSignup(uid) {
+      return signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email', 'role', 'status', 'permissions', 'createdAt', 'updatedAt'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == 'user'
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.permissions.keys().hasOnly([
+          'dashboard', 'customers', 'enquiries', 'executives', 'products',
+          'salesVouchers', 'voucherSettings', 'areas'
+        ])
+        && request.resource.data.permissions.dashboard == true
+        && request.resource.data.permissions.customers == false
+        && request.resource.data.permissions.enquiries == false
+        && request.resource.data.permissions.executives == false
+        && request.resource.data.permissions.products == false
+        && request.resource.data.permissions.salesVouchers == false
+        && request.resource.data.permissions.voucherSettings == false
+        && request.resource.data.permissions.areas == false;
+    }
+
+    match /user/{uid} {
+      allow create: if validSignup(uid);
+      allow get: if signedIn() && (request.auth.uid == uid || admin());
+      allow list, update, delete: if admin();
+    }
+
+    match /customers/{document=**} {
+      allow read: if permitted('customers') || permitted('dashboard') || permitted('salesVouchers') || permitted('voucherSettings') || permitted('enquiries');
+      allow write: if permitted('customers');
+    }
+    match /enquiries/{document=**} { allow read, write: if permitted('enquiries'); }
+    match /executives/{document=**} {
+      allow read: if permitted('executives') || permitted('dashboard') || permitted('salesVouchers') || permitted('voucherSettings') || permitted('enquiries');
+      allow write: if permitted('executives');
+    }
+    match /products/{document=**} {
+      allow read: if permitted('products') || permitted('dashboard') || permitted('salesVouchers') || permitted('enquiries');
+      allow write: if permitted('products');
+    }
+    match /areas/{document=**} {
+      allow read: if permitted('areas') || permitted('salesVouchers') || permitted('enquiries');
+      allow write: if permitted('areas');
+    }
+    match /salesVouchers/{document=**} {
+      allow read: if permitted('salesVouchers') || permitted('dashboard') || permitted('customers') || permitted('voucherSettings');
+      allow write: if permitted('salesVouchers');
+    }
+    match /callReceiptVouchers/{document=**} {
+      allow read: if permitted('voucherSettings') || permitted('dashboard') || permitted('customers') || permitted('executives');
+      allow write: if permitted('voucherSettings');
+    }
+    match /voucherSettings/{document=**} { allow read, write: if permitted('salesVouchers') || permitted('voucherSettings'); }
+    match /salesVoucherNumberClaims/{document=**} { allow read, write: if permitted('salesVouchers'); }
+    match /callReceiptVoucherNumberClaims/{document=**} { allow read, write: if permitted('voucherSettings'); }
+    match /{document=**} { allow read, write: if admin(); }
+  }
+}

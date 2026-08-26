@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { MapPin, Package, Users, UserRound } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
+import { useAuth } from '../../context/AuthContext'
 
 const cards = [
   {
@@ -10,6 +11,7 @@ const cards = [
     description: 'Create and manage sales/service executives.',
     action: '/masters/executives',
     buttonLabel: 'Create Executive',
+    permission: 'executives',
   },
   {
     title: 'Customer Master',
@@ -17,6 +19,7 @@ const cards = [
     description: 'Create and manage customer information.',
     action: '/masters/customers',
     buttonLabel: 'Manage Customers',
+    permission: 'customers',
   },
   {
     title: 'Product Master',
@@ -24,6 +27,7 @@ const cards = [
     description: 'Manage products and AMC eligibility.',
     action: '/masters/products',
     buttonLabel: 'Manage Products',
+    permission: 'products',
   },
   {
     title: 'Area Master',
@@ -31,15 +35,18 @@ const cards = [
     description: 'Create and manage customer service areas.',
     action: '/masters/areas',
     buttonLabel: 'Manage Areas',
+    permission: 'areas',
   },
 ]
 
 const Masters = () => {
+  const { isAdmin, hasPermission } = useAuth()
+  const visibleCards = cards.filter((card) => isAdmin || hasPermission(card.permission))
   return (
     <div className="page-stack">
       <PageHeader title="Masters" subtitle="Manage your business master data." />
       <div className="masters-grid">
-        {cards.map((card) => {
+        {visibleCards.map((card) => {
           const Icon = card.icon
           return (
             <article className="master-card" key={card.title}>

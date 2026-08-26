@@ -6,21 +6,22 @@ import {
   BarChart3,
   LogOut,
   Menu,
+  Users,
   X,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'AMC Dashboard', path: '/dashboard' }, { label: 'Enquiry and Support Dashboard', path: '/dashboard/enquiry' }] },
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'AMC Dashboard', path: '/dashboard', permission: 'dashboard' }, { label: 'Enquiry and Support Dashboard', path: '/dashboard/enquiry', permission: 'enquiries' }] },
   {
     label: 'Vouchers',
     path: '/sales-voucher',
     icon: FileText,
     children: [
-      { label: 'AMC Voucher', path: '/sales-voucher' },
-      { label: 'Call Receipt Voucher', path: '/call-management/call-receipt-voucher' },
-      { label: 'Enquiry Voucher', path: '/enquiry' },
+      { label: 'AMC Voucher', path: '/sales-voucher', permission: 'salesVouchers' },
+      { label: 'Call Receipt Voucher', path: '/call-management/call-receipt-voucher', permission: 'voucherSettings' },
+      { label: 'Enquiry Voucher', path: '/enquiry', permission: 'enquiries' },
     ],
   },
   {
@@ -28,10 +29,10 @@ const navItems = [
     path: '/masters',
     icon: BookOpen,
     children: [
-      { label: 'Executive Master', path: '/masters/executives' },
-      { label: 'Customer Master', path: '/masters/customers' },
-      { label: 'Product Master', path: '/masters/products' },
-      { label: 'Area Master', path: '/masters/areas' },
+      { label: 'Executive Master', path: '/masters/executives', permission: 'executives' },
+      { label: 'Customer Master', path: '/masters/customers', permission: 'customers' },
+      { label: 'Product Master', path: '/masters/products', permission: 'products' },
+      { label: 'Area Master', path: '/masters/areas', permission: 'areas' },
     ],
   },
   {
@@ -39,22 +40,27 @@ const navItems = [
     path: '/reports',
     icon: BarChart3,
     children: [
-      { label: 'AMC Register Report', path: '/reports/sales-register' },
-      { label: 'Call Register Report', path: '/reports/call-register' },
-      { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history' },
-      { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry' },
-      { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history' },
-      { label: 'Executive Calls Report', path: '/reports/executive-calls' },
-      { label: 'Enquiry Report', path: '/reports/enquiry-report' },
-      { label: 'Enquiry Leads Report', path: '/reports/enquiry-leads' },
+      { label: 'AMC Register Report', path: '/reports/sales-register', permission: 'salesVouchers' },
+      { label: 'Call Register Report', path: '/reports/call-register', permission: 'voucherSettings' },
+      { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history', permission: 'customers' },
+      { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry', permission: 'salesVouchers' },
+      { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history', permission: 'customers' },
+      { label: 'Executive Calls Report', path: '/reports/executive-calls', permission: 'executives' },
+      { label: 'Enquiry Report', path: '/reports/enquiry-report', permission: 'enquiries' },
+      { label: 'Enquiry Leads Report', path: '/reports/enquiry-leads', permission: 'enquiries' },
     ],
   },
+  { label: 'User Management', path: '/user-management', icon: Users, adminOnly: true },
 ]
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, isAdmin, hasPermission } = useAuth()
+  const visibleItems = navItems.map((item) => {
+    const children = item.children?.filter((child) => isAdmin || hasPermission(child.permission))
+    return { ...item, path: !isAdmin && children?.length ? children[0].path : item.path, children }
+  }).filter((item) => item.adminOnly ? isAdmin : item.children ? item.children.length > 0 : (isAdmin || !item.permission || hasPermission(item.permission)))
 
   const handleLogout = async () => {
     await logout()
@@ -81,7 +87,7 @@ const Sidebar = () => {
           </div>
 
           <nav className="nav-links">
-            {navItems.map((item) => (
+            {visibleItems.map((item) => (
               <div key={item.label}>
                 <NavLink
                   to={item.path}

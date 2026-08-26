@@ -3,13 +3,13 @@ import { useAuth } from '../../context/AuthContext'
 import Loader from '../common/Loader'
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, userProfile, loading } = useAuth()
 
   if (loading) {
     return <Loader fullScreen />
   }
 
-  if (!user) {
+  if (!user || !userProfile) {
     return <Navigate to="/login" replace />
   }
 

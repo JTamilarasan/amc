@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import PermissionRoute from './components/auth/PermissionRoute'
 import Login from './pages/Login/Login'
 import Signup from './pages/Signup/Signup'
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword'
@@ -29,6 +30,8 @@ import Enquiry from './pages/Enquiry/Enquiry'
 import EnquiryDashboard from './pages/Enquiry/EnquiryDashboard'
 import EnquiryReport from './pages/Reports/EnquiryReport'
 import EnquiryLeadsReport from './pages/Reports/EnquiryLeadsReport'
+import UserManagement from './pages/UserManagement/UserManagement'
+import Unauthorized from './pages/Unauthorized/Unauthorized'
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -46,31 +49,33 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/enquiry" element={<EnquiryDashboard />} />
-            <Route path="/enquiry" element={<Enquiry />} />
-            <Route path="/masters" element={<Masters />} />
-            <Route path="/masters/executives" element={<ExecutiveMaster />} />
-            <Route path="/masters/customers" element={<CustomerMaster />} />
-            <Route path="/masters/products" element={<ProductMaster />} />
-            <Route path="/masters/areas" element={<AreaMaster />} />
-            <Route path="/sales-voucher" element={<SalesVoucher />} />
-            <Route path="/amc" element={<AMCManagement />} />
-            <Route path="/call-management/call-receipt-voucher" element={<CallReceiptVoucher />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/reports/sales-register" element={<SalesRegisterReport />} />
-            <Route path="/reports/current-month-expiry" element={<CurrentMonthlyExpiryReport />} />
-            <Route path="/reports/customer-calls-history" element={<CustomerCallsHistoryReport />} />
-            <Route path="/reports/executive-calls" element={<ExecutiveCallsReport />} />
-            <Route path="/reports/call-register" element={<CallRegisterReport />} />
-            <Route path="/reports/single-customer-calls-history" element={<SingleCustomerCallsHistoryReport />} />
-            <Route path="/reports/amc-active" element={<ActiveAmcCustomersReport />} />
-            <Route path="/reports/amc-expired" element={<ExpiredAmcCustomersReport />} />
-            <Route path="/reports/amc-new" element={<NewAmcReport />} />
-            <Route path="/reports/amc-going-to-expire" element={<GoingToExpireAmcReport />} />
-            <Route path="/reports/amc-renewed" element={<RenewedAmcReport />} />
-            <Route path="/reports/enquiry-report" element={<EnquiryReport />} />
-            <Route path="/reports/enquiry-leads" element={<EnquiryLeadsReport />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/dashboard" element={<PermissionRoute permission="dashboard"><Dashboard /></PermissionRoute>} />
+            <Route path="/dashboard/enquiry" element={<PermissionRoute permission="enquiries"><EnquiryDashboard /></PermissionRoute>} />
+            <Route path="/enquiry" element={<PermissionRoute permission="enquiries"><Enquiry /></PermissionRoute>} />
+            <Route path="/masters" element={<PermissionRoute anyOf={['customers', 'executives', 'products', 'areas']}><Masters /></PermissionRoute>} />
+            <Route path="/masters/executives" element={<PermissionRoute permission="executives"><ExecutiveMaster /></PermissionRoute>} />
+            <Route path="/masters/customers" element={<PermissionRoute permission="customers"><CustomerMaster /></PermissionRoute>} />
+            <Route path="/masters/products" element={<PermissionRoute permission="products"><ProductMaster /></PermissionRoute>} />
+            <Route path="/masters/areas" element={<PermissionRoute permission="areas"><AreaMaster /></PermissionRoute>} />
+            <Route path="/sales-voucher" element={<PermissionRoute permission="salesVouchers"><SalesVoucher /></PermissionRoute>} />
+            <Route path="/amc" element={<PermissionRoute permission="salesVouchers"><AMCManagement /></PermissionRoute>} />
+            <Route path="/call-management/call-receipt-voucher" element={<PermissionRoute permission="voucherSettings"><CallReceiptVoucher /></PermissionRoute>} />
+            <Route path="/reports" element={<PermissionRoute anyOf={['customers', 'enquiries', 'executives', 'salesVouchers', 'voucherSettings']}><Reports /></PermissionRoute>} />
+            <Route path="/reports/sales-register" element={<PermissionRoute permission="salesVouchers"><SalesRegisterReport /></PermissionRoute>} />
+            <Route path="/reports/current-month-expiry" element={<PermissionRoute permission="salesVouchers"><CurrentMonthlyExpiryReport /></PermissionRoute>} />
+            <Route path="/reports/customer-calls-history" element={<PermissionRoute permission="customers"><CustomerCallsHistoryReport /></PermissionRoute>} />
+            <Route path="/reports/executive-calls" element={<PermissionRoute permission="executives"><ExecutiveCallsReport /></PermissionRoute>} />
+            <Route path="/reports/call-register" element={<PermissionRoute permission="voucherSettings"><CallRegisterReport /></PermissionRoute>} />
+            <Route path="/reports/single-customer-calls-history" element={<PermissionRoute permission="customers"><SingleCustomerCallsHistoryReport /></PermissionRoute>} />
+            <Route path="/reports/amc-active" element={<PermissionRoute permission="salesVouchers"><ActiveAmcCustomersReport /></PermissionRoute>} />
+            <Route path="/reports/amc-expired" element={<PermissionRoute permission="salesVouchers"><ExpiredAmcCustomersReport /></PermissionRoute>} />
+            <Route path="/reports/amc-new" element={<PermissionRoute permission="salesVouchers"><NewAmcReport /></PermissionRoute>} />
+            <Route path="/reports/amc-going-to-expire" element={<PermissionRoute permission="salesVouchers"><GoingToExpireAmcReport /></PermissionRoute>} />
+            <Route path="/reports/amc-renewed" element={<PermissionRoute permission="salesVouchers"><RenewedAmcReport /></PermissionRoute>} />
+            <Route path="/reports/enquiry-report" element={<PermissionRoute permission="enquiries"><EnquiryReport /></PermissionRoute>} />
+            <Route path="/reports/enquiry-leads" element={<PermissionRoute permission="enquiries"><EnquiryLeadsReport /></PermissionRoute>} />
+            <Route path="/user-management" element={<PermissionRoute adminOnly><UserManagement /></PermissionRoute>} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

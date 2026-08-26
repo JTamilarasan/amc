@@ -226,6 +226,11 @@ th { color: #64748b; font-weight: 600; }
 .executive-calls-report-section .report-table table { min-width: 720px; }
 .report-count-link { border: 0; padding: 2px 4px; background: transparent; color: #2563eb; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .report-count-link:hover { color: #1d4ed8; }
+.access-denied-card { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; color: #475569; }
+.access-denied-card p { margin: 0; }
+.user-management-table table { min-width: 980px; }
+.user-management-table select { min-width: 118px; padding: 8px 10px; border: 1px solid #dbe4f0; border-radius: 10px; background: white; color: #0f172a; font: inherit; }
+.permission-grid { display: grid; grid-template-columns: repeat(2, minmax(130px, 1fr)); gap: 8px 14px; min-width: 310px; }
 .customer-calls-report-section th, .backup-details-table th { font-weight: 700; }
 .executive-calls-report-section th, .executive-call-details-table th { font-weight: 700; }
 .report-total-row { background: #f8fafc; font-weight: 700; }

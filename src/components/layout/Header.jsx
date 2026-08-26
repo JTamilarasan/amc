@@ -42,6 +42,8 @@ const Header = () => {
     '/reports/customer-calls-history': ['Reports', 'AMC Customer Calls History'],
     '/reports/executive-calls': ['Reports', 'Executive Calls Report'],
     '/call-management/call-receipt-voucher': ['Vouchers', 'Call Receipt Voucher'],
+    '/user-management': ['Administration', 'User Management'],
+    '/unauthorized': ['Access Denied'],
   }
   const breadcrumb = breadcrumbByPath[pathname] || ['Dashboard']
   const displayName = user?.displayName || user?.email || 'User'
