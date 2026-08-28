@@ -17,9 +17,11 @@ const getRanges = () => {
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1)
   const weekStart = new Date(today); weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7))
   const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6)
+  const nextWeekStart = new Date(weekEnd); nextWeekStart.setDate(weekEnd.getDate() + 1)
+  const nextWeekEnd = new Date(nextWeekStart); nextWeekEnd.setDate(nextWeekStart.getDate() + 6)
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1); const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
   const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1); const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0)
-  return { today: [dateValue(today), dateValue(today)], tomorrow: [dateValue(tomorrow), dateValue(tomorrow)], week: [dateValue(weekStart), dateValue(weekEnd)], month: [dateValue(monthStart), dateValue(monthEnd)], nextMonth: [dateValue(nextMonthStart), dateValue(nextMonthEnd)] }
+  return { today: [dateValue(today), dateValue(today)], tomorrow: [dateValue(tomorrow), dateValue(tomorrow)], week: [dateValue(weekStart), dateValue(weekEnd)], nextWeek: [dateValue(nextWeekStart), dateValue(nextWeekEnd)], month: [dateValue(monthStart), dateValue(monthEnd)], nextMonth: [dateValue(nextMonthStart), dateValue(nextMonthEnd)] }
 }
 
 const EnquiryDashboard = () => {
@@ -48,6 +50,7 @@ const EnquiryDashboard = () => {
     ['Today Follow-up', rangeRecords(ranges.today), CalendarClock, 'accent-blue'],
     ['Tomorrow Follow-up', rangeRecords(ranges.tomorrow), UserCheck, 'accent-indigo'],
     ['This Week Follow-up', rangeRecords(ranges.week), Flame, 'accent-amber'],
+    ['Next Week Follow-up', rangeRecords(ranges.nextWeek), CalendarClock, 'accent-indigo'],
     ['This Month Follow-up', rangeRecords(ranges.month), CalendarClock, 'accent-green'],
     ['Next Month Follow-up', rangeRecords(ranges.nextMonth), Snowflake, 'accent-purple'],
     ['Expired Follow-up', supportItems.filter((voucher) => voucher.callStatus === 'Open' && normalizedTime(voucher.when) !== null && normalizedTime(voucher.when) < todayTime), AlertTriangle, 'accent-red'],
@@ -58,6 +61,8 @@ const EnquiryDashboard = () => {
   const existingCards = [
     { title: 'Today Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.today)).length, icon: CalendarClock, accent: 'accent-blue', range: ranges.today },
     { title: 'Tomorrow Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.tomorrow)).length, icon: UserCheck, accent: 'accent-indigo', range: ranges.tomorrow },
+    { title: 'This Week Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.week)).length, icon: Flame, accent: 'accent-amber', range: ranges.week },
+    { title: 'Next Week Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.nextWeek)).length, icon: CalendarClock, accent: 'accent-indigo', range: ranges.nextWeek },
     { title: 'Overall Today Followup', value: selectedEnquiries.filter((item) => inRange(item, ranges.today)).length, icon: CalendarClock, accent: 'accent-blue', range: ranges.today },
     { title: 'Overall Dropped', value: selectedEnquiries.filter((item) => item.callDisposition === 'DROPPED').length, icon: XCircle, accent: 'accent-red', disposition: 'DROPPED' },
     { title: 'Overall Completed', value: selectedEnquiries.filter((item) => item.callDisposition === 'COMPLETED').length, icon: CheckCircle2, accent: 'accent-green', disposition: 'COMPLETED' },
