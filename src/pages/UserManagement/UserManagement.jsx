@@ -3,12 +3,13 @@ import { Check, ChevronDown, Save, Search, X } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import Loader from '../../components/common/Loader'
-import { CRUD_ACTIONS, fullCrudPermission, fullModulePermission, getModuleActions, normalizeUserRole, PERMISSION_MODULES, USER_ROLES, USER_STATUSES } from '../../constants/userAccess'
+import { CRUD_ACTIONS, DEFAULT_USER_PERMISSIONS, fullCrudPermission, fullModulePermission, getModuleActions, normalizeUserRole, PERMISSION_MODULES, USER_ROLES, USER_STATUSES } from '../../constants/userAccess'
 import { userService } from '../../services/userService'
 import { useAuth } from '../../context/AuthContext'
 
 const title = (value) => value[0].toUpperCase() + value.slice(1)
-const copyUser = (entry) => ({ ...entry, permissions: Object.fromEntries(Object.entries(entry.permissions).map(([module, permission]) => [module, { ...permission }])) })
+const copyPermissions = (permissions) => Object.fromEntries(Object.entries(permissions).map(([module, permission]) => [module, { ...permission }]))
+const copyUser = (entry) => ({ ...entry, permissions: copyPermissions(entry.status === 'pending' ? DEFAULT_USER_PERMISSIONS : entry.permissions) })
 
 const UserManagement = () => {
   const { user, refreshUserProfile } = useAuth()

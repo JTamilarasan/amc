@@ -1,9 +1,9 @@
 export const USER_ROLES = ['admin', 'manager', 'user']
-export const USER_STATUSES = ['active', 'inactive']
+export const USER_STATUSES = ['pending', 'active', 'inactive']
 export const CRUD_ACTIONS = ['view', 'add', 'edit', 'delete']
 
 export const PERMISSION_MODULES = [
-  { key: 'dashboard', label: 'Dashboard', defaultView: true },
+  { key: 'dashboard', label: 'Dashboard' },
   { key: 'customers', label: 'Customers' },
   { key: 'enquiries', label: 'Enquiries' },
   { key: 'executives', label: 'Executives' },
@@ -29,3 +29,20 @@ export const normalizePermissions = (permissions = {}) => Object.fromEntries(PER
   const view = saved?.view === true
   return [key, Object.fromEntries(actions.map((action) => [action, action === 'view' ? view : view && saved?.[action] === true]))]
 }))
+
+const PERMISSION_LANDING_ROUTES = [
+  ['dashboard', '/dashboard'],
+  ['enquiries', '/dashboard/enquiry'],
+  ['customers', '/masters/customers'],
+  ['executives', '/masters/executives'],
+  ['products', '/masters/products'],
+  ['areas', '/masters/areas'],
+  ['salesVouchers', '/sales-voucher'],
+  ['voucherSettings', '/call-management/call-receipt-voucher'],
+  ['reports', '/reports'],
+]
+
+export const getUserLandingRoute = (profile) => {
+  if (profile?.role === 'admin') return '/dashboard'
+  return PERMISSION_LANDING_ROUTES.find(([permission]) => profile?.permissions?.[permission]?.view)?.[1] || '/unauthorized'
+}

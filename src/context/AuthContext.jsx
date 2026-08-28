@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, deleteUser, onAuthStateChanged, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth'
+import { browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, setPersistence, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth'
 import { auth } from '../firebase/firebase'
 import { getFirebaseAuthErrorMessage } from '../utils/firebaseAuthErrors'
 import { userService } from '../services/userService'
@@ -8,11 +8,13 @@ import Loader from '../components/common/Loader'
 const AuthContext = createContext({})
 const PROFILE_MISSING_ERROR = 'Your user profile is not configured. Please contact the administrator.'
 const PROFILE_INACTIVE_ERROR = 'Your account is inactive. Please contact the administrator.'
+const PROFILE_ACCESS_ERROR = 'Unable to access your account profile. Please try again or contact the administrator.'
+const isProfilePermissionError = (error) => ['permission-denied', 'firestore/permission-denied'].includes(error?.code)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); const [userProfile, setUserProfile] = useState(null); const [loading, setLoading] = useState(true); const [authError, setAuthError] = useState(''); const [profileVersion, setProfileVersion] = useState(0)
   const authOperation = useRef(false)
-  const acceptAuthenticatedUser = async (firebaseUser) => { const profile = await userService.getUserProfile(firebaseUser.uid); if (!profile) throw new Error(PROFILE_MISSING_ERROR); if (profile.status !== 'active') throw new Error(PROFILE_INACTIVE_ERROR); setUser(firebaseUser); setUserProfile(profile); return profile }
+  const acceptAuthenticatedUser = async (firebaseUser) => { let profile = await userService.getUserProfile(firebaseUser.uid); if (!profile) profile = await userService.createSignupProfile(firebaseUser); if (!['active', 'pending'].includes(profile.status)) throw new Error(PROFILE_INACTIVE_ERROR); setUser(firebaseUser); setUserProfile(profile); return profile }
   const rejectAuthenticatedUser = async (message) => { setUser(null); setUserProfile(null); setAuthError(message); await signOut(auth) }
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true)
       if (!currentUser) { setUser(null); setUserProfile(null); setLoading(false); return }
       try { await acceptAuthenticatedUser(currentUser) }
-      catch (error) { await rejectAuthenticatedUser(error.message || PROFILE_MISSING_ERROR) }
+      catch (error) { await rejectAuthenticatedUser(isProfilePermissionError(error) ? PROFILE_ACCESS_ERROR : error.message || PROFILE_MISSING_ERROR) }
       finally { setLoading(false) }
     })
     return () => unsubscribe()
@@ -31,7 +33,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, rememberMe = false) => {
     setAuthError(''); setLoading(true); authOperation.current = true
     try { await applyPersistence(rememberMe); const credential = await signInWithEmailAndPassword(auth, email, password); await acceptAuthenticatedUser(credential.user) }
-    catch (error) { const message = [PROFILE_MISSING_ERROR, PROFILE_INACTIVE_ERROR].includes(error.message) ? error.message : getFirebaseAuthErrorMessage(error, 'login'); if (auth.currentUser) await rejectAuthenticatedUser(message); else setAuthError(message); throw error }
+    catch (error) { const message = isProfilePermissionError(error) ? PROFILE_ACCESS_ERROR : [PROFILE_MISSING_ERROR, PROFILE_INACTIVE_ERROR].includes(error.message) ? error.message : getFirebaseAuthErrorMessage(error, 'login'); if (auth.currentUser) await rejectAuthenticatedUser(message); else setAuthError(message); throw error }
     finally { authOperation.current = false; setLoading(false) }
   }
   const signup = async (email, password, displayName, rememberMe = false) => {
@@ -41,8 +43,8 @@ export const AuthProvider = ({ children }) => {
     catch (error) {
       let message = getFirebaseAuthErrorMessage(error, 'signup')
       if (createdUser) {
-        message = 'Your account profile could not be created. The incomplete signup was cancelled. Please try again or contact the administrator.'
-        try { await deleteUser(createdUser) } catch { if (auth.currentUser) await signOut(auth) }
+        message = 'Your account was created, but its profile could not be completed. Please try signing in again or contact the administrator.'
+        if (auth.currentUser) await signOut(auth)
       }
       setAuthError(message); setUser(null); setUserProfile(null); throw error
     }
