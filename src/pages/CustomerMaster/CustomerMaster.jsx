@@ -191,7 +191,7 @@ const CustomerMaster = () => {
         const savedCustomer = await dispatch(addCustomer(payload)).unwrap()
         const context = returnContext?.customerReturnContext || returnContext
         if (context?.returnTo) {
-          navigate(context.returnTo, { state: { ...context, createdCustomerId: savedCustomer.id, createdCustomerName: savedCustomer.customerName, createdCustomerMobileNo: savedCustomer.mobileNo || payload.mobileNo } })
+          navigate(context.returnTo, { state: { ...context, createdCustomerId: savedCustomer.id, createdCustomerName: savedCustomer.customerName, createdCustomerMobileNo: savedCustomer.mobileNo || payload.mobileNo, createdCustomerAreaId: savedCustomer.areaId || payload.areaId, createdCustomerAreaName: savedCustomer.areaName || payload.areaName } })
           return
         }
       }
