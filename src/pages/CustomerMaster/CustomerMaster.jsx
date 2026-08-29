@@ -19,6 +19,7 @@ const CUSTOMER_CATEGORY_2_OPTIONS = ['Direct', 'Reference', ...ENQUIRY_LEAD_SOUR
 
 const initialForm = {
   customerName: '',
+  contactName: '',
   mobileNo: '',
   email: '',
   areaId: '',
@@ -92,7 +93,7 @@ const CustomerMaster = () => {
       return items
     }
 
-    return items.filter((customer) => [customer.customerName, customer.mobileNo, customer.email, customer.areaName, customer.state].some((value) => (value || '').toLowerCase().includes(query)))
+    return items.filter((customer) => [customer.customerName, customer.contactName, customer.mobileNo, customer.email, customer.areaName, customer.state].some((value) => (value || '').toLowerCase().includes(query)))
   }, [items, searchText])
 
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
@@ -174,6 +175,7 @@ const CustomerMaster = () => {
     const payload = {
       ...form,
       customerName: form.customerName.trim(),
+      contactName: form.contactName.trim(),
       mobileNo: form.mobileNo.trim(),
       email: form.email.trim().toLowerCase(),
       address: form.address.trim(),
@@ -191,7 +193,7 @@ const CustomerMaster = () => {
         const savedCustomer = await dispatch(addCustomer(payload)).unwrap()
         const context = returnContext?.customerReturnContext || returnContext
         if (context?.returnTo) {
-          navigate(context.returnTo, { state: { ...context, createdCustomerId: savedCustomer.id, createdCustomerName: savedCustomer.customerName, createdCustomerMobileNo: savedCustomer.mobileNo || payload.mobileNo, createdCustomerAreaId: savedCustomer.areaId || payload.areaId, createdCustomerAreaName: savedCustomer.areaName || payload.areaName } })
+          navigate(context.returnTo, { state: { ...context, createdCustomerId: savedCustomer.id, createdCustomerName: savedCustomer.customerName, createdCustomerContactName: savedCustomer.contactName || payload.contactName, createdCustomerMobileNo: savedCustomer.mobileNo || payload.mobileNo, createdCustomerAreaId: savedCustomer.areaId || payload.areaId, createdCustomerAreaName: savedCustomer.areaName || payload.areaName } })
           return
         }
       }
@@ -205,6 +207,7 @@ const CustomerMaster = () => {
     setEditingId(customer.id)
     setForm({
       customerName: customer.customerName,
+      contactName: customer.contactName || '',
       mobileNo: customer.mobileNo || '',
       email: customer.email || '',
       areaId: customer.areaId || '',
@@ -248,6 +251,10 @@ const CustomerMaster = () => {
               <span>Customer Name *</span>
               <input name="customerName" value={form.customerName} onChange={handleChange} placeholder="Enter customer name" />
               {validationErrors.customerName ? <div className="field-message field-error">{validationErrors.customerName}</div> : null}
+            </label>
+            <label className="field">
+              <span>Contact Name</span>
+              <input name="contactName" value={form.contactName} onChange={handleChange} placeholder="Enter contact person name" />
             </label>
             <label className="field">
               <span>Area</span>
@@ -342,7 +349,7 @@ const CustomerMaster = () => {
         <div className="toolbar" style={{ marginBottom: 12 }}>
           <div className="search-box" style={{ minWidth: 240, width: '100%' }}>
             <Search size={16} />
-            <input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search name, mobile, email, area or state..." />
+            <input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search customer, contact, mobile, email, area or state..." />
           </div>
           <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}>
             <option value={10}>10</option>
@@ -355,6 +362,7 @@ const CustomerMaster = () => {
             {pagedCustomers.map((customer) => (
               <div className="customer-mobile-card" key={customer.id}>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Customer</span><span>{customer.customerName}</span></div>
+                <div className="customer-mobile-row"><span className="customer-mobile-label">Contact</span><span>{customer.contactName || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Mobile</span><span>{customer.mobileNo || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Email</span><span>{customer.email || '—'}</span></div>
                 <div className="customer-mobile-row"><span className="customer-mobile-label">Area</span><span>{customer.areaName || '—'}</span></div>
@@ -375,6 +383,7 @@ const CustomerMaster = () => {
                 <tr>
                   <th>S.No</th>
                   <th>Customer Name</th>
+                  <th>Contact Name</th>
                   <th>Mobile No</th>
                   <th>Email ID</th>
                   <th>Area</th>
@@ -387,12 +396,13 @@ const CustomerMaster = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading && items.length === 0 ? <tr><td colSpan="11"><Loader size="small" label="Loading customers..." /></td></tr> : null}
-                {!loading && filteredCustomers.length === 0 ? <tr><td colSpan="11" className="text-center">{searchText ? 'No matching customers found.' : 'No customers found.'}</td></tr> : null}
+                {loading && items.length === 0 ? <tr><td colSpan="12"><Loader size="small" label="Loading customers..." /></td></tr> : null}
+                {!loading && filteredCustomers.length === 0 ? <tr><td colSpan="12" className="text-center">{searchText ? 'No matching customers found.' : 'No customers found.'}</td></tr> : null}
                 {pagedCustomers.map((customer, index) => (
                   <tr key={customer.id}>
                     <td>{(page - 1) * pageSize + index + 1}</td>
                     <td>{customer.customerName}</td>
+                    <td>{customer.contactName || '—'}</td>
                     <td>{customer.mobileNo || '—'}</td>
                     <td>{customer.email || '—'}</td>
                     <td>{customer.areaName || '—'}</td>

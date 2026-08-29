@@ -36,6 +36,7 @@ const calculateAmcToDate = (fromDate, duration, amcApplicable) => {
   const targetMonth = targetMonthIndex % 12
   const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate()
   const result = new Date(targetYear, targetMonth, Math.min(day, lastDay))
+  result.setDate(result.getDate() - 1)
   return `${result.getFullYear()}-${String(result.getMonth() + 1).padStart(2, '0')}-${String(result.getDate()).padStart(2, '0')}`
 }
 

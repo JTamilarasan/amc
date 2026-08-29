@@ -34,6 +34,7 @@ const mapCustomer = (docSnapshot) => {
   return {
     id: docSnapshot.id,
     customerName: data.customerName,
+    contactName: data.contactName || '',
     customerNameLower: data.customerNameLower,
     mobileNo: data.mobileNo || '',
     email: data.email || '',
@@ -58,6 +59,7 @@ const mapCustomer = (docSnapshot) => {
 const formatCustomerPayload = (customerData) => ({
   customerName: customerData.customerName.trim(),
   customerNameLower: normalizeCustomerName(customerData.customerName),
+  contactName: (customerData.contactName || '').trim(),
   mobileNo: (customerData.mobileNo || '').trim(),
   email: (customerData.email || '').trim().toLowerCase(),
   areaId: customerData.areaId || '',
