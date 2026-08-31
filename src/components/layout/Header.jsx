@@ -18,6 +18,7 @@ const Header = () => {
   const { pathname } = useLocation()
   const breadcrumbByPath = {
     '/dashboard': ['Dashboard', 'AMC Dashboard'],
+    '/dashboard/free-support': ['Dashboard', 'Free Support Dashboard'],
     '/dashboard/enquiry': ['Dashboard', 'Enquiry and Support Dashboard'],
     '/enquiry': ['Vouchers', 'Enquiry Voucher'],
     '/masters': ['Masters'],
@@ -26,9 +27,12 @@ const Header = () => {
     '/masters/products': ['Masters', 'Product Master'],
     '/masters/areas': ['Masters', 'Area Master'],
     '/sales-voucher': ['Vouchers', 'AMC Voucher'],
+    '/free-support-voucher': ['Vouchers', 'Free Support'],
     '/amc': ['AMC Management'],
     '/reports': ['Reports'],
     '/reports/sales-register': ['Reports', 'AMC Register Report'],
+    '/reports/free-support-register': ['Reports', 'Free Support Register Report'],
+    '/reports/free-support-calls-history': ['Reports', 'Free Support Calls History'],
     '/reports/call-register': ['Reports', 'Call Register Report'],
     '/reports/single-customer-calls-history': ['Reports', 'Single Customer Calls History Report'],
     '/reports/amc-active': ['Reports', 'Active AMC Customers Report'],

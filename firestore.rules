@@ -59,12 +59,17 @@ service cloud.firestore {
       allow read: if permitted('salesVouchers', 'view') || permitted('dashboard', 'view') || permitted('customers', 'view') || permitted('voucherSettings', 'view') || permitted('reports', 'view');
       allow create: if permitted('salesVouchers', 'add'); allow update: if permitted('salesVouchers', 'edit'); allow delete: if permitted('salesVouchers', 'delete');
     }
+    match /freeSupportVouchers/{document=**} {
+      allow read: if permitted('salesVouchers', 'view') || permitted('dashboard', 'view') || permitted('customers', 'view') || permitted('reports', 'view');
+      allow create: if permitted('salesVouchers', 'add'); allow update: if permitted('salesVouchers', 'edit'); allow delete: if permitted('salesVouchers', 'delete');
+    }
     match /callReceiptVouchers/{document=**} {
       allow read: if permitted('voucherSettings', 'view') || permitted('dashboard', 'view') || permitted('customers', 'view') || permitted('executives', 'view') || permitted('reports', 'view');
       allow create: if permitted('voucherSettings', 'add'); allow update: if permitted('voucherSettings', 'edit'); allow delete: if permitted('voucherSettings', 'delete');
     }
     match /voucherSettings/{document=**} { allow read: if permitted('salesVouchers', 'view') || permitted('voucherSettings', 'view') || permitted('reports', 'view'); allow create, update: if permitted('salesVouchers', 'add') || permitted('salesVouchers', 'edit') || permitted('voucherSettings', 'add') || permitted('voucherSettings', 'edit'); }
     match /salesVoucherNumberClaims/{document=**} { allow read, create: if permitted('salesVouchers', 'add'); }
+    match /freeSupportVoucherNumberClaims/{document=**} { allow read, create: if permitted('salesVouchers', 'add'); }
     match /callReceiptVoucherNumberClaims/{document=**} { allow read, create: if permitted('voucherSettings', 'add'); }
     match /{document=**} { allow read, write: if admin(); }
   }

@@ -1,6 +1,5 @@
 import { collection, doc, getDoc, getDocs, query, runTransaction, serverTimestamp, where } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
-import { toDisplayDate } from '../utils/dateUtils'
 
 const COLLECTION = 'callReceiptVouchers'
 const counterRef = (year) => doc(db, 'voucherSettings', `callReceiptVoucher_${year}`)
@@ -29,35 +28,6 @@ const getHighestCallSequenceForYear = async (year) => {
   return snapshot.docs.reduce((highest, item) => Math.max(highest, savedVoucherSequence(item.data(), year)), 0)
 }
 const normalizeName = (value) => String(value || '').trim().toLowerCase()
-const isAmcApplicable = (value) => value === true || String(value || '').trim().toLowerCase() === 'yes'
-const startOfDay = (value = new Date()) => {
-  const date = toDisplayDate(value)
-  return date ? new Date(date.getFullYear(), date.getMonth(), date.getDate()) : null
-}
-
-const latestValidAmcToDate = (salesVouchers, today = new Date()) => {
-  const todayDate = startOfDay(today)
-  if (!todayDate) return null
-
-  return salesVouchers
-    .flatMap((voucher) => voucher.items || [])
-    .filter((item) => isAmcApplicable(item.amcApplicable))
-    .map((item) => ({ value: item.amcToDate, date: startOfDay(item.amcToDate) }))
-    .filter((item) => item.date && item.date >= todayDate)
-    .sort((left, right) => right.date.getTime() - left.date.getTime())[0]?.value || null
-}
-
-const getMatchingSalesVouchers = (voucher, salesVouchers) => {
-  const partyName = normalizeName(voucher.partyName)
-  if (voucher.partyId) {
-    const idMatches = salesVouchers.filter((salesVoucher) => salesVoucher.customerId === voucher.partyId)
-    const legacyNameMatches = partyName
-      ? salesVouchers.filter((salesVoucher) => !salesVoucher.customerId && normalizeName(salesVoucher.customerName) === partyName)
-      : []
-    return [...idMatches, ...legacyNameMatches]
-  }
-  return partyName ? salesVouchers.filter((salesVoucher) => normalizeName(salesVoucher.customerName) === partyName) : []
-}
 
 const updateCustomerCounters = (transaction, ref, snapshot, delta) => {
   const current = snapshot.data() || {}
@@ -209,22 +179,27 @@ export const getCallRegisterSummary = (vouchers) => ({
 })
 
 export const getCustomerCallsReport = async (fromDate, toDate) => {
-  const [vouchers, salesVoucherSnapshot] = await Promise.all([
+  const [vouchers, customerSnapshot] = await Promise.all([
     getCallReceiptVouchersByDateRange(fromDate, toDate),
-    getDocs(collection(db, 'salesVouchers')),
+    getDocs(collection(db, 'customers')),
   ])
-  const salesVouchers = salesVoucherSnapshot.docs.map(mapDocument)
   const grouped = new Map()
+  customerSnapshot.docs.forEach((entry) => {
+    const customer = { id: entry.id, ...entry.data() }
+    if ((customer.status || 'Active') !== 'Active') return
+    grouped.set(customer.id, { partyId: customer.id, partyName: customer.customerName || '', contactNo: customer.mobileNo || '', areaName: customer.areaName || '', customerExpiryDate: null, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [], visitVouchers: [] })
+  })
   vouchers.forEach((voucher) => {
-    const customerExpiryDate = latestValidAmcToDate(getMatchingSalesVouchers(voucher, salesVouchers))
-    if (!customerExpiryDate) return
-    const key = voucher.partyId || `name:${normalizeName(voucher.partyName)}`
-    const current = grouped.get(key) || { partyId: key, partyName: voucher.partyName, customerExpiryDate, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [], visitVouchers: [] }
+    const key = voucher.partyId && grouped.has(voucher.partyId)
+      ? voucher.partyId
+      : [...grouped.entries()].find(([, customer]) => normalizeName(customer.partyName) === normalizeName(voucher.partyName))?.[0]
+    if (!key) return
+    const current = grouped.get(key)
+    if (voucher.customerExpiryDate && (!current.customerExpiryDate || voucher.customerExpiryDate > current.customerExpiryDate)) current.customerExpiryDate = voucher.customerExpiryDate
     current.totalCalls += 1
     current.callVouchers.push(voucher)
     if (voucher.category2 === 'Visit') { current.totalVisits += 1; current.visitVouchers.push(voucher) }
     if (voucher.category === 'Monthly Backup') { current.backupChecklist += 1; current.backupVouchers.push(voucher) }
-    grouped.set(key, current)
   })
   return [...grouped.values()].sort((a, b) => (a.partyName || '').localeCompare(b.partyName || ''))
 }

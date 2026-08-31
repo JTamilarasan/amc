@@ -63,7 +63,7 @@ const EnquiryDashboard = () => {
     { title: 'Tomorrow Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.tomorrow)).length, icon: UserCheck, accent: 'accent-indigo', range: ranges.tomorrow },
     { title: 'This Week Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.week)).length, icon: Flame, accent: 'accent-amber', range: ranges.week },
     { title: 'Next Week Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.nextWeek)).length, icon: CalendarClock, accent: 'accent-indigo', range: ranges.nextWeek },
-    { title: 'Overall Today Followup', value: selectedEnquiries.filter((item) => inRange(item, ranges.today)).length, icon: CalendarClock, accent: 'accent-blue', range: ranges.today },
+    { title: 'This Month Follow-up', value: selectedEnquiries.filter((item) => inRange(item, ranges.month)).length, icon: CalendarClock, accent: 'accent-green', range: ranges.month },
     { title: 'Overall Dropped', value: selectedEnquiries.filter((item) => item.callDisposition === 'DROPPED').length, icon: XCircle, accent: 'accent-red', disposition: 'DROPPED' },
     { title: 'Overall Completed', value: selectedEnquiries.filter((item) => item.callDisposition === 'COMPLETED').length, icon: CheckCircle2, accent: 'accent-green', disposition: 'COMPLETED' },
     { title: 'Next Month Followup', value: selectedEnquiries.filter((item) => inRange(item, ranges.nextMonth)).length, icon: Snowflake, accent: 'accent-purple', range: ranges.nextMonth },

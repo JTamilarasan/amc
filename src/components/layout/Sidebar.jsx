@@ -14,13 +14,14 @@ import { useAuth } from '../../context/AuthContext'
 import { PERMISSION_KEYS } from '../../constants/userAccess'
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'AMC Dashboard', path: '/dashboard', permission: 'dashboard' }, { label: 'Enquiry and Support Dashboard', path: '/dashboard/enquiry', permission: 'enquiries' }] },
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, children: [{ label: 'AMC Dashboard', path: '/dashboard', permission: 'dashboard' }, { label: 'Free Support Dashboard', path: '/dashboard/free-support', permission: 'dashboard' }, { label: 'Enquiry and Support Dashboard', path: '/dashboard/enquiry', permission: 'enquiries' }] },
   {
     label: 'Vouchers',
     path: '/sales-voucher',
     icon: FileText,
     children: [
       { label: 'AMC Voucher', path: '/sales-voucher', permission: 'salesVouchers' },
+      { label: 'Free Support', path: '/free-support-voucher', permission: 'salesVouchers' },
       { label: 'Call Receipt Voucher', path: '/call-management/call-receipt-voucher', permission: 'voucherSettings' },
       { label: 'Enquiry Voucher', path: '/enquiry', permission: 'enquiries' },
     ],
@@ -43,6 +44,8 @@ const navItems = [
     permission: PERMISSION_KEYS.reports,
     children: [
       { label: 'AMC Register Report', path: '/reports/sales-register', permission: PERMISSION_KEYS.reports },
+      { label: 'Free Support Register', path: '/reports/free-support-register', permission: PERMISSION_KEYS.reports },
+      { label: 'Free Support Calls History', path: '/reports/free-support-calls-history', permission: PERMISSION_KEYS.reports },
       { label: 'Call Register Report', path: '/reports/call-register', permission: PERMISSION_KEYS.reports },
       { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history', permission: PERMISSION_KEYS.reports },
       { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry', permission: PERMISSION_KEYS.reports },

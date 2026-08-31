@@ -146,7 +146,7 @@ const CallReceiptVoucher = () => {
     finally { setSaving(false) }
   }
   const changeStatus = (value) => {
-    setForm((current) => ({ ...current, callStatus: value, ...(value === 'Open' ? { callSubStatus: '', closedOn: '' } : { nextAction: '', when: '' }) }))
+    setForm((current) => ({ ...current, callStatus: value, ...(value === 'Open' ? { callSubStatus: '', closedOn: '' } : { closedOn: current.closedOn || todayValue(), nextAction: '', when: '' }) }))
     setErrors((current) => ({ ...current, callStatus: '', callSubStatus: '', closedOn: '', ...(value === 'Closed' ? { nextAction: '', when: '' } : {}) }))
     setMessage('')
   }

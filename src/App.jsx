@@ -6,15 +6,20 @@ import Login from './pages/Login/Login'
 import Signup from './pages/Signup/Signup'
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword'
 import Dashboard from './pages/Dashboard/Dashboard'
+import FreeSupportDashboard from './pages/FreeSupportDashboard/FreeSupportDashboard'
 import Masters from './pages/Masters/Masters'
 import ExecutiveMaster from './pages/ExecutiveMaster/ExecutiveMaster'
 import CustomerMaster from './pages/CustomerMaster/CustomerMaster'
 import ProductMaster from './pages/ProductMaster/ProductMaster'
 import AreaMaster from './pages/AreaMaster/AreaMaster'
 import SalesVoucher from './pages/SalesVoucher/SalesVoucher'
+import FreeSupportVoucher from './pages/FreeSupportVoucher/FreeSupportVoucher'
 import AMCManagement from './pages/AMCManagement/AMCManagement'
 import Reports from './pages/Reports/Reports'
 import SalesRegisterReport from './pages/Reports/SalesRegisterReport'
+import FreeSupportRegisterReport from './pages/Reports/FreeSupportRegisterReport'
+import FreeSupportCallsHistoryReport from './pages/Reports/FreeSupportCallsHistoryReport'
+import FreeSupportSummaryReport from './pages/Reports/FreeSupportSummaryReport'
 import CurrentMonthlyExpiryReport from './pages/Reports/CurrentMonthlyExpiryReport'
 import CallReceiptVoucher from './pages/CallManagement/CallReceiptVoucher'
 import CustomerCallsHistoryReport from './pages/Reports/CustomerCallsHistoryReport'
@@ -52,6 +57,7 @@ function App() {
           >
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/dashboard" element={<PermissionRoute permission="dashboard"><Dashboard /></PermissionRoute>} />
+            <Route path="/dashboard/free-support" element={<PermissionRoute permission="dashboard"><FreeSupportDashboard /></PermissionRoute>} />
             <Route path="/dashboard/enquiry" element={<PermissionRoute permission="enquiries"><EnquiryDashboard /></PermissionRoute>} />
             <Route path="/enquiry" element={<PermissionRoute permission="enquiries"><Enquiry /></PermissionRoute>} />
             <Route path="/masters" element={<PermissionRoute anyOf={['customers', 'executives', 'products', 'areas']}><Masters /></PermissionRoute>} />
@@ -60,10 +66,14 @@ function App() {
             <Route path="/masters/products" element={<PermissionRoute permission="products"><ProductMaster /></PermissionRoute>} />
             <Route path="/masters/areas" element={<PermissionRoute permission="areas"><AreaMaster /></PermissionRoute>} />
             <Route path="/sales-voucher" element={<PermissionRoute permission="salesVouchers"><SalesVoucher /></PermissionRoute>} />
+            <Route path="/free-support-voucher" element={<PermissionRoute permission="salesVouchers"><FreeSupportVoucher /></PermissionRoute>} />
             <Route path="/amc" element={<PermissionRoute permission="salesVouchers"><AMCManagement /></PermissionRoute>} />
             <Route path="/call-management/call-receipt-voucher" element={<PermissionRoute permission="voucherSettings"><CallReceiptVoucher /></PermissionRoute>} />
             <Route path="/reports" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><Reports /></PermissionRoute>} />
             <Route path="/reports/sales-register" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><SalesRegisterReport /></PermissionRoute>} />
+            <Route path="/reports/free-support-register" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><FreeSupportRegisterReport /></PermissionRoute>} />
+            <Route path="/reports/free-support-calls-history" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><FreeSupportCallsHistoryReport /></PermissionRoute>} />
+            <Route path="/reports/free-support-summary/:type" element={<PermissionRoute permission="dashboard"><FreeSupportSummaryReport /></PermissionRoute>} />
             <Route path="/reports/current-month-expiry" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><CurrentMonthlyExpiryReport /></PermissionRoute>} />
             <Route path="/reports/customer-calls-history" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><CustomerCallsHistoryReport /></PermissionRoute>} />
             <Route path="/reports/executive-calls" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><ExecutiveCallsReport /></PermissionRoute>} />

@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext'
 
 const reportCards = [
   { title: 'AMC Register Report', description: 'View AMC vouchers by selected date range.', path: '/reports/sales-register', icon: FileSpreadsheet, permission: 'salesVouchers' },
+  { title: 'Free Support Register Report', description: 'View Free Support vouchers by selected date range.', path: '/reports/free-support-register', icon: FileSpreadsheet, permission: 'salesVouchers' },
+  { title: 'Free Support Calls History', description: 'View active Free Support customer call and visit history.', path: '/reports/free-support-calls-history', icon: Users, permission: 'customers' },
   { title: 'Call Register Report', description: 'View call receipt vouchers by date or voucher number.', path: '/reports/call-register', icon: Headset, permission: 'voucherSettings' },
   { title: 'Single Customer Calls History Report', description: 'View complete call history for any selected customer.', path: '/reports/single-customer-calls-history', icon: Users, permission: 'customers' },
   { title: 'Current Monthly Expiry Report', description: 'View AMC records expiring in the current month.', path: '/reports/current-month-expiry', icon: CalendarClock, permission: 'salesVouchers' },
