@@ -179,23 +179,41 @@ export const getCallRegisterSummary = (vouchers) => ({
 })
 
 export const getCustomerCallsReport = async (fromDate, toDate) => {
-  const [vouchers, customerSnapshot] = await Promise.all([
-    getCallReceiptVouchersByDateRange(fromDate, toDate),
+  const [allVouchers, customerSnapshot, salesVoucherSnapshot] = await Promise.all([
+    getCallReceiptVouchers(),
     getDocs(collection(db, 'customers')),
+    getDocs(collection(db, 'salesVouchers')),
   ])
+  const vouchers = allVouchers.filter((voucher) => voucher.date >= fromDate && voucher.date <= toDate)
   const grouped = new Map()
   customerSnapshot.docs.forEach((entry) => {
     const customer = { id: entry.id, ...entry.data() }
     if ((customer.status || 'Active') !== 'Active') return
     grouped.set(customer.id, { partyId: customer.id, partyName: customer.customerName || '', contactNo: customer.mobileNo || '', areaName: customer.areaName || '', customerExpiryDate: null, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [], visitVouchers: [] })
   })
-  vouchers.forEach((voucher) => {
-    const key = voucher.partyId && grouped.has(voucher.partyId)
-      ? voucher.partyId
-      : [...grouped.entries()].find(([, customer]) => normalizeName(customer.partyName) === normalizeName(voucher.partyName))?.[0]
+  const findCustomerKey = (voucher) => voucher.partyId && grouped.has(voucher.partyId)
+    ? voucher.partyId
+    : [...grouped.entries()].find(([, customer]) => normalizeName(customer.partyName) === normalizeName(voucher.partyName))?.[0]
+  salesVoucherSnapshot.docs.forEach((entry) => {
+    const voucher = entry.data()
+    if (voucher.status === 'Deleted') return
+    const key = voucher.customerId && grouped.has(voucher.customerId)
+      ? voucher.customerId
+      : [...grouped.entries()].find(([, customer]) => normalizeName(customer.partyName) === normalizeName(voucher.customerName))?.[0]
     if (!key) return
     const current = grouped.get(key)
-    if (voucher.customerExpiryDate && (!current.customerExpiryDate || voucher.customerExpiryDate > current.customerExpiryDate)) current.customerExpiryDate = voucher.customerExpiryDate
+    const expiryDates = (voucher.items || [])
+      .filter((item) => item.amcApplicable !== false)
+      .map((item) => item.amcToDate)
+      .filter(Boolean)
+    expiryDates.forEach((expiryDate) => {
+      if (!current.customerExpiryDate || expiryDate > current.customerExpiryDate) current.customerExpiryDate = expiryDate
+    })
+  })
+  vouchers.forEach((voucher) => {
+    const key = findCustomerKey(voucher)
+    if (!key) return
+    const current = grouped.get(key)
     current.totalCalls += 1
     current.callVouchers.push(voucher)
     if (voucher.category2 === 'Visit') { current.totalVisits += 1; current.visitVouchers.push(voucher) }
