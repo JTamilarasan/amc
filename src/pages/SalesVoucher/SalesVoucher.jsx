@@ -48,6 +48,8 @@ const SalesVoucher = () => {
   const routeEditVoucher = location.state?.editVoucher || null
   const routeEditItem = routeEditVoucher?.items?.[0] || routeEditVoucher?.item || null
   const routeRenewVoucher = location.state?.renewalMode ? location.state?.renewVoucher || null : null
+  const dropMode = location.state?.dropMode === true
+  const restoreMode = location.state?.restoreMode === true
   const routeRenewItem = routeRenewVoucher?.item || routeRenewVoucher?.items?.[0] || null
   const returnedSalesForm = location.state?.customerReturnSource === 'sales-voucher' ? location.state.salesVoucherForm : null
   const initialVoucherDate = returnedSalesForm?.voucherDate || routeEditVoucher?.voucherDate || todayValue()
@@ -68,6 +70,8 @@ const SalesVoucher = () => {
   const [executiveOpen, setExecutiveOpen] = useState(false)
   const [category, setCategory] = useState(returnedSalesForm?.category || routeEditVoucher?.category || (routeRenewVoucher ? 'Renewal' : ''))
   const [narration, setNarration] = useState(returnedSalesForm?.narration || routeEditVoucher?.narration || '')
+  const [amcStatus, setAmcStatus] = useState(dropMode ? 'DROPPED' : restoreMode ? 'ACTIVE' : returnedSalesForm?.amcStatus || routeEditVoucher?.amcStatus || 'ACTIVE')
+  const [remarks, setRemarks] = useState(returnedSalesForm?.remarks || routeEditVoucher?.remarks || '')
   const [itemForm, setItemForm] = useState(returnedSalesForm?.itemForm || (routeEditItem
     ? { ...emptyItem, ...routeEditItem, amount: String(routeEditItem.amount || '') }
     : routeRenewItem
@@ -184,7 +188,7 @@ const SalesVoucher = () => {
   const clearVoucher = async () => {
     const nextDate = todayValue()
     setVoucherDate(nextDate); setCustomerId(''); setCustomerName(''); setExecutiveId(''); setExecutiveName('')
-    setCategory(''); setNarration(''); setEditingVoucherId(null); setFormError(''); setPartyError(''); resetItemForm()
+    setCategory(''); setNarration(''); setAmcStatus('ACTIVE'); setRemarks(''); setEditingVoucherId(null); setFormError(''); setPartyError(''); resetItemForm()
     const lookupId = ++voucherLookupId.current
     try {
       const next = await dispatch(fetchNextVoucherNumber(nextDate)).unwrap()
@@ -211,7 +215,7 @@ const SalesVoucher = () => {
     }
     const payload = {
       voucherNumber, voucherDate, customerId, customerName, executiveId, executiveName, category,
-      narration: narration.trim(), items: [voucherItem], totalAmount: Number(itemForm.amount),
+      narration: narration.trim(), amcStatus, remarks: remarks.trim(), items: [voucherItem], totalAmount: Number(itemForm.amount),
       renewalSourceVoucherId: routeRenewVoucher?.id || location.state?.oldSalesVoucherId || '',
       renewalSourceVoucherNumber: routeRenewVoucher?.voucherNumber || location.state?.oldVoucherNumber || '',
     }
@@ -245,7 +249,7 @@ const SalesVoucher = () => {
     setEditingVoucherId(voucher.id); setVoucherNumber(voucher.voucherNumber); setVoucherDate(voucher.voucherDate)
     setCustomerId(voucher.customerId || ''); setCustomerName(voucher.customerName || '')
     setExecutiveId(voucher.executiveId || ''); setExecutiveName(voucher.executiveName || '')
-    setCategory(voucher.category || ''); setNarration(voucher.narration || '')
+    setCategory(voucher.category || ''); setNarration(voucher.narration || ''); setAmcStatus(voucher.amcStatus || 'ACTIVE'); setRemarks(voucher.remarks || '')
     const item = voucher.items?.[0] || voucher.item
     setItemForm(item ? { ...emptyItem, ...item, amount: String(item.amount || '') } : emptyItem)
     setFormError(''); window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -288,6 +292,8 @@ const SalesVoucher = () => {
         <label className="field"><span>Category *</span><select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">Select category</option><option value="New">New</option><option value="Renewal">Renewal</option></select></label>
       </div>
       <label className="field"><span>Narration</span><textarea value={narration} onChange={(event) => setNarration(event.target.value)} placeholder="Enter voucher narration..." /></label>
+      <label className="field"><span>AMC Status</span><select value={amcStatus} onChange={(event) => setAmcStatus(event.target.value)}><option value="ACTIVE">ACTIVE</option><option value="DROPPED">DROPPED</option></select></label>
+      <label className="field"><span>Remarks</span><textarea value={remarks} onChange={(event) => setRemarks(event.target.value)} placeholder="Enter remarks..." /></label>
       {routeRenewVoucher && <label className="field"><span>Old Voucher Reference</span><input value={routeRenewVoucher.voucherNumber || location.state?.oldVoucherNumber || ''} readOnly disabled /></label>}
 
       <div className="panel-heading voucher-products-heading"><h2>Item Details</h2></div>

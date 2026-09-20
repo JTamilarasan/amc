@@ -33,7 +33,7 @@ const CustomerCallsHistoryReport = () => {
   const [pageSize, setPageSize] = useState(10)
   const [callDetails, setCallDetails] = useState(null)
   const [viewVoucher, setViewVoucher] = useState(null)
-  const filtered = useMemo(() => { const search = searchText.trim().toLowerCase(); return rows.filter((row) => !search || [row.partyName, row.contactNo, row.areaName, row.customerExpiryDate, row.backupChecklist, row.totalCalls, row.totalVisits].some((value) => String(value || '').toLowerCase().includes(search))) }, [rows, searchText])
+  const filtered = useMemo(() => { const search = searchText.trim().toLowerCase(); return rows.filter((row) => !search || [row.partyName, row.category1, row.contactNo, row.areaName, row.customerExpiryDate, row.backupChecklist, row.totalCalls, row.totalVisits].some((value) => String(value || '').toLowerCase().includes(search))) }, [rows, searchText])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize)
 
@@ -64,7 +64,7 @@ const CustomerCallsHistoryReport = () => {
     await loadReport(fromDate, toDate)
   }
   const clear = () => { setFromDate(''); setToDate(''); setRange(null); setRows([]); setErrors({}); setError(''); setMessage(''); setSearchText(''); setPage(1) }
-  const download = () => exportToCsv({ filename: `amc-customer-calls-history-${range.from}-to-${range.to}.csv`, headers: ['S.No', 'AMC Customer Name', 'Contact No', 'Area', 'AMC Expiry', 'Backup Count', 'Total Calls', 'Total Visits'], rows: filtered.map((row, index) => [index + 1, row.partyName, row.contactNo, row.areaName, formatDate(row.customerExpiryDate), row.backupChecklist, row.totalCalls, row.totalVisits]) })
+  const download = () => exportToCsv({ filename: `amc-customer-calls-history-${range.from}-to-${range.to}.csv`, headers: ['S.No', 'AMC Customer Name', 'Category 1', 'Contact No', 'Area', 'AMC Expiry', 'BC', 'TC', 'TV'], rows: filtered.map((row, index) => [index + 1, row.partyName, row.category1, row.contactNo, row.areaName, formatDate(row.customerExpiryDate), row.backupChecklist, row.totalCalls, row.totalVisits]) })
   const editVoucher = (voucher) => {
     setCallDetails(null)
     navigate('/call-management/call-receipt-voucher', { state: { editVoucherId: voucher.id, returnTo: '/reports/customer-calls-history', reportRange: { fromDate: range.from, toDate: range.to } } })
@@ -80,11 +80,11 @@ const CustomerCallsHistoryReport = () => {
       <div className="form-actions report-actions"><Button type="button" onClick={generate} disabled={loading}>{loading ? 'Generating...' : 'Generate Report'}</Button><Button type="button" variant="secondary" onClick={clear}>Clear</Button><Button type="button" variant="ghost" onClick={download} disabled={!filtered.length}><Download size={15} /> Download Report</Button></div>
       {error && <div className="field-message">{error}</div>}{message && <div className="auth-success">{message}</div>}
       {range && !rows.length && !error && <div className="report-empty-warning" role="status"><AlertTriangle size={16} /><span>No AMC customers found.</span></div>}
-      <div className="toolbar report-toolbar"><div className="search-box"><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search customer, contact number, area, expiry, calls or visits..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
-      <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>AMC Customer Name</th><th>Contact No</th><th>Area</th><th>AMC Expiry</th><th>Backup Count</th><th>Total Calls</th><th>Total Visits</th></tr></thead><tbody>
-        {!range && <tr><td colSpan="8" className="text-center">Select a date range and generate the report.</td></tr>}
-        {range && !filtered.length && <tr><td colSpan="8" className="text-center">No records found.</td></tr>}
-        {paged.map((row, index) => <tr key={row.partyId}><td>{(page - 1) * pageSize + index + 1}</td><td>{emptyReportValue(row.partyName)}</td><td>{emptyReportValue(row.contactNo)}</td><td>{emptyReportValue(row.areaName)}</td><td>{formatDate(row.customerExpiryDate)}</td><td><button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'backup' })}>{row.backupChecklist}</button></td><td><button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'all' })}>{row.totalCalls}</button></td><td>{row.totalVisits > 0 ? <button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'visits' })}>{row.totalVisits}</button> : row.totalVisits}</td></tr>)}
+      <div className="toolbar report-toolbar"><div className="search-box"><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search customer, category, contact number, area, expiry, calls or visits..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
+      <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>AMC Customer Name</th><th>Category 1</th><th>Contact No</th><th>Area</th><th>AMC Expiry</th><th>BC</th><th>TC</th><th>TV</th></tr></thead><tbody>
+        {!range && <tr><td colSpan="9" className="text-center">Select a date range and generate the report.</td></tr>}
+        {range && !filtered.length && <tr><td colSpan="9" className="text-center">No records found.</td></tr>}
+        {paged.map((row, index) => <tr key={row.partyId}><td>{(page - 1) * pageSize + index + 1}</td><td>{emptyReportValue(row.partyName)}</td><td>{emptyReportValue(row.category1)}</td><td>{emptyReportValue(row.contactNo)}</td><td>{emptyReportValue(row.areaName)}</td><td>{formatDate(row.customerExpiryDate)}</td><td><button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'backup' })}>{row.backupChecklist}</button></td><td><button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'all' })}>{row.totalCalls}</button></td><td><button type="button" className="report-count-link" onClick={() => setCallDetails({ row, type: 'visits' })}>{row.totalVisits}</button></td></tr>)}
       </tbody></table></div>
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" />
     </section>
@@ -104,6 +104,7 @@ const CustomerCallsHistoryReport = () => {
         <div className="detail-field"><span>Call Sub Status</span><strong>{emptyReportValue(viewVoucher.callSubStatus)}</strong></div><div className="detail-field"><span>Next Action</span><strong>{viewVoucher.callStatus === 'Open' ? emptyReportValue(viewVoucher.nextAction) : '-'}</strong></div>
         <div className="detail-field"><span>When</span><strong>{viewVoucher.callStatus === 'Open' ? formatDate(viewVoucher.when) : '-'}</strong></div><div className="detail-field"><span>Customer Expiry</span><strong>{formatDate(viewVoucher.customerExpiryDate)}</strong></div>
         <div className="detail-field"><span>Remarks</span><strong>{emptyReportValue(viewVoucher.callReceiptRemarks)}</strong></div>
+        {canEdit && <div className="form-actions"><Button type="button" onClick={() => editVoucher(viewVoucher)}><Pencil size={13} /> Edit Voucher</Button></div>}
       </div></>}
     </DetailsModal>
   </div>

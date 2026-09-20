@@ -83,7 +83,7 @@ export const createSalesVoucher = async (voucherData) => {
       category: voucherData.category, narration: (voucherData.narration || '').trim(),
       renewedFromVoucherId: voucherData.renewalSourceVoucherId || '', renewedFromVoucherNumber: voucherData.renewalSourceVoucherNumber || '',
       items: cleanItems(voucherData.items), totalAmount: Number(voucherData.totalAmount),
-      status: 'Active', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      status: 'Active', amcStatus: voucherData.amcStatus || 'ACTIVE', remarks: (voucherData.remarks || '').trim(), createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     }
     transaction.set(numberClaimRef, { voucherSequence: sequence, voucherYear: year, voucherNumber, voucherId: voucherRef.id, createdAt: serverTimestamp() })
     transaction.set(sequenceRef, { lastVoucherNumber: sequence, voucherYear: year, updatedAt: serverTimestamp() }, { merge: true })
@@ -110,7 +110,7 @@ export const updateSalesVoucher = async (id, voucherData) => {
     voucherDate: voucherData.voucherDate, customerId: voucherData.customerId, customerName: voucherData.customerName,
     executiveId: voucherData.executiveId, executiveName: voucherData.executiveName,
     category: voucherData.category, narration: (voucherData.narration || '').trim(),
-    items: cleanItems(voucherData.items), totalAmount: Number(voucherData.totalAmount), updatedAt: serverTimestamp(),
+    items: cleanItems(voucherData.items), totalAmount: Number(voucherData.totalAmount), amcStatus: voucherData.amcStatus || 'ACTIVE', remarks: (voucherData.remarks || '').trim(), updatedAt: serverTimestamp(),
   }
   await updateDoc(ref, payload)
   return mapVoucher(await getDoc(ref))

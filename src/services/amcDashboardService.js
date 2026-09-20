@@ -31,13 +31,15 @@ export const classifyAmcDashboardRecords = (vouchers, now = new Date()) => {
   const today = startOfDay(now)
   const warningEnd = new Date(today)
   warningEnd.setDate(warningEnd.getDate() + EXPIRY_WARNING_DAYS)
-  const currentCustomerRecords = getCurrentCustomerAmcRecords(vouchers, today)
+  const dropped = vouchers.filter((voucher) => voucher.amcStatus === 'DROPPED')
+  const currentCustomerRecords = getCurrentCustomerAmcRecords(vouchers.filter((voucher) => voucher.amcStatus !== 'DROPPED'), today)
   const active = currentCustomerRecords.filter((record) => record.amcTo >= today)
   const expired = currentCustomerRecords.filter((record) => record.amcTo < today)
   const goingToExpire = active.filter((record) => record.amcTo <= warningEnd).sort((a, b) => a.amcTo - b.amcTo)
-  const newAmc = vouchers.filter((voucher) => voucher.category === 'New')
-  const renewed = vouchers.filter((voucher) => voucher.category === 'Renewal')
-  return { active, expired, newAmc, goingToExpire, renewed }
+  const activeVouchers = vouchers.filter((voucher) => voucher.amcStatus !== 'DROPPED')
+  const newAmc = activeVouchers.filter((voucher) => voucher.category === 'New')
+  const renewed = activeVouchers.filter((voucher) => voucher.category === 'Renewal')
+  return { active, expired, newAmc, goingToExpire, renewed, dropped }
 }
 
 export const getAmcDashboardData = async () => {
@@ -51,5 +53,6 @@ export const getExpiredAMCRecords = async () => (await getAmcDashboardData()).ex
 export const getNewAMCRecords = async () => (await getAmcDashboardData()).newAmc
 export const getGoingToExpireAMCRecords = async () => (await getAmcDashboardData()).goingToExpire
 export const getRenewedAMCRecords = async () => (await getAmcDashboardData()).renewed
+export const getDroppedAMCRecords = async () => (await getAmcDashboardData()).dropped
 
-export const amcDashboardService = { getAmcDashboardData, getActiveAMCRecords, getExpiredAMCRecords, getNewAMCRecords, getGoingToExpireAMCRecords, getRenewedAMCRecords }
+export const amcDashboardService = { getAmcDashboardData, getActiveAMCRecords, getExpiredAMCRecords, getNewAMCRecords, getGoingToExpireAMCRecords, getRenewedAMCRecords, getDroppedAMCRecords }

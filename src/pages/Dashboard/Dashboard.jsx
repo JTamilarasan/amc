@@ -1,4 +1,4 @@
-import { BellRing, CalendarClock, PackageCheck, RefreshCw, Sparkles } from 'lucide-react'
+import { BellRing, CalendarClock, PackageCheck, RefreshCw, Sparkles, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
@@ -23,6 +23,7 @@ const Dashboard = () => {
     { title: 'Total New AMC', value: data.newAmc.length, subtitle: 'AMC Voucher category: New', icon: Sparkles, accent: 'accent-blue', path: '/reports/amc-new' },
     { title: 'Total Going to Expire', value: data.goingToExpire.length, subtitle: `Next ${EXPIRY_WARNING_DAYS} days`, icon: CalendarClock, accent: 'accent-amber', path: '/reports/amc-going-to-expire' },
     { title: 'Total Renewed AMC', value: data.renewed.length, subtitle: 'AMC Voucher category: Renewal', icon: RefreshCw, accent: 'accent-purple', path: '/reports/amc-renewed' },
+    { title: 'Total Dropped AMC', value: data.dropped.length, subtitle: 'AMC status: Dropped', icon: XCircle, accent: 'accent-red', path: '/reports/amc-dropped' },
   ] : []
 
   return <div className="page-stack dashboard-amc-summary">

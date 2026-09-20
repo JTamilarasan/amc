@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BellRing, CalendarClock, PackageCheck, Sparkles, XCircle } from 'lucide-react'
+import { BellRing, CalendarClock, PackageCheck, Sparkles, XCircle, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import StatCard from '../../components/common/StatCard'
@@ -15,6 +15,7 @@ const FreeSupportDashboard = () => {
     ['Total New FS', data.newFs.length, 'Free Support category: New', Sparkles, 'accent-blue', 'new'],
     ['Total Going to Expire', data.goingToExpire.length, 'Next 30 days', CalendarClock, 'accent-amber', 'going-to-expire'],
     ['Total Dropped', data.dropped.length, 'Available for renewal', XCircle, 'accent-purple', 'dropped'],
+    ['Converted to AMC', data.converted.length, 'Converted from Free Support', CheckCircle2, 'accent-blue', 'converted'],
   ] : []
   return <div className="page-stack"><PageHeader title="Free Support Dashboard" subtitle="Current Free Support customer and voucher summary." />{error && <div className="auth-error">{error}</div>}{!data && !error ? <section className="panel-card"><Loader label="Loading Free Support totals..." /></section> : <section className="stats-grid dashboard-five-stats">{cards.map(([title, value, subtitle, icon, accent, type]) => <StatCard key={type} title={title} value={value} subtitle={subtitle} icon={icon} accent={accent} onClick={() => navigate(`/reports/free-support-summary/${type}`)} />)}</section>}</div>
 }

@@ -28,6 +28,7 @@ const getHighestCallSequenceForYear = async (year) => {
   return snapshot.docs.reduce((highest, item) => Math.max(highest, savedVoucherSequence(item.data(), year)), 0)
 }
 const normalizeName = (value) => String(value || '').trim().toLowerCase()
+const AMC_CALL_HISTORY_CATEGORIES = new Set(['Remote AMC', 'New'])
 
 const updateCustomerCounters = (transaction, ref, snapshot, delta) => {
   const current = snapshot.data() || {}
@@ -189,7 +190,8 @@ export const getCustomerCallsReport = async (fromDate, toDate) => {
   customerSnapshot.docs.forEach((entry) => {
     const customer = { id: entry.id, ...entry.data() }
     if ((customer.status || 'Active') !== 'Active') return
-    grouped.set(customer.id, { partyId: customer.id, partyName: customer.customerName || '', contactNo: customer.mobileNo || '', areaName: customer.areaName || '', customerExpiryDate: null, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [], visitVouchers: [] })
+    if (!AMC_CALL_HISTORY_CATEGORIES.has(customer.category1)) return
+    grouped.set(customer.id, { partyId: customer.id, partyName: customer.customerName || '', category1: customer.category1, contactNo: customer.mobileNo || '', areaName: customer.areaName || '', customerExpiryDate: null, backupChecklist: 0, totalCalls: 0, totalVisits: 0, backupVouchers: [], callVouchers: [], visitVouchers: [] })
   })
   const findCustomerKey = (voucher) => voucher.partyId && grouped.has(voucher.partyId)
     ? voucher.partyId
@@ -214,6 +216,7 @@ export const getCustomerCallsReport = async (fromDate, toDate) => {
     const key = findCustomerKey(voucher)
     if (!key) return
     const current = grouped.get(key)
+    if (!current.customerExpiryDate && voucher.customerExpiryDate) current.customerExpiryDate = voucher.customerExpiryDate
     current.totalCalls += 1
     current.callVouchers.push(voucher)
     if (voucher.category2 === 'Visit') { current.totalVisits += 1; current.visitVouchers.push(voucher) }

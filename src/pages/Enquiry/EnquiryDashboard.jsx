@@ -79,7 +79,7 @@ const EnquiryDashboard = () => {
     {loading && !items.length ? <section className="panel-card">Loading enquiry summary...</section> : <section className="stats-grid enquiry-stats">{existingCards.map((card) => <StatCard key={card.title} {...card} onClick={() => openReport(card)} />)}</section>}
     <section className="panel-card" style={{ marginTop: 18 }}><div className="panel-heading"><h2>Support Dashboard</h2><span>Call Receipt Voucher follow-ups by When date</span></div>{supportError && <div className="auth-error">{supportError}</div>}</section>
     <section className="stats-grid enquiry-stats">{supportCards.map((card) => <StatCard key={card.title} {...card} onClick={() => setSupportDetails(card)} />)}</section>
-    <CallDetailsModal isOpen={Boolean(supportDetails)} executiveName={`${selectedLeadName || 'All Executives'} - ${supportDetails?.title || ''}`} vouchers={supportDetails?.records || []} onClose={() => setSupportDetails(null)} onEdit={(voucher) => navigate('/call-management/call-receipt-voucher', { state: { editVoucherId: voucher.id } })} />
+    <CallDetailsModal isOpen={Boolean(supportDetails)} executiveName={`${selectedLeadName || 'All Executives'} - ${supportDetails?.title || ''}`} vouchers={supportDetails?.records || []} onClose={() => setSupportDetails(null)} onEdit={(voucher) => navigate('/call-management/call-receipt-voucher', { state: { editVoucherId: voucher.id, returnTo: '/dashboard/enquiry' } })} />
   </div>
 }
 

@@ -31,6 +31,7 @@ import ExpiredAmcCustomersReport from './pages/Reports/ExpiredAmcCustomersReport
 import NewAmcReport from './pages/Reports/NewAmcReport'
 import GoingToExpireAmcReport from './pages/Reports/GoingToExpireAmcReport'
 import RenewedAmcReport from './pages/Reports/RenewedAmcReport'
+import AmcSummaryReport from './pages/Reports/AmcSummaryReport'
 import Enquiry from './pages/Enquiry/Enquiry'
 import EnquiryDashboard from './pages/Enquiry/EnquiryDashboard'
 import EnquiryReport from './pages/Reports/EnquiryReport'
@@ -84,6 +85,7 @@ function App() {
             <Route path="/reports/amc-new" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><NewAmcReport /></PermissionRoute>} />
             <Route path="/reports/amc-going-to-expire" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><GoingToExpireAmcReport /></PermissionRoute>} />
             <Route path="/reports/amc-renewed" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><RenewedAmcReport /></PermissionRoute>} />
+            <Route path="/reports/amc-dropped" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><AmcSummaryReport reportType="dropped" /></PermissionRoute>} />
             <Route path="/reports/enquiry-report" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><EnquiryReport /></PermissionRoute>} />
             <Route path="/reports/enquiry-leads" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><EnquiryLeadsReport /></PermissionRoute>} />
             <Route path="/user-management" element={<PermissionRoute adminOnly><UserManagement /></PermissionRoute>} />

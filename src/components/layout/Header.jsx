@@ -38,6 +38,7 @@ const Header = () => {
     '/reports/amc-active': ['Reports', 'Active AMC Customers Report'],
     '/reports/amc-expired': ['Reports', 'Expired AMC Customers Report'],
     '/reports/amc-new': ['Reports', 'New AMC Report'],
+    '/reports/amc-dropped': ['Reports', 'Dropped AMC Report'],
     '/reports/amc-going-to-expire': ['Reports', 'Going to Expire AMC Report'],
     '/reports/amc-renewed': ['Reports', 'Renewed AMC Report'],
     '/reports/enquiry-report': ['Reports', 'Enquiry Report'],
