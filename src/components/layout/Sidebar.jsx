@@ -43,16 +43,19 @@ const navItems = [
     icon: BarChart3,
     permission: PERMISSION_KEYS.reports,
     children: [
-      { label: 'AMC Register Report', path: '/reports/sales-register', permission: PERMISSION_KEYS.reports },
-      { label: 'Free Support Register', path: '/reports/free-support-register', permission: PERMISSION_KEYS.reports },
-      { label: 'Free Support Calls History', path: '/reports/free-support-calls-history', permission: PERMISSION_KEYS.reports },
-      { label: 'Call Register Report', path: '/reports/call-register', permission: PERMISSION_KEYS.reports },
-      { label: 'Single Customer Calls History Report', path: '/reports/single-customer-calls-history', permission: PERMISSION_KEYS.reports },
-      { label: 'Current Monthly Expiry Report', path: '/reports/current-month-expiry', permission: PERMISSION_KEYS.reports },
-      { label: 'AMC Customer Calls History', path: '/reports/customer-calls-history', permission: PERMISSION_KEYS.reports },
-      { label: 'Executive Calls Report', path: '/reports/executive-calls', permission: PERMISSION_KEYS.reports },
-      { label: 'Enquiry Report', path: '/reports/enquiry-report', permission: PERMISSION_KEYS.reports },
-      { label: 'Enquiry Leads Report', path: '/reports/enquiry-leads', permission: PERMISSION_KEYS.reports },
+      { label: 'Registers', type: 'heading' },
+      { label: 'AMC Register', path: '/reports/sales-register', permission: PERMISSION_KEYS.reports },
+      { label: 'Free support Register', path: '/reports/free-support-register', permission: PERMISSION_KEYS.reports },
+      { label: 'Call Register', path: '/reports/call-register', permission: PERMISSION_KEYS.reports },
+      { label: 'Enquiry register', path: '/reports/enquiry-report', permission: PERMISSION_KEYS.reports },
+      { label: 'Summary', type: 'heading' },
+      { label: 'Free support call Summary', path: '/reports/free-support-calls-history', permission: PERMISSION_KEYS.reports },
+      { label: 'AMC Customer call summary', path: '/reports/customer-calls-history', permission: PERMISSION_KEYS.reports },
+      { label: 'Executive wise summary', path: '/reports/executive-calls', permission: PERMISSION_KEYS.reports },
+      { label: 'Enquiry Lead wise summary', path: '/reports/enquiry-leads', permission: PERMISSION_KEYS.reports },
+      { label: 'Other Reports', type: 'heading' },
+      { label: 'Current Month Expiry report', path: '/reports/current-month-expiry', permission: PERMISSION_KEYS.reports },
+      { label: 'Customer calls report', path: '/reports/single-customer-calls-history', permission: PERMISSION_KEYS.reports },
     ],
   },
   { label: 'User Management', path: '/user-management', icon: Users, adminOnly: true },
@@ -63,8 +66,9 @@ const Sidebar = () => {
   const navigate = useNavigate()
   const { logout, isAdmin, hasPermission } = useAuth()
   const visibleItems = navItems.map((item) => {
-    const children = item.children?.filter((child) => isAdmin || hasPermission(child.permission))
-    return { ...item, path: !isAdmin && children?.length ? children[0].path : item.path, children }
+    const children = item.children?.filter((child) => child.type === 'heading' || isAdmin || hasPermission(child.permission))
+    const firstLink = children?.find((child) => child.type !== 'heading')
+    return { ...item, path: !isAdmin && firstLink ? firstLink.path : item.path, children }
   }).filter((item) => item.adminOnly ? isAdmin : item.children ? (isAdmin || !item.permission || hasPermission(item.permission)) && item.children.length > 0 : (isAdmin || !item.permission || hasPermission(item.permission)))
 
   const handleLogout = async () => {
@@ -104,7 +108,9 @@ const Sidebar = () => {
                 </NavLink>
                 {item.children ? (
                   <div className="submenu">
-                    {item.children.map((child) => (
+                    {item.children.map((child) => child.type === 'heading' ? (
+                      <div className="nav-subheading" key={child.label}>{child.label}</div>
+                    ) : (
                       <NavLink
                         key={child.path}
                         to={child.path}
