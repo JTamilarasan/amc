@@ -208,6 +208,7 @@ const SalesVoucher = () => {
     if (itemForm.amcApplicable && !itemForm.amcToDate) return setFormError('AMC To Date is required.')
     if (itemForm.amcApplicable && itemForm.amcToDate < itemForm.amcFromDate) return setFormError('AMC To Date cannot be earlier than AMC From Date.')
     if (Number(itemForm.amount) <= 0) return setFormError('Amount must be greater than 0.')
+    if (amcStatus === 'DROPPED' && !remarks.trim()) return setFormError('Remarks are required when AMC status is DROPPED.')
     const voucherItem = {
       serialNo: itemForm.serialNo.trim(), productId: itemForm.productId, itemName: itemForm.itemName,
       duration: itemForm.duration, unit: itemForm.unit, amcApplicable: itemForm.amcApplicable,
@@ -292,8 +293,8 @@ const SalesVoucher = () => {
         <label className="field"><span>Category *</span><select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">Select category</option><option value="New">New</option><option value="Renewal">Renewal</option></select></label>
       </div>
       <label className="field"><span>Narration</span><textarea value={narration} onChange={(event) => setNarration(event.target.value)} placeholder="Enter voucher narration..." /></label>
-      <label className="field"><span>AMC Status</span><select value={amcStatus} onChange={(event) => setAmcStatus(event.target.value)}><option value="ACTIVE">ACTIVE</option><option value="DROPPED">DROPPED</option></select></label>
-      <label className="field"><span>Remarks</span><textarea value={remarks} onChange={(event) => setRemarks(event.target.value)} placeholder="Enter remarks..." /></label>
+      <label className="field"><span>AMC Status</span><select value={amcStatus} onChange={(event) => setAmcStatus(event.target.value)} disabled={dropMode}><option value="ACTIVE">ACTIVE</option><option value="DROPPED">DROPPED</option></select></label>
+      <label className="field"><span>{amcStatus === 'DROPPED' ? 'Dropped Reason / Remarks *' : 'Remarks'}</span><textarea value={remarks} onChange={(event) => setRemarks(event.target.value)} placeholder={amcStatus === 'DROPPED' ? 'Enter reason for dropping AMC...' : 'Enter remarks...'} /></label>
       {routeRenewVoucher && <label className="field"><span>Old Voucher Reference</span><input value={routeRenewVoucher.voucherNumber || location.state?.oldVoucherNumber || ''} readOnly disabled /></label>}
 
       <div className="panel-heading voucher-products-heading"><h2>Item Details</h2></div>

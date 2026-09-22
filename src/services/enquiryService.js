@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
 
 const COLLECTION = 'enquiries'
@@ -63,4 +63,5 @@ export const updateEnquiry = async (id, data) => {
   await updateDoc(ref, { ...clean(data), updatedAt: serverTimestamp() })
   return mapDocument(await getDoc(ref))
 }
-export const enquiryService = { getEnquiries, getEnquiryById, createEnquiry, updateEnquiry }
+export const deleteEnquiry = async (id) => { await deleteDoc(doc(db, COLLECTION, id)) }
+export const enquiryService = { getEnquiries, getEnquiryById, createEnquiry, updateEnquiry, deleteEnquiry }

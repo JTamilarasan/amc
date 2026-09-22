@@ -49,6 +49,9 @@ const CustomerMaster = () => {
     ...(returnedCustomerState.customerForm || {}),
     areaId: returnedCustomerState.createdAreaId,
     areaName: returnedCustomerState.createdAreaName || '',
+  } : location.state?.customerReturnSource === 'sales-voucher' ? {
+    ...initialForm,
+    customerName: location.state.salesVoucherForm?.customerName || '',
   } : initialForm)
   const [editingId, setEditingId] = useState(() => returnedCustomerState?.customerEditingId || null)
   const [searchText, setSearchText] = useState('')
@@ -148,8 +151,7 @@ const CustomerMaster = () => {
       nextErrors.customerName = 'Customer name is required.'
     }
     if (!form.state) nextErrors.state = 'Please select State'
-    if (!form.mobileNo.trim()) nextErrors.mobileNo = 'Mobile number is required.'
-    else if (!/^\d{10}$/.test(form.mobileNo.trim())) nextErrors.mobileNo = 'Enter a valid 10-digit mobile number.'
+    if (form.mobileNo.trim() && !/^\d{10}$/.test(form.mobileNo.trim())) nextErrors.mobileNo = 'Enter a valid 10-digit mobile number.'
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextErrors.email = 'Enter a valid email address.'
     if (form.pincode.trim() && !/^\d{6}$/.test(form.pincode.trim())) {
       nextErrors.pincode = 'Pincode must be 6 digits.'
@@ -268,7 +270,7 @@ const CustomerMaster = () => {
               {validationErrors.areaId ? <div className="field-message field-error">{validationErrors.areaId}</div> : null}
             </label>
             <label className="field">
-              <span>Mobile No *</span>
+              <span>Mobile No</span>
               <input name="mobileNo" inputMode="numeric" maxLength="10" value={form.mobileNo} onChange={(event) => handleChange({ target: { name: 'mobileNo', value: event.target.value.replace(/\D/g, '').slice(0, 10) } })} placeholder="9876543210" />
               {validationErrors.mobileNo ? <div className="field-message field-error">{validationErrors.mobileNo}</div> : null}
             </label>

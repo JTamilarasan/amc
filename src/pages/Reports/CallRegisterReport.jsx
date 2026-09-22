@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Download, Pencil, Search } from 'lucide-react'
+import { AlertTriangle, Download, Pencil, Search, Trash2 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
@@ -20,7 +20,7 @@ const Summary = ({ summary }) => <div className="call-register-summary">
 </div>
 
 const CallRegisterReport = () => {
-  const { hasPermission } = useAuth(); const canEdit = hasPermission('voucherSettings', 'edit')
+  const { hasPermission } = useAuth(); const canEdit = hasPermission('voucherSettings', 'edit'); const canDelete = hasPermission('voucherSettings', 'delete')
   const location = useLocation()
   const navigate = useNavigate()
   const returned = location.state?.fromDate && location.state?.toDate && location.state?.viewType ? location.state : null
@@ -71,6 +71,10 @@ const CallRegisterReport = () => {
     finally { setLoading(false) }
   }
   const editVoucher = (voucher) => navigate('/call-management/call-receipt-voucher', { state: { editVoucherId: voucher.id, returnTo: '/reports/call-register', reportRange: { fromDate: range.from, toDate: range.to, viewType: range.viewType } } })
+  const deleteVoucher = async (voucher) => {
+    if (!window.confirm(`Delete call receipt voucher #${voucher.voucherNumber}?`)) return
+    try { await callReceiptVoucherService.deleteCallReceiptVoucher(voucher.id); setRecords((current) => current.filter((item) => item.id !== voucher.id)) } catch { setLoadError('Unable to delete call receipt voucher.') }
+  }
   const clear = () => { setFromDate(''); setToDate(''); setViewType(''); setRange(null); setRecords([]); setErrors({}); setLoadError(''); setSearchText(''); setPage(1) }
   const download = () => {
     const reportSummary = getCallRegisterSummary(records)
@@ -109,6 +113,7 @@ const CallRegisterReport = () => {
         {range && <><CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" /><Summary summary={summary} /></>}
       </>}
     </section>
+        {canDelete && filtered.length > 0 && <div className="report-inline-actions">{filtered.slice((page - 1) * pageSize, page * pageSize).map((voucher) => <button type="button" className="executive-action-btn delete" key={`delete-${voucher.id}`} onClick={() => deleteVoucher(voucher)}><Trash2 size={13} /> Delete #{voucher.voucherNumber}</button>)}</div>}
   </div>
 }
 

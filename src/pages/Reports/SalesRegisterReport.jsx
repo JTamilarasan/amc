@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { AlertTriangle, Download, Pencil, Search } from 'lucide-react'
+import { AlertTriangle, Download, Pencil, Search, Trash2 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import CommonPagination from '../../components/common/CommonPagination'
 import Loader from '../../components/common/Loader'
-import { fetchSalesVouchers, selectSalesVoucherState, selectSalesVouchers } from '../../features/salesVouchers/salesVoucherSlice'
+import { fetchSalesVouchers, removeSalesVoucher, selectSalesVoucherState, selectSalesVouchers } from '../../features/salesVouchers/salesVoucherSlice'
 import { exportToCsv } from '../../utils/exportCsv'
 import { emptyReportValue, formatReportCurrency, formatReportDate, getVoucherItem, voucherMatchesReportSearch } from '../../utils/reportUtils'
 import { getCurrentMonthDateRange } from '../../utils/reportDateRange'
@@ -30,13 +30,12 @@ const compareVoucherNumbers = (left, right) => {
 }
 
 const SalesRegisterReport = () => {
-  const { hasPermission } = useAuth(); const canEdit = hasPermission('salesVouchers', 'edit')
+  const { hasPermission } = useAuth(); const canEdit = hasPermission('salesVouchers', 'edit'); const canDelete = hasPermission('salesVouchers', 'delete')
   const dispatch = useDispatch()
   const location = useLocation()
   const navigate = useNavigate()
   const vouchers = useSelector(selectSalesVouchers)
   const { loading, error } = useSelector(selectSalesVoucherState)
-  const shouldFetch = useRef(vouchers.length === 0 && !loading)
   const defaultRange = getCurrentMonthDateRange()
   const [fromDate, setFromDate] = useState(location.state?.fromDate || defaultRange.fromDate)
   const [toDate, setToDate] = useState(location.state?.toDate || defaultRange.toDate)
@@ -46,7 +45,7 @@ const SalesRegisterReport = () => {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  useEffect(() => { if (shouldFetch.current) dispatch(fetchSalesVouchers()) }, [dispatch])
+  useEffect(() => { dispatch(fetchSalesVouchers()) }, [dispatch])
 
   const generated = useMemo(() => !range ? [] : vouchers.filter((voucher) => voucher.voucherDate >= range.from && voucher.voucherDate <= range.to), [vouchers, range])
   const filtered = useMemo(() => {
@@ -74,6 +73,10 @@ const SalesRegisterReport = () => {
     rows: [...generated].sort(compareVoucherNumbers).map((voucher) => { const item = getVoucherItem(voucher); return [voucher.voucherNumber, formatReportDate(voucher.voucherDate), voucher.customerName, voucher.executiveName, voucher.category, item?.itemName, item?.serialNo, item?.duration, formatReportDate(item?.amcFromDate), formatReportDate(item?.amcToDate), item?.amount, voucher.status] }),
   })
   const editVoucher = (voucher) => navigate('/sales-voucher', { state: { editVoucherId: voucher.id, editVoucher: voucher, returnTo: '/reports/sales-register', reportRange: { fromDate: range.from, toDate: range.to } } })
+  const deleteVoucher = async (voucher) => {
+    if (!window.confirm(`Delete AMC voucher #${voucher.voucherNumber}?`)) return
+    try { await dispatch(removeSalesVoucher(voucher.id)).unwrap() } catch { /* Redux displays the service error. */ }
+  }
 
   if (loading && !vouchers.length) return <div className="page-stack"><PageHeader title="AMC Register Report" subtitle="View AMC vouchers by selected date range." /><section className="panel-card"><Loader label="Loading report data..." /></section></div>
 
@@ -91,7 +94,7 @@ const SalesRegisterReport = () => {
       <div className="toolbar report-toolbar"><div className="search-box"><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search voucher, customer, executive, product or serial no..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
       <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>Voucher No</th><th>Date</th><th>Customer Name</th><th>Executive</th><th>Category</th><th>Product</th><th>Serial No</th><th>Duration</th><th>AMC From</th><th>AMC To</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>
         {range && !filtered.length && <tr><td colSpan="14" className="text-center">No records found.</td></tr>}{!range && <tr><td colSpan="14" className="text-center">Select a date range and generate the report.</td></tr>}
-        {paged.map((voucher, index) => { const item = getVoucherItem(voucher); return <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{emptyReportValue(voucher.voucherNumber)}</td><td>{formatReportDate(voucher.voucherDate)}</td><td>{emptyReportValue(voucher.customerName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(item?.itemName)}</td><td>{emptyReportValue(item?.serialNo)}</td><td>{emptyReportValue(item?.duration)}</td><td>{formatReportDate(item?.amcFromDate)}</td><td>{formatReportDate(item?.amcToDate)}</td><td>{formatReportCurrency(item?.amount)}</td><td>{emptyReportValue(voucher.status)}</td><td>{canEdit && <button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button>}</td></tr> })}
+        {paged.map((voucher, index) => { const item = getVoucherItem(voucher); return <tr key={voucher.id}><td>{(page - 1) * pageSize + index + 1}</td><td>#{emptyReportValue(voucher.voucherNumber)}</td><td>{formatReportDate(voucher.voucherDate)}</td><td>{emptyReportValue(voucher.customerName)}</td><td>{emptyReportValue(voucher.executiveName)}</td><td>{emptyReportValue(voucher.category)}</td><td>{emptyReportValue(item?.itemName)}</td><td>{emptyReportValue(item?.serialNo)}</td><td>{emptyReportValue(item?.duration)}</td><td>{formatReportDate(item?.amcFromDate)}</td><td>{formatReportDate(item?.amcToDate)}</td><td>{formatReportCurrency(item?.amount)}</td><td>{emptyReportValue(voucher.status)}</td><td><div className="table-actions">{canEdit && <button type="button" className="executive-action-btn" onClick={() => editVoucher(voucher)}><Pencil size={13} /> Edit</button>}{canDelete && <button type="button" className="executive-action-btn delete" onClick={() => deleteVoucher(voucher)}><Trash2 size={13} /> Delete</button>}</div></td></tr> })}
       </tbody></table></div>
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" />
     </section>
