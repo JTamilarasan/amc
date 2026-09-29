@@ -46,7 +46,7 @@ service cloud.firestore {
     match /enquiries/{document=**} { allow read: if permitted('enquiries', 'view') || permitted('reports', 'view'); allow create: if permitted('enquiries', 'add'); allow update: if permitted('enquiries', 'edit'); allow delete: if permitted('enquiries', 'delete'); }
     match /otherFollowUps/{document=**} { allow read: if permitted('otherFollowUps', 'view') || permitted('reports', 'view') || permitted('dashboard', 'view'); allow create: if permitted('otherFollowUps', 'add'); allow update: if permitted('otherFollowUps', 'edit'); allow delete: if permitted('otherFollowUps', 'delete'); }
     match /executives/{document=**} {
-      allow read: if permitted('executives', 'view') || permitted('dashboard', 'view') || permitted('salesVouchers', 'view') || permitted('voucherSettings', 'view') || permitted('enquiries', 'view') || permitted('reports', 'view');
+      allow read: if permitted('executives', 'view') || permitted('dashboard', 'view') || permitted('salesVouchers', 'view') || permitted('voucherSettings', 'view') || permitted('enquiries', 'view') || permitted('otherFollowUps', 'view') || permitted('reports', 'view');
       allow create: if permitted('executives', 'add'); allow update: if permitted('executives', 'edit'); allow delete: if permitted('executives', 'delete');
     }
     match /products/{document=**} {
