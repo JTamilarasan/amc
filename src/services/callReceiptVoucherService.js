@@ -58,7 +58,7 @@ const cleanVoucher = (data) => {
   return ({
   date: data.date, partyId: data.partyId, partyName: data.partyName, customerExpiryDate: data.customerExpiryDate || null,
   executiveId: data.executiveId, executiveName: data.executiveName, category: data.category, category2: data.category2 || null,
-  callReceiptRemarks: (data.callReceiptRemarks || '').trim(), callStatus: data.callStatus, callSubStatus: data.callStatus === 'Closed' ? data.callSubStatus || '' : '',
+  contactedBy: (data.contactedBy || '').trim(), callReceiptRemarks: (data.callReceiptRemarks || '').trim(), callStatus: data.callStatus, callSubStatus: data.callStatus === 'Closed' ? data.callSubStatus || '' : '',
   closedOn: data.callStatus === 'Closed' ? data.closedOn || null : null,
   nextAction: data.callStatus === 'Open' ? data.nextAction || null : null,
   when: data.callStatus === 'Open' ? data.when || null : null,

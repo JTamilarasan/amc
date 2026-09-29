@@ -13,9 +13,10 @@ import { fetchExecutives, selectActiveExecutives } from '../../features/executiv
 import { callReceiptVoucherService } from '../../services/callReceiptVoucherService'
 import { formatDate } from '../../utils/dateUtils'
 import { emptyReportValue } from '../../utils/reportUtils'
+import { formatNameInput } from '../../utils/textUtils'
 
 const todayValue = () => new Date().toLocaleDateString('en-CA')
-const initialForm = () => ({ date: todayValue(), partyId: '', partyName: '', customerExpiryDate: null, executiveId: '', executiveName: '', category: '', category2: '', callReceiptRemarks: '', callStatus: '', callSubStatus: '', closedOn: '', nextAction: '', when: '' })
+const initialForm = () => ({ date: todayValue(), partyId: '', partyName: '', customerExpiryDate: null, executiveId: '', executiveName: '', category: '', category2: '', contactedBy: '', callReceiptRemarks: '', callStatus: '', callSubStatus: '', closedOn: '', nextAction: '', when: '' })
 
 const CallReceiptVoucher = () => {
   const { hasPermission } = useAuth(); const canAdd = hasPermission('voucherSettings', 'add'); const canEdit = hasPermission('voucherSettings', 'edit'); const canDelete = hasPermission('voucherSettings', 'delete'); const canAddCustomer = hasPermission('customers', 'add')
@@ -71,7 +72,7 @@ const CallReceiptVoucher = () => {
           setVoucherNumber(voucher.voucherNumber || '')
           setForm({
             date: voucher.date || todayValue(), partyId: voucher.partyId || '', partyName: voucher.partyName || '', customerExpiryDate: voucher.customerExpiryDate || null,
-            executiveId: voucher.executiveId || '', executiveName: voucher.executiveName || '', category: voucher.category || '', category2: voucher.category2 || '',
+            executiveId: voucher.executiveId || '', executiveName: voucher.executiveName || '', category: voucher.category || '', category2: voucher.category2 || '', contactedBy: voucher.contactedBy || '',
             callReceiptRemarks: voucher.callReceiptRemarks || '', callStatus: voucher.callStatus || '', callSubStatus: voucher.callSubStatus || '', closedOn: voucher.closedOn || '', nextAction: voucher.nextAction || '', when: voucher.when || '',
           })
         })
@@ -93,7 +94,7 @@ const CallReceiptVoucher = () => {
   }, [])
   const filteredVouchers = useMemo(() => {
     const search = searchText.trim().toLowerCase()
-    return vouchers.filter((voucher) => !search || [voucher.voucherNumber, voucher.partyName, voucher.executiveName, voucher.category, voucher.category2, voucher.callStatus].some((value) => String(value || '').toLowerCase().includes(search)))
+    return vouchers.filter((voucher) => !search || [voucher.voucherNumber, voucher.partyName, voucher.executiveName, voucher.category, voucher.category2, voucher.callStatus, voucher.contactedBy].some((value) => String(value || '').toLowerCase().includes(search)))
   }, [vouchers, searchText])
   const totalPages = Math.max(1, Math.ceil(filteredVouchers.length / pageSize))
   const pagedVouchers = filteredVouchers.slice((page - 1) * pageSize, page * pageSize)
@@ -150,14 +151,14 @@ const CallReceiptVoucher = () => {
     setErrors((current) => ({ ...current, callStatus: '', callSubStatus: '', closedOn: '', ...(value === 'Closed' ? { nextAction: '', when: '' } : {}) }))
     setMessage('')
   }
-  const changeCustomer = (value) => { const match = customers.find((item) => item.customerName.toLowerCase() === value.trim().toLowerCase()); setForm((current) => ({ ...current, partyName: value, partyId: match?.id || '' })); setErrors((current) => ({ ...current, partyId: '' })) }
+  const changeCustomer = (value) => { const formattedValue = formatNameInput(value); const match = customers.find((item) => item.customerName.toLowerCase() === formattedValue.trim().toLowerCase()); setForm((current) => ({ ...current, partyName: formattedValue, partyId: match?.id || '' })); setErrors((current) => ({ ...current, partyId: '' })) }
   const createCustomer = () => navigate('/masters/customers', { state: { returnTo: '/call-management/call-receipt-voucher', customerReturnSource: 'call-receipt-voucher', callReceiptForm: { voucherNumber, form } } })
   const changeExecutive = (value) => { const match = executives.find((item) => item.name.toLowerCase() === value.trim().toLowerCase()); setForm((current) => ({ ...current, executiveName: value, executiveId: match?.id || '' })); setErrors((current) => ({ ...current, executiveId: '' })) }
   const editFromHistory = (voucher) => {
     setHistoryEditId(voucher.id); setVoucherNumber(voucher.voucherNumber || '')
     setForm({
       date: voucher.date || todayValue(), partyId: voucher.partyId || '', partyName: voucher.partyName || '', customerExpiryDate: voucher.customerExpiryDate || null,
-      executiveId: voucher.executiveId || '', executiveName: voucher.executiveName || '', category: voucher.category || '', category2: voucher.category2 || '',
+      executiveId: voucher.executiveId || '', executiveName: voucher.executiveName || '', category: voucher.category || '', category2: voucher.category2 || '', contactedBy: voucher.contactedBy || '',
       callReceiptRemarks: voucher.callReceiptRemarks || '', callStatus: voucher.callStatus || '', callSubStatus: voucher.callSubStatus || '', closedOn: voucher.closedOn || '', nextAction: voucher.nextAction || '', when: voucher.when || '',
     })
     setErrors({}); setMessage(''); window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -184,6 +185,7 @@ const CallReceiptVoucher = () => {
         <label className="field"><span>Category *</span><select value={form.category} onChange={(event) => setField('category', event.target.value)}><option value="">Select category</option><option>Support</option><option>Installation</option><option>Monthly Backup</option><option>Demo</option><option>Meeting</option><option>TDL</option><option>GST Filing</option><option>Renewal</option><option>Others</option></select>{errors.category && <div className="field-message">{errors.category}</div>}</label>
         <label className="field"><span>Category 2 *</span><select value={form.category2} onChange={(event) => setField('category2', event.target.value)}><option value="">Select category 2</option><option>Call</option><option>Visit</option></select>{errors.category2 && <div className="field-message">{errors.category2}</div>}</label>
         <label className="field"><span>Call Status *</span><select value={form.callStatus} onChange={(event) => changeStatus(event.target.value)}><option value="">Select status</option><option>Open</option><option>Closed</option></select>{errors.callStatus && <div className="field-message">{errors.callStatus}</div>}</label>
+        <label className="field"><span>Contacted By</span><input value={form.contactedBy} onChange={(event) => setField('contactedBy', formatNameInput(event.target.value))} placeholder="Enter contacted by" /></label>
         {form.callStatus === 'Closed' && <label className="field"><span>Call Sub Status *</span><select value={form.callSubStatus} onChange={(event) => setField('callSubStatus', event.target.value)}><option value="">Select sub status</option><option>Successful</option><option>Unsuccessful</option><option>Cancelled</option></select>{errors.callSubStatus && <div className="field-message">{errors.callSubStatus}</div>}</label>}
         {form.callStatus === 'Closed' && <label className="field"><span>Closed On *</span><input type="date" value={form.closedOn} onChange={(event) => setField('closedOn', event.target.value)} />{errors.closedOn && <div className="field-message">{errors.closedOn}</div>}</label>}
         {form.callStatus === 'Open' && <label className="field"><span>Next Action *</span><select value={form.nextAction} onChange={(event) => setField('nextAction', event.target.value)}><option value="">Select next action</option><option>Call</option><option>Visit</option></select>{errors.nextAction && <div className="field-message">{errors.nextAction}</div>}</label>}
@@ -210,7 +212,7 @@ const CallReceiptVoucher = () => {
 
     <DetailsModal isOpen={Boolean(viewVoucher)} title="Call Receipt Voucher Details" onClose={() => setViewVoucher(null)} size="medium">
       {viewVoucher && <><div className="voucher-modal-number">Voucher #{emptyReportValue(viewVoucher.voucherNumber)}</div><div className="details-grid">
-        <div className="detail-field"><span>Date</span><strong>{formatDate(viewVoucher.date)}</strong></div><div className="detail-field"><span>Party Name</span><strong>{emptyReportValue(viewVoucher.partyName)}</strong></div><div className="detail-field"><span>Executive</span><strong>{emptyReportValue(viewVoucher.executiveName)}</strong></div><div className="detail-field"><span>Category</span><strong>{emptyReportValue(viewVoucher.category)}</strong></div><div className="detail-field"><span>Category 2</span><strong>{emptyReportValue(viewVoucher.category2)}</strong></div><div className="detail-field"><span>Call Status</span><strong>{emptyReportValue(viewVoucher.callStatus)}</strong></div><div className="detail-field"><span>Call Sub Status</span><strong>{emptyReportValue(viewVoucher.callSubStatus)}</strong></div><div className="detail-field"><span>Closed On</span><strong>{viewVoucher.callStatus === 'Closed' ? formatDate(viewVoucher.closedOn) : '-'}</strong></div><div className="detail-field"><span>Next Action</span><strong>{viewVoucher.callStatus === 'Open' ? emptyReportValue(viewVoucher.nextAction) : '-'}</strong></div><div className="detail-field"><span>When</span><strong>{viewVoucher.callStatus === 'Open' ? formatDate(viewVoucher.when) : '-'}</strong></div><div className="detail-field"><span>Remarks</span><strong>{emptyReportValue(viewVoucher.callReceiptRemarks)}</strong></div>
+        <div className="detail-field"><span>Date</span><strong>{formatDate(viewVoucher.date)}</strong></div><div className="detail-field"><span>Party Name</span><strong>{emptyReportValue(viewVoucher.partyName)}</strong></div><div className="detail-field"><span>Executive</span><strong>{emptyReportValue(viewVoucher.executiveName)}</strong></div><div className="detail-field"><span>Category</span><strong>{emptyReportValue(viewVoucher.category)}</strong></div><div className="detail-field"><span>Category 2</span><strong>{emptyReportValue(viewVoucher.category2)}</strong></div><div className="detail-field"><span>Call Status</span><strong>{emptyReportValue(viewVoucher.callStatus)}</strong></div><div className="detail-field"><span>Contacted By</span><strong>{emptyReportValue(viewVoucher.contactedBy)}</strong></div><div className="detail-field"><span>Call Sub Status</span><strong>{emptyReportValue(viewVoucher.callSubStatus)}</strong></div><div className="detail-field"><span>Closed On</span><strong>{viewVoucher.callStatus === 'Closed' ? formatDate(viewVoucher.closedOn) : '-'}</strong></div><div className="detail-field"><span>Next Action</span><strong>{viewVoucher.callStatus === 'Open' ? emptyReportValue(viewVoucher.nextAction) : '-'}</strong></div><div className="detail-field"><span>When</span><strong>{viewVoucher.callStatus === 'Open' ? formatDate(viewVoucher.when) : '-'}</strong></div><div className="detail-field"><span>Remarks</span><strong>{emptyReportValue(viewVoucher.callReceiptRemarks)}</strong></div>
       </div></>}
     </DetailsModal>
 

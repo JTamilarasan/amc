@@ -4,6 +4,7 @@ import {
   BookOpen,
   FileText,
   BarChart3,
+  ClipboardList,
   LogOut,
   Menu,
   Users,
@@ -24,6 +25,17 @@ const navItems = [
       { label: 'Free Support', path: '/free-support-voucher', permission: 'salesVouchers' },
       { label: 'Call Receipt Voucher', path: '/call-management/call-receipt-voucher', permission: 'voucherSettings' },
       { label: 'Enquiry Voucher', path: '/enquiry', permission: 'enquiries' },
+    ],
+  },
+  {
+    label: 'Other Follow Up',
+    path: '/other-follow-up',
+    icon: ClipboardList,
+    permission: 'otherFollowUps',
+    children: [
+      { label: 'Follow Up Voucher', path: '/other-follow-up', permission: 'otherFollowUps' },
+      { label: 'Follow Up Dashboard', path: '/dashboard/other-follow-up', permission: 'otherFollowUps' },
+      { label: 'Follow Up Report', path: '/reports/other-follow-up', permission: 'otherFollowUps' },
     ],
   },
   {

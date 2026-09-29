@@ -9,6 +9,7 @@ import Loader from '../../components/common/Loader'
 import { clearAreaMessage, createArea, editArea, fetchAreas, removeArea, selectAreaState } from '../../features/areas/areaSlice'
 import { useAuth } from '../../context/AuthContext'
 import { formatDate } from '../../utils/dateUtils'
+import { formatNameInput } from '../../utils/textUtils'
 
 const AreaMaster = () => {
   const { hasPermission } = useAuth(); const canAdd = hasPermission('areas', 'add'); const canEdit = hasPermission('areas', 'edit'); const canDelete = hasPermission('areas', 'delete')
@@ -71,7 +72,7 @@ const AreaMaster = () => {
   return <div className="page-stack">
     <PageHeader title="Area Master" subtitle="Create and maintain service areas." />
     <section className="panel-card form-card"><div className="panel-heading"><h2>{editingId ? 'Edit Area' : 'Add Area'}</h2></div>
-      <form onSubmit={submit}><label className="field"><span>Area Name *</span><input value={areaName} onChange={(event) => { setAreaName(event.target.value); setFieldError('') }} placeholder="Enter area name" />{fieldError && <div className="field-message">{fieldError}</div>}</label>
+      <form onSubmit={submit}><label className="field"><span>Area Name *</span><input value={areaName} onChange={(event) => { setAreaName(formatNameInput(event.target.value)); setFieldError('') }} placeholder="Enter area name" />{fieldError && <div className="field-message">{fieldError}</div>}</label>
         {(error || successMessage) && <div className={successMessage ? 'auth-success' : 'auth-error'} style={{ marginTop: 14 }}>{error || successMessage}</div>}
         <div className="form-actions master-form-actions">{(editingId ? canEdit : canAdd) && <Button type="submit" disabled={loading}>{loading ? 'Saving...' : editingId ? 'Update Area' : 'Save Area'}</Button>}<Button type="button" variant="secondary" onClick={reset}>Clear</Button></div>
       </form>

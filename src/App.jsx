@@ -36,6 +36,9 @@ import Enquiry from './pages/Enquiry/Enquiry'
 import EnquiryDashboard from './pages/Enquiry/EnquiryDashboard'
 import EnquiryReport from './pages/Reports/EnquiryReport'
 import EnquiryLeadsReport from './pages/Reports/EnquiryLeadsReport'
+import OtherFollowUp from './pages/OtherFollowUp/OtherFollowUp'
+import OtherFollowUpDashboard from './pages/OtherFollowUp/OtherFollowUpDashboard'
+import OtherFollowUpReport from './pages/Reports/OtherFollowUpReport'
 import UserManagement from './pages/UserManagement/UserManagement'
 import Unauthorized from './pages/Unauthorized/Unauthorized'
 import { AuthProvider } from './context/AuthContext'
@@ -61,6 +64,8 @@ function App() {
             <Route path="/dashboard/free-support" element={<PermissionRoute permission="dashboard"><FreeSupportDashboard /></PermissionRoute>} />
             <Route path="/dashboard/enquiry" element={<PermissionRoute permission="enquiries"><EnquiryDashboard /></PermissionRoute>} />
             <Route path="/enquiry" element={<PermissionRoute permission="enquiries"><Enquiry /></PermissionRoute>} />
+            <Route path="/other-follow-up" element={<PermissionRoute permission="otherFollowUps"><OtherFollowUp /></PermissionRoute>} />
+            <Route path="/dashboard/other-follow-up" element={<PermissionRoute permission="otherFollowUps"><OtherFollowUpDashboard /></PermissionRoute>} />
             <Route path="/masters" element={<PermissionRoute anyOf={['customers', 'executives', 'products', 'areas']}><Masters /></PermissionRoute>} />
             <Route path="/masters/executives" element={<PermissionRoute permission="executives"><ExecutiveMaster /></PermissionRoute>} />
             <Route path="/masters/customers" element={<PermissionRoute permission="customers"><CustomerMaster /></PermissionRoute>} />
@@ -88,6 +93,7 @@ function App() {
             <Route path="/reports/amc-dropped" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><AmcSummaryReport reportType="dropped" /></PermissionRoute>} />
             <Route path="/reports/enquiry-report" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><EnquiryReport /></PermissionRoute>} />
             <Route path="/reports/enquiry-leads" element={<PermissionRoute permission={PERMISSION_KEYS.reports}><EnquiryLeadsReport /></PermissionRoute>} />
+            <Route path="/reports/other-follow-up" element={<PermissionRoute permission="otherFollowUps"><OtherFollowUpReport /></PermissionRoute>} />
             <Route path="/user-management" element={<PermissionRoute adminOnly><UserManagement /></PermissionRoute>} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

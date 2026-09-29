@@ -17,6 +17,7 @@ import {
   selectSalesVoucherState, selectSalesVouchers,
 } from '../../features/salesVouchers/salesVoucherSlice'
 import { formatDate } from '../../utils/dateUtils'
+import { formatNameInput } from '../../utils/textUtils'
 
 const todayValue = () => {
   const date = new Date()
@@ -143,8 +144,9 @@ const SalesVoucher = () => {
   const pagedVouchers = useMemo(() => filteredVouchers.slice((page - 1) * pageSize, page * pageSize), [filteredVouchers, page, pageSize])
 
   const handleCustomerInput = (value) => {
-    const match = customers.find((item) => item.customerName.toLowerCase() === value.trim().toLowerCase())
-    setCustomerName(value)
+    const formattedValue = formatNameInput(value)
+    const match = customers.find((item) => item.customerName.toLowerCase() === formattedValue.trim().toLowerCase())
+    setCustomerName(formattedValue)
     setCustomerId(match?.id || '')
   }
   const selectCustomer = (customer) => {

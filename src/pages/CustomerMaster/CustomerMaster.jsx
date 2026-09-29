@@ -13,6 +13,7 @@ import { INDIAN_STATES } from '../../data/indianStates'
 import { customerService } from '../../services/customerService'
 import { ENQUIRY_LEAD_SOURCES } from '../../data/enquiryOptions'
 import { useAuth } from '../../context/AuthContext'
+import { formatNameInput } from '../../utils/textUtils'
 
 const leadSourceLabel = (value) => value.replaceAll('Reference', 'Ref')
 const CUSTOMER_CATEGORY_2_OPTIONS = ['Direct', 'Reference', ...ENQUIRY_LEAD_SOURCES].filter((value, index, options) => options.indexOf(value) === index)
@@ -108,7 +109,8 @@ const CustomerMaster = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+    const nextValue = ['customerName', 'contactName'].includes(name) ? formatNameInput(value) : value
+    setForm((prev) => ({ ...prev, [name]: nextValue }))
     setValidationErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
@@ -120,8 +122,9 @@ const CustomerMaster = () => {
   const exactAreaExists = areas.some((area) => area.areaName.toLowerCase() === areaSearchText.toLowerCase())
 
   const handleAreaInput = (value) => {
-    const match = areas.find((area) => area.areaName.toLowerCase() === value.trim().toLowerCase())
-    setForm((prev) => ({ ...prev, areaName: value, areaId: match?.id || '' }))
+    const formattedValue = formatNameInput(value)
+    const match = areas.find((area) => area.areaName.toLowerCase() === formattedValue.trim().toLowerCase())
+    setForm((prev) => ({ ...prev, areaName: formattedValue, areaId: match?.id || '' }))
     setValidationErrors((prev) => ({ ...prev, areaId: '' }))
   }
 

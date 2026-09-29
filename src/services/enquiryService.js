@@ -2,11 +2,21 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, se
 import { db } from '../firebase/firebase'
 
 const COLLECTION = 'enquiries'
+const nextVoucherNumber = (dateValue, items = []) => {
+  const year = String(dateValue || '').match(/^(\d{4})-/)?.[1] || new Date().getFullYear()
+  const current = items
+    .map((item) => String(item?.voucherNumber || '').match(/^(\d+)/)?.[1])
+    .filter(Boolean)
+    .map(Number)
+  const highest = current.length ? Math.max(...current) : 0
+  return `${highest + 1}/${year}`
+}
 const mapDocument = (snapshot) => {
   const data = snapshot.data()
   return { id: snapshot.id, ...data, leadCreationDate: data.leadCreationDate || data.enquiryDate || '', contactName: data.contactName ?? data.companyName ?? '' }
 }
 const clean = (data) => ({
+  voucherNumber: data.voucherNumber || '',
   leadCreationDate: data.leadCreationDate || data.enquiryDate,
   enquiryDate: data.leadCreationDate || data.enquiryDate,
   contactName: (data.contactName || data.companyName || '').trim(),
@@ -17,6 +27,7 @@ const clean = (data) => ({
   nextFollowUp: ['HOT', 'WARM'].includes(data.priority) && data.callDisposition === 'FOLLOWUP' ? data.nextFollowUp || '' : '',
   closedOn: data.callDisposition === 'COMPLETED' ? data.closedOn || '' : '',
   remarks: (data.remarks || '').trim(),
+  executiveInstructions: (data.executiveInstructions || '').trim(),
   customerId: data.customerId || '', customerName: data.customerName || '',
   areaId: data.areaId || '', areaName: data.areaName || '',
   receivedExecutiveId: data.receivedExecutiveId || '', receivedExecutiveName: data.receivedExecutiveName || '',
@@ -44,6 +55,10 @@ const validate = (data) => {
   if (!data.followUpLeadId || !data.followUpLeadName) throw new Error('Logged-in Follow Up Lead is required.')
 }
 
+export const getNextEnquiryVoucherNumber = async (dateValue) => {
+  const snapshot = await getDocs(query(collection(db, COLLECTION), orderBy('createdAt', 'desc')))
+  return nextVoucherNumber(dateValue, snapshot.docs.map((item) => item.data()))
+}
 export const getEnquiries = async () => {
   const snapshot = await getDocs(query(collection(db, COLLECTION), orderBy('createdAt', 'desc')))
   return snapshot.docs.map(mapDocument)
@@ -54,7 +69,8 @@ export const getEnquiryById = async (id) => {
 }
 export const createEnquiry = async (data) => {
   validate(data)
-  const ref = await addDoc(collection(db, COLLECTION), { ...clean(data), createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
+  const payload = clean({ ...data, voucherNumber: data.voucherNumber || await getNextEnquiryVoucherNumber(data.leadCreationDate || data.enquiryDate) })
+  const ref = await addDoc(collection(db, COLLECTION), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
   return mapDocument(await getDoc(ref))
 }
 export const updateEnquiry = async (id, data) => {
@@ -64,4 +80,4 @@ export const updateEnquiry = async (id, data) => {
   return mapDocument(await getDoc(ref))
 }
 export const deleteEnquiry = async (id) => { await deleteDoc(doc(db, COLLECTION, id)) }
-export const enquiryService = { getEnquiries, getEnquiryById, createEnquiry, updateEnquiry, deleteEnquiry }
+export const enquiryService = { getNextEnquiryVoucherNumber, getEnquiries, getEnquiryById, createEnquiry, updateEnquiry, deleteEnquiry }

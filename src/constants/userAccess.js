@@ -6,6 +6,7 @@ export const PERMISSION_MODULES = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'customers', label: 'Customers' },
   { key: 'enquiries', label: 'Enquiries' },
+  { key: 'otherFollowUps', label: 'Other Follow Up' },
   { key: 'executives', label: 'Executives' },
   { key: 'products', label: 'Products' },
   { key: 'salesVouchers', label: 'Sales Vouchers' },
@@ -33,6 +34,7 @@ export const normalizePermissions = (permissions = {}) => Object.fromEntries(PER
 const PERMISSION_LANDING_ROUTES = [
   ['dashboard', '/dashboard'],
   ['enquiries', '/dashboard/enquiry'],
+  ['otherFollowUps', '/dashboard/other-follow-up'],
   ['customers', '/masters/customers'],
   ['executives', '/masters/executives'],
   ['products', '/masters/products'],
