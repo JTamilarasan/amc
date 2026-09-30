@@ -194,6 +194,12 @@ th { color: #64748b; font-weight: 600; }
 .metric-card span { color: #64748b; }
 .report-section { overflow: hidden; }
 .report-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; }
+.customer-calls-report-filters { grid-template-columns: repeat(3, minmax(0, 260px)); align-items: start; }
+.category-filter-field { min-width: 0; margin: 0; padding: 0; border: 0; }
+.category-filter-field legend { margin-bottom: 6px; font-weight: 600; color: #334155; }
+.category-filter-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 42px; }
+.category-filter-options label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+.category-filter-options input { width: 16px; height: 16px; min-width: 16px; margin: 0; padding: 0; border-radius: 4px; accent-color: #2563eb; }
 .call-register-filters { grid-template-columns: repeat(3, minmax(0, 260px)); }
 .call-register-report .page-header h1, .call-register-report .field > span, .call-register-report th { font-weight: 700; }
 .call-register-table table { min-width: 820px; }
@@ -311,7 +317,7 @@ th { color: #64748b; font-weight: 600; }
   .details-modal-header, .details-modal-body, .details-modal-footer { padding-left: 14px; padding-right: 14px; }
   .details-grid { grid-template-columns: 1fr; }
   .detail-field-wide { grid-column: auto; }
-  .report-filter-grid { grid-template-columns: 1fr; width: 100%; }
+  .report-filter-grid, .customer-calls-report-filters { grid-template-columns: 1fr; width: 100%; }
   .report-actions { flex-direction: row; align-items: center; flex-wrap: wrap; }
   .report-actions .btn { width: auto; }
   .report-pagination { flex-direction: row; align-items: center; width: 100%; }

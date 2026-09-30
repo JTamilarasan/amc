@@ -12,6 +12,8 @@ import { formatDate } from '../../utils/dateUtils'
 import { emptyReportValue } from '../../utils/reportUtils'
 import { useAuth } from '../../context/AuthContext'
 
+const CATEGORY_OPTIONS = ['AMC', 'Remote AMC', 'New']
+
 const CustomerCallsHistoryReport = () => {
   const { hasPermission } = useAuth()
   const canEdit = hasPermission('voucherSettings', 'edit')
@@ -22,6 +24,7 @@ const CustomerCallsHistoryReport = () => {
   const returnedToDate = location.state?.toDate || defaultRange.toDate
   const [fromDate, setFromDate] = useState(returnedFromDate)
   const [toDate, setToDate] = useState(returnedToDate)
+  const [selectedCategories, setSelectedCategories] = useState(['AMC'])
   const [range, setRange] = useState(returnedFromDate && returnedToDate ? { from: returnedFromDate, to: returnedToDate } : null)
   const [rows, setRows] = useState([])
   const [errors, setErrors] = useState({})
@@ -33,7 +36,7 @@ const CustomerCallsHistoryReport = () => {
   const [pageSize, setPageSize] = useState(10)
   const [callDetails, setCallDetails] = useState(null)
   const [viewVoucher, setViewVoucher] = useState(null)
-  const filtered = useMemo(() => { const search = searchText.trim().toLowerCase(); return rows.filter((row) => !search || [row.partyName, row.category1, row.contactNo, row.areaName, row.customerExpiryDate, row.backupChecklist, row.totalCalls, row.totalVisits].some((value) => String(value || '').toLowerCase().includes(search))) }, [rows, searchText])
+  const filtered = useMemo(() => { const search = searchText.trim().toLowerCase(); return rows.filter((row) => selectedCategories.some((category) => category.toLowerCase() === String(row.category1 || '').trim().toLowerCase()) && (!search || [row.partyName, row.category1, row.contactNo, row.areaName, row.customerExpiryDate, row.backupChecklist, row.totalCalls, row.totalVisits].some((value) => String(value || '').toLowerCase().includes(search)))) }, [rows, searchText, selectedCategories])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize)
 
@@ -63,7 +66,8 @@ const CustomerCallsHistoryReport = () => {
     if (Object.keys(next).length) return
     await loadReport(fromDate, toDate)
   }
-  const clear = () => { setFromDate(''); setToDate(''); setRange(null); setRows([]); setErrors({}); setError(''); setMessage(''); setSearchText(''); setPage(1) }
+  const clear = () => { setFromDate(''); setToDate(''); setRange(null); setRows([]); setSelectedCategories(['AMC']); setErrors({}); setError(''); setMessage(''); setSearchText(''); setPage(1) }
+  const toggleCategory = (category) => { setSelectedCategories((current) => current.includes(category) ? current.filter((value) => value !== category) : [...current, category]); setPage(1) }
   const download = () => exportToCsv({ filename: `amc-customer-calls-history-${range.from}-to-${range.to}.csv`, headers: ['S.No', 'AMC Customer Name', 'Category 1', 'Contact No', 'Area', 'AMC Expiry', 'BC', 'TC', 'TV'], rows: filtered.map((row, index) => [index + 1, row.partyName, row.category1, row.contactNo, row.areaName, formatDate(row.customerExpiryDate), row.backupChecklist, row.totalCalls, row.totalVisits]) })
   const editVoucher = (voucher) => {
     setCallDetails(null)
@@ -73,9 +77,10 @@ const CustomerCallsHistoryReport = () => {
   return <div className="page-stack">
     <PageHeader title="AMC Customer Calls History" subtitle="View AMC customer calls, visits, and monthly backup history by date range." />
     <section className="panel-card report-section customer-calls-report-section">
-      <div className="report-filter-grid">
+      <div className="report-filter-grid customer-calls-report-filters">
         <label className="field"><span>From Date *</span><input type="date" value={fromDate} onChange={(event) => { setFromDate(event.target.value); setErrors((value) => ({ ...value, fromDate: '' })) }} />{errors.fromDate && <div className="field-message">{errors.fromDate}</div>}</label>
         <label className="field"><span>To Date *</span><input type="date" value={toDate} onChange={(event) => { setToDate(event.target.value); setErrors((value) => ({ ...value, toDate: '' })) }} />{errors.toDate && <div className="field-message">{errors.toDate}</div>}</label>
+        <fieldset className="field category-filter-field"><legend>Category 1</legend><div className="category-filter-options">{CATEGORY_OPTIONS.map((category) => <label key={category}><input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => toggleCategory(category)} /><span>{category}</span></label>)}</div></fieldset>
       </div>
       <div className="form-actions report-actions"><Button type="button" onClick={generate} disabled={loading}>{loading ? 'Generating...' : 'Generate Report'}</Button><Button type="button" variant="secondary" onClick={clear}>Clear</Button><Button type="button" variant="ghost" onClick={download} disabled={!filtered.length}><Download size={15} /> Download Report</Button></div>
       {error && <div className="field-message">{error}</div>}{message && <div className="auth-success">{message}</div>}
