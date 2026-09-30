@@ -27,7 +27,7 @@ const OtherFollowUp = () => {
     event.preventDefault()
     setSaving(true); setError(''); setMessage('')
     try {
-      await otherFollowUpService.createOtherFollowUp({ ...form, executiveId: user?.uid || '', executiveName })
+      await otherFollowUpService.createOtherFollowUp({ ...form, userId: user?.uid || '', executiveName })
       setForm(initialForm())
       setMessage('Other follow-up saved successfully.')
     } catch (reason) {

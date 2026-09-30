@@ -5,7 +5,7 @@ import PageHeader from '../../components/common/PageHeader'
 import StatCard from '../../components/common/StatCard'
 import Loader from '../../components/common/Loader'
 import { otherFollowUpService } from '../../services/otherFollowUpService'
-import { executiveService } from '../../services/executiveService'
+import { useAuth } from '../../context/AuthContext'
 
 const dateValue = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 const getRanges = () => {
@@ -24,25 +24,25 @@ const getRanges = () => {
 
 const OtherFollowUpDashboard = () => {
   const navigate = useNavigate()
+  const { user, userProfile } = useAuth()
+  const executiveName = userProfile?.displayName || userProfile?.name || user?.displayName || user?.email || ''
   const [records, setRecords] = useState([])
-  const [executives, setExecutives] = useState([])
-  const [executiveId, setExecutiveId] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let active = true
-    Promise.all([otherFollowUpService.getOtherFollowUps(), executiveService.getExecutives()])
-      .then(([items, executiveItems]) => { if (active) { setRecords(items); setExecutives(executiveItems.filter((item) => item.status === 'Active')) } })
+    setLoading(true)
+    otherFollowUpService.getOtherFollowUps(user?.uid)
+      .then((items) => { if (active) setRecords(items) })
       .catch(() => { if (active) setError('Unable to load Other Follow Up dashboard.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [])
+  }, [user?.uid])
 
   const ranges = useMemo(getRanges, [])
-  const selectedRecords = records.filter((item) => !executiveId || item.executiveId === executiveId)
-  const openRecords = selectedRecords.filter((item) => item.status === 'Open')
-  const closedRecords = selectedRecords.filter((item) => item.status === 'Closed')
+  const openRecords = records.filter((item) => item.status === 'Open')
+  const closedRecords = records.filter((item) => item.status === 'Closed')
   const inRange = (item, range) => Boolean(item.date) && item.date >= range[0] && item.date <= range[1]
   const cards = [
     { title: 'Today Follow-up', records: openRecords.filter((item) => inRange(item, ranges.today)), icon: CalendarClock, accent: 'accent-blue', range: ranges.today, status: 'Open' },
@@ -56,13 +56,12 @@ const OtherFollowUpDashboard = () => {
     { title: 'Expired Follow-up', records: openRecords.filter((item) => item.date < ranges.today[0]), icon: AlertTriangle, accent: 'accent-red', toDate: dateValue(new Date(Date.now() - 86400000)), status: 'Open' },
     { title: 'Upcoming Follow-up', records: openRecords.filter((item) => item.date > ranges.today[0]), icon: CalendarClock, accent: 'accent-indigo', fromDate: ranges.tomorrow[0], status: 'Open' },
   ].map((card) => ({ ...card, value: card.records.length }))
-  const selectedExecutiveName = executives.find((item) => item.id === executiveId)?.name || ''
-  const openReport = (card) => navigate('/reports/other-follow-up', { state: { status: card.status, fromDate: card.range?.[0] || card.fromDate || '', toDate: card.range?.[1] || card.toDate || '', executiveId, executiveName: selectedExecutiveName } })
+  const openReport = (card) => navigate('/reports/other-follow-up', { state: { status: card.status, fromDate: card.range?.[0] || card.fromDate || '', toDate: card.range?.[1] || card.toDate || '', executiveName } })
 
   return <div className="page-stack">
     <PageHeader title="Other Follow Up Dashboard" subtitle="Executive-wise follow-up summary by date and status." />
     {error && <div className="auth-error">{error}</div>}
-    <section className="panel-card"><label className="field"><span>Executive</span><select value={executiveId} onChange={(event) => setExecutiveId(event.target.value)}><option value="">All Executives</option>{executives.map((executive) => <option key={executive.id} value={executive.id}>{executive.name}</option>)}</select></label></section>
+    <section className="panel-card"><label className="field"><span>Executive</span><input value={executiveName} readOnly disabled /></label></section>
     {loading ? <section className="panel-card"><Loader label="Loading follow-up dashboard..." /></section> : <section className="stats-grid enquiry-stats">{cards.map((card) => <StatCard key={card.title} title={card.title} value={card.value} icon={card.icon} accent={card.accent} onClick={() => openReport(card)} />)}</section>}
   </div>
 }

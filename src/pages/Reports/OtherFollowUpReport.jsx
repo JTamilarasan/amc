@@ -8,8 +8,10 @@ import Loader from '../../components/common/Loader'
 import { otherFollowUpService } from '../../services/otherFollowUpService'
 import { exportToCsv } from '../../utils/exportCsv'
 import { formatReportDate } from '../../utils/reportUtils'
+import { useAuth } from '../../context/AuthContext'
 
 const OtherFollowUpReport = () => {
+  const { user, userProfile } = useAuth()
   const location = useLocation()
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,22 +19,21 @@ const OtherFollowUpReport = () => {
   const [fromDate, setFromDate] = useState(location.state?.fromDate || '')
   const [toDate, setToDate] = useState(location.state?.toDate || '')
   const [status, setStatus] = useState(location.state?.status || '')
-  const [executiveId] = useState(location.state?.executiveId || '')
-  const [executiveName] = useState(location.state?.executiveName || '')
+  const executiveName = userProfile?.displayName || userProfile?.name || user?.displayName || user?.email || location.state?.executiveName || ''
   const [searchText, setSearchText] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     let active = true
-    otherFollowUpService.getOtherFollowUps().then((items) => { if (active) setRecords(items) }).catch(() => { if (active) setError('Unable to load Other Follow Up report.') }).finally(() => { if (active) setLoading(false) })
+    otherFollowUpService.getOtherFollowUps(user?.uid).then((items) => { if (active) setRecords(items) }).catch(() => { if (active) setError('Unable to load Other Follow Up report.') }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [])
+  }, [user?.uid])
 
   const filtered = useMemo(() => {
     const search = searchText.trim().toLowerCase()
-    return records.filter((item) => (!executiveId || item.executiveId === executiveId) && (!fromDate || item.date >= fromDate) && (!toDate || item.date <= toDate) && (!status || item.status === status) && (!search || [item.executiveName, item.status, item.remarks, item.date].some((value) => String(value || '').toLowerCase().includes(search))))
-  }, [records, executiveId, fromDate, toDate, status, searchText])
+    return records.filter((item) => (!fromDate || item.date >= fromDate) && (!toDate || item.date <= toDate) && (!status || item.status === status) && (!search || [item.executiveName, item.status, item.remarks, item.date].some((value) => String(value || '').toLowerCase().includes(search))))
+  }, [records, fromDate, toDate, status, searchText])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize)
   const clear = () => { setFromDate(''); setToDate(''); setStatus(''); setSearchText(''); setPage(1) }
@@ -42,7 +43,7 @@ const OtherFollowUpReport = () => {
     <PageHeader title="Other Follow Up Report" subtitle="Review follow-up records by date, executive, status, and remarks." />
     {error && <div className="auth-error">{error}</div>}
     {loading ? <section className="panel-card"><Loader label="Loading follow-up report..." /></section> : <section className="panel-card report-section">
-      {executiveId && <div className="auth-success">Executive: {executiveName || 'Selected Executive'}</div>}
+      <div className="auth-success">Executive: {executiveName || 'Signed-in Executive'}</div>
       <div className="report-filter-grid">
         <label className="field"><span>From Date</span><input type="date" value={fromDate} onChange={(event) => { setFromDate(event.target.value); setPage(1) }} /></label>
         <label className="field"><span>To Date</span><input type="date" value={toDate} onChange={(event) => { setToDate(event.target.value); setPage(1) }} /></label>
