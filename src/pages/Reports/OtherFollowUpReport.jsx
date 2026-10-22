@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, Search } from 'lucide-react'
-import { useLocation } from 'react-router-dom'
+import { Download, Pencil, Search, Trash2 } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/common/PageHeader'
 import Button from '../../components/common/Button'
 import CommonPagination from '../../components/common/CommonPagination'
@@ -11,8 +11,11 @@ import { formatReportDate } from '../../utils/reportUtils'
 import { useAuth } from '../../context/AuthContext'
 
 const OtherFollowUpReport = () => {
-  const { user, userProfile } = useAuth()
+  const { user, userProfile, hasPermission } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
+  const canEdit = hasPermission('otherFollowUps', 'edit')
+  const canDelete = hasPermission('otherFollowUps', 'delete')
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -20,9 +23,11 @@ const OtherFollowUpReport = () => {
   const [toDate, setToDate] = useState(location.state?.toDate || '')
   const [status, setStatus] = useState(location.state?.status || '')
   const executiveName = userProfile?.displayName || userProfile?.name || user?.displayName || user?.email || location.state?.executiveName || ''
-  const [searchText, setSearchText] = useState('')
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [searchText, setSearchText] = useState(location.state?.searchText || '')
+  const [page, setPage] = useState(location.state?.page || 1)
+  const [pageSize, setPageSize] = useState(location.state?.pageSize || 10)
+  const [actionError, setActionError] = useState('')
+  const [message, setMessage] = useState(location.state?.message || '')
 
   useEffect(() => {
     let active = true
@@ -38,10 +43,23 @@ const OtherFollowUpReport = () => {
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize)
   const clear = () => { setFromDate(''); setToDate(''); setStatus(''); setSearchText(''); setPage(1) }
   const download = () => exportToCsv({ filename: 'other-follow-up-report.csv', headers: ['S.No', 'Date', 'Executive', 'Status', 'Remarks'], rows: filtered.map((item, index) => [index + 1, formatReportDate(item.date), item.executiveName, item.status, item.remarks]) })
+  const editRecord = (item) => navigate('/other-follow-up', { state: { editOtherFollowUpId: item.id, returnTo: location.pathname, returnState: { fromDate, toDate, status, searchText, page, pageSize } } })
+  const deleteRecord = async (item) => {
+    if (!window.confirm(`Delete follow-up record dated ${formatReportDate(item.date)}?`)) return
+    setActionError('')
+    try {
+      await otherFollowUpService.deleteOtherFollowUp(item.id)
+      setRecords((current) => current.filter((record) => record.id !== item.id))
+      setMessage('Follow-up deleted successfully.')
+    } catch {
+      setActionError('Unable to delete this follow-up record.')
+    }
+  }
 
   return <div className="page-stack">
     <PageHeader title="Other Follow Up Report" subtitle="Review follow-up records by date, executive, status, and remarks." />
     {error && <div className="auth-error">{error}</div>}
+    {actionError && <div className="auth-error">{actionError}</div>}{message && <div className="auth-success">{message}</div>}
     {loading ? <section className="panel-card"><Loader label="Loading follow-up report..." /></section> : <section className="panel-card report-section">
       <div className="auth-success">Executive: {executiveName || 'Signed-in Executive'}</div>
       <div className="report-filter-grid">
@@ -51,7 +69,7 @@ const OtherFollowUpReport = () => {
       </div>
       <div className="form-actions report-actions"><Button type="button" variant="secondary" onClick={clear}>Clear Filters</Button><Button type="button" variant="ghost" onClick={download} disabled={!filtered.length}><Download size={15} /> Download Report</Button></div>
       <div className="toolbar report-toolbar"><div className="search-box"><Search size={16} /><input value={searchText} onChange={(event) => { setSearchText(event.target.value); setPage(1) }} placeholder="Search executive, status, date or remarks..." /></div><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1) }}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select></div>
-      <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>Date</th><th>Executive</th><th>Status</th><th>Remarks</th></tr></thead><tbody>{!filtered.length && <tr><td colSpan="5" className="text-center">No follow-up records found.</td></tr>}{paged.map((item, index) => <tr key={item.id}><td>{(page - 1) * pageSize + index + 1}</td><td>{formatReportDate(item.date)}</td><td>{item.executiveName || '—'}</td><td><span className={`status-badge ${item.status === 'Closed' ? 'green' : 'amber'}`}>{item.status}</span></td><td>{item.remarks || '—'}</td></tr>)}</tbody></table></div>
+      <div className="table-wrap report-table"><table><thead><tr><th>S.No</th><th>Date</th><th>Executive</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>{!filtered.length && <tr><td colSpan="6" className="text-center">No follow-up records found.</td></tr>}{paged.map((item, index) => <tr key={item.id}><td>{(page - 1) * pageSize + index + 1}</td><td>{formatReportDate(item.date)}</td><td>{item.executiveName || '—'}</td><td><span className={`status-badge ${item.status === 'Closed' ? 'green' : 'amber'}`}>{item.status}</span></td><td>{item.remarks || '—'}</td><td><div className="table-actions">{canEdit && <button type="button" className="executive-action-btn" onClick={() => editRecord(item)}><Pencil size={13} /> Edit</button>}{canDelete && <button type="button" className="executive-action-btn delete" onClick={() => deleteRecord(item)}><Trash2 size={13} /> Delete</button>}</div></td></tr>)}</tbody></table></div>
       <CommonPagination currentPage={page} totalPages={totalPages} totalRecords={filtered.length} onPrevious={() => setPage((value) => Math.max(1, value - 1))} onNext={() => setPage((value) => Math.min(totalPages, value + 1))} className="report-pagination" />
     </section>}
   </div>

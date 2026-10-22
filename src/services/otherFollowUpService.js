@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
 
 const COLLECTION = 'otherFollowUps'
@@ -28,4 +28,23 @@ export const createOtherFollowUp = async (data) => {
   return { id: reference.id, ...payload }
 }
 
-export const otherFollowUpService = { getOtherFollowUps, createOtherFollowUp }
+export const updateOtherFollowUp = async (id, data) => {
+  if (!id) throw new Error('Follow-up record is required.')
+  if (!data.date) throw new Error('Date is required.')
+  if (!['Open', 'Closed'].includes(data.status)) throw new Error('Select a valid status.')
+  const payload = {
+    date: data.date,
+    status: data.status,
+    remarks: (data.remarks || '').trim(),
+    updatedAt: serverTimestamp(),
+  }
+  await updateDoc(doc(db, COLLECTION, id), payload)
+  return { id, ...payload }
+}
+
+export const deleteOtherFollowUp = async (id) => {
+  if (!id) throw new Error('Follow-up record is required.')
+  await deleteDoc(doc(db, COLLECTION, id))
+}
+
+export const otherFollowUpService = { getOtherFollowUps, createOtherFollowUp, updateOtherFollowUp, deleteOtherFollowUp }
